@@ -1,15 +1,19 @@
 {
   "name": "@rulsynor/core",
   "version": "1.0.0",
-  "description": "ERDL deterministic Guard engine — open-source Agent runtime with cryptographic audit chain",
+  "description": "ERDL deterministic Guard engine �?open-source Agent runtime with cryptographic audit chain",
   "license": "MIT",
-  "repository": "https://github.com/OpenOBA/rulsynor-core",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OpenOBA/rulsynor-core.git"
+  },
   "type": "module",
   "files": [
     "dist/",
     "src/",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "README.zh-CN.md"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -26,8 +30,7 @@
     "./playground": "./dist/playground.js"
   },
   "bin": {
-    "rulsynor": "./dist/playground.js",
-    "@rulsynor/core": "./dist/playground.js"
+    "rulsynor": "./dist/playground.js"
   },
   "scripts": {
     "build": "tsc && node scripts/copy-rules.mjs",
@@ -47,6 +50,24 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.0"
   },
-  "keywords": ["erdl","agent","guard","audit","decision-object","rulsynor","openoba","gbz-185","eu-ai-act","compliance"],
-  "engines": { "node": ">=20.0.0" }
+  "keywords": [
+    "erdl",
+    "agent",
+    "guard",
+    "audit",
+    "decision-object",
+    "rulsynor",
+    "openoba",
+    "gbz-185",
+    "eu-ai-act",
+    "compliance"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "OpenOBA <support@openoba.com> (https://openoba.com)",
+  "bugs": {
+    "url": "https://github.com/OpenOBA/rulsynor-core/issues"
+  },
+  "homepage": "https://github.com/OpenOBA/rulsynor-core#readme"
 }

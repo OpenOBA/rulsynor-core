@@ -44,7 +44,7 @@ export interface AuditTestVector { id: string; decision_object: Record<string,un
 // From ATCF compiler output
 export interface DecisionTree { root: TreeNode; traverse(context: Record<string,unknown>): Decision; }
 export interface TreeNode { left?: TreeNode; right?: TreeNode; condition?: RuleCondition; terminal?: Decision; runtimeEval?: { nodeId: string; operator: string }; }
-export interface RuntimeEvaluator { evaluate(context: Record<string,unknown>, state: GuardStateManager): boolean; }
+export interface RuntimeEvaluator { evaluate(context: Record<string,unknown>): boolean; }
 export interface SafeExprBytecode { op: string; args: unknown[]; }
 
 // From ATCF verification layer
@@ -399,19 +399,6 @@ export interface AuditTemplate {
 
   // PreValidation 审计引用（当此规则触发了 autoTransform）
   preValidationAudit?: PreValidationAuditRecord;
-}
-
-// Clock 接口 — 时间抽象层（Phase 0 必须完成）
-// 使时间依赖规则（within/rate）可测试
-export interface Clock {
-  now(): Date;
-  freeze?(time: Date): void;
-  advance?(ms: number): void;
-}
-
-// GuardStateManager — 状态管理 + 热更新策略（converted from class to interface）
-export interface GuardStateManager {
-  onHotReload(newDirective: GuardDirective): void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

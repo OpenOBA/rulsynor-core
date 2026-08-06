@@ -5,7 +5,7 @@
 - [x] ERDL rule engine with 16 SafeExpr operators
 - [x] 25-field Decision Object (JCS+SHA-256 cryptographic audit)
 - [x] RuleCompiler: ERDL YAML → 4-product compilation
-- [x] 29 preset security rules (validated via 3-round experiment)
+- [x] 28 preset security rules (validated via 3-round experiment)
 - [x] ComplianceService: 4 regulations × 4 jurisdictions
 - [x] GB/Z 185-compatible AID generation
 - [x] Guidance: extractNavigationGuide, CORRECT loop, REQUEST_HUMAN signal parser

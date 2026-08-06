@@ -1,13 +1,13 @@
-# Changelog â€” @rulsynor/core
+# Changelog â€?@rulsynor/core
 
-## v2.0.0-alpha.1 (2026-08-06)
+## v1.0.0 (2026-08-06)
 
 ### First public release
 
 **Core Engine**
 - ERDL rule evaluator with 16 SafeExpr operators (eq, ne, gt, gte, lt, lte, in, not_in, contains, match, exists, starts_with, ends_with, and, or, not)
 - 25-field Decision Object builder with JCS (RFC 8785) + SHA-256 cryptographic audit hash
-- RuleCompiler: ERDL YAML â†’ four parallel products (ComplianceSchema, GuidanceArtifact, GuardDirective, AuditTemplate)
+- RuleCompiler: ERDL YAML â†?four parallel products (ComplianceSchema, GuidanceArtifact, GuardDirective, AuditTemplate)
 - GuardStateManager with within/rate temporal tracking
 - Clock abstraction (SystemClock + VirtualClock for testing)
 - Shadow Mode (dual-engine evaluation via EvaluatorAdapter)
@@ -16,7 +16,7 @@
 **Guard & Compliance**
 - ComplianceService: 4 regulations (EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI) across 4 jurisdictions
 - GB/Z 185-compliant Agent Identity Code (AID) generation
-- extractNavigationGuide: DENY/CORRECT decisions â†’ structured LLM guidance
+- extractNavigationGuide: DENY/CORRECT decisions â†?structured LLM guidance
 
 **Preflight**
 - CORRECT loop state machine (5 states, 3-round retry before escalation)
@@ -32,5 +32,5 @@
 **Packaging**
 - MIT License
 - Zero framework dependencies (only json-canonicalize + js-yaml)
-- 67 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Guidance, Runtime, Preflight)
+- 76 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Guidance, Runtime, Preflight)
 - npm package: 155 kB, 10 sub-path exports
