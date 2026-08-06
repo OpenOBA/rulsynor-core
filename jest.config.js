@@ -5,10 +5,12 @@ export default {
   roots: ['<rootDir>/test'],
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    // Strip .js from ALL relative imports so ts-jest resolves the .ts source
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { useESM: true }],
+    '^.+\\.tsx?$': ['ts-jest', {
+      useESM: true,
+      tsconfig: { module: 'nodenext', moduleResolution: 'nodenext' },
+    }],
   },
 };
