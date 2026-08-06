@@ -1,440 +1,384 @@
-# ERDL Rule: Default-deny for exec (Ring 3)
-# This is the catch-all. Safer rules at Ring 0-1 match first.
-name: block-all-exec
-version: 1
-category: security
-severity: high
-ring: 3
-priority: 999
-description: "Default-deny: blocks exec calls not explicitly allowed by higher-priority rules"
-when:
-  conditions:
-    - field: "context.tool.name"
-      operator: eq
-      value: "exec"
-then:
-  decision: DENY
-  instruction: "System command blocked. Use read/search tools, or request approval for exec."
----
-# ERDL Rule: Block dangerous shell commands (Ring 0)
 name: block-dangerous-cmd
 version: 1
 category: security
 severity: critical
 ring: 0
 priority: 900
-description: "Block destructive commands: rm -rf, format, shutdown, dd, redirect to /dev/sda, etc."
+description: 'Block destructive commands: rm -rf, format, shutdown, dd, redirect to /dev/sda, etc.'
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "exec"
-    - field: "context.tool.args.command"
+      value: exec
+    - field: context.tool.args.command
       operator: matches
-      value: "(rm\\s+-rf|shutdown|reboot|mkfs\\.|dd\\s+if=|>\\s*/dev/sda|:(){ :\\|:& };:)"
+      value: (rm\s+-rf|shutdown|reboot|mkfs\.|dd\s+if=|>\s*/dev/sda|:(){ :\|:& };:)
 then:
   decision: DENY
-  instruction: "Destructive command blocked. Use safe alternatives or request human approval."
-  alternative: "Use the read tool to inspect the target first, or request explicit human approval before any destructive command."
+  instruction: Destructive command blocked. Use safe alternatives or request human approval.
+  alternative: Use the read tool to inspect the target first, or request explicit human approval before any destructive command.
 ---
-# ERDL Rule: Block fork bomb pattern (Ring 0)
 name: block-fork-bomb
 version: 1
 category: security
 severity: critical
 ring: 0
 priority: 890
-description: "Block fork bomb and process explosion patterns"
+description: Block fork bomb and process explosion patterns
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "exec"
-    - field: "context.tool.args.command"
+      value: exec
+    - field: context.tool.args.command
       operator: matches
-      value: "(:\\()|fork\\s*bomb|while\\s*:\\s*;\\s*do"
+      value: (:\()|fork\s*bomb|while\s*:\s*;\s*do
 then:
   decision: DENY
-  instruction: "Fork bomb pattern detected and blocked."
+  instruction: Fork bomb pattern detected and blocked.
 ---
-# ERDL Rule: Block writes to system paths (Ring 0)
 name: block-system-writes
 version: 1
 category: security
 severity: high
 ring: 0
 priority: 850
-description: "Block file writes to system directories and configuration paths"
+description: Block file writes to system directories and configuration paths
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "write_file"
-    - field: "context.tool.args.path"
+      value: write_file
+    - field: context.tool.args.path
       operator: matches
-      value: "^(/etc/|/sys/|/proc/|/boot/|/dev/|C:\\\\Windows|C:\\\\Program Files)"
+      value: ^(/etc/|/sys/|/proc/|/boot/|/dev/|C:\\Windows|C:\\Program Files)
 then:
   decision: DENY
-  instruction: "System file write blocked. Use application directory only."
-  alternative: "Write to your application's working directory (e.g. /var/app/) instead of system paths like /etc, /sys, or /proc."
+  instruction: System file write blocked. Use application directory only.
+  alternative: Write to your application's working directory (e.g. /var/app/) instead of system paths like /etc, /sys, or /proc.
 ---
-# ERDL Rule: Block writes to dot-files (Ring 1)
 name: block-dotfile-writes
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 700
-description: "Block writes to dot-files and dot-directories (SSH keys, env files, git config)"
+description: Block writes to dot-files and dot-directories (SSH keys, env files, git config)
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "write_file"
-    - field: "context.tool.args.path"
+      value: write_file
+    - field: context.tool.args.path
       operator: matches
-      value: "(/\\.ssh/|/\\.git/config|/\\.env|\\.bashrc|\\.zshrc|\\.profile|authorized_keys)"
+      value: (/\.ssh/|/\.git/config|/\.env|\.bashrc|\.zshrc|\.profile|authorized_keys)
 then:
   decision: DENY
-  instruction: "Write to sensitive dot-file blocked. Review and approve manually."
-  alternative: "Store secrets in a secrets manager or environment injection, not in dot-files under version control."
+  instruction: Write to sensitive dot-file blocked. Review and approve manually.
+  alternative: Store secrets in a secrets manager or environment injection, not in dot-files under version control.
 ---
-# ERDL Rule: Block SSRF (internal IP requests) (Ring 0)
 name: block-ssrf
 version: 1
 category: security
 severity: critical
 ring: 0
 priority: 850
-description: "SSRF prevention: block HTTP requests to internal/private IPs and metadata endpoints"
+description: 'SSRF prevention: block HTTP requests to internal/private IPs and metadata endpoints'
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "http_request"
-    - field: "context.tool.args.url"
+      value: http_request
+    - field: context.tool.args.url
       operator: matches
-      value: "(10\\.\\d+\\.\\d+\\.\\d+|172\\.(1[6-9]|2\\d|3[01])\\.|192\\.168\\.|127\\.0\\.0\\.|0\\.0\\.0\\.0|localhost|metadata|169\\.254\\.)"
+      value: (10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata|169\.254\.)
 then:
   decision: DENY
-  instruction: "SSRF blocked. Internal IP / metadata endpoint access denied."
-  alternative: "Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata endpoint."
+  instruction: SSRF blocked. Internal IP / metadata endpoint access denied.
+  alternative: >-
+    Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata
+    endpoint.
 ---
-# ERDL Rule: Block HTTP to non-standard ports (Ring 1)
 name: block-nonstandard-ports
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 600
-description: "Block HTTP requests to unusual ports (common exploit targets)"
+description: Block HTTP requests to unusual ports (common exploit targets)
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "http_request"
-    - field: "context.tool.args.url"
+      value: http_request
+    - field: context.tool.args.url
       operator: matches
-      value: ":(22|25|53|3389|6379|27017|11211|5432|3306)"
+      value: ':(22|25|53|3389|6379|27017|11211|5432|3306)'
 then:
   decision: DENY
-  instruction: "Non-standard port HTTP blocked. Verify destination before proceeding."
+  instruction: Non-standard port HTTP blocked. Verify destination before proceeding.
 ---
-# ERDL Rule: Rate limit tool calls (Ring 1)
-name: rate-limit-exec
-version: 1
-category: security
-severity: high
-ring: 1
-priority: 500
-description: "Rate limit: max 10 exec calls per 60 seconds"
-when:
-  conditions:
-    - field: "context.tool.name"
-      operator: eq
-      value: "exec"
-      rate: "10/60s"
-then:
-  decision: DENY
-  instruction: "Rate limit exceeded. Slow down and batch your operations."
----
-# ERDL Rule: Block empty command (Ring 1)
 name: block-empty-command
 version: 1
 category: security
 severity: low
 ring: 1
 priority: 400
-description: "Block exec calls with empty or whitespace-only command"
+description: Block exec calls with empty or whitespace-only command
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "exec"
-    - field: "context.tool.args.command"
+      value: exec
+    - field: context.tool.args.command
       operator: match
-      value: "^\\s*$"
+      value: ^\s*$
 then:
   decision: DENY
-  instruction: "Empty command blocked. Specify a valid command."
+  instruction: Empty command blocked. Specify a valid command.
 ---
-# ERDL Rule: Block SQL injection patterns in all tool args (Ring 0)
 name: block-sql-injection
 version: 1
 category: security
 severity: critical
 ring: 0
 priority: 880
-description: "Block SQL injection and XSS patterns in any tool argument"
+description: Block SQL injection and XSS patterns in any tool argument
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: contains
-      value: "'; DROP TABLE"
-    - field: "context.tool.args.url"
+      value: '''; DROP TABLE'
+    - field: context.tool.args.url
       operator: contains
-      value: "'; DROP TABLE"
-    - field: "context.tool.args.content"
+      value: '''; DROP TABLE'
+    - field: context.tool.args.content
       operator: contains
-      value: "<script>"
-  conditionLogic: "OR"
+      value: <script>
+  conditionLogic: OR
 then:
   decision: DENY
-  instruction: "SQL injection / XSS pattern detected and blocked."
+  instruction: SQL injection / XSS pattern detected and blocked.
 ---
-# ERDL Rule: Block writes > 10MB (Ring 1)
 name: block-large-writes
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 650
-description: "Block file writes exceeding 10MB to prevent resource exhaustion"
+description: Block file writes exceeding 10MB to prevent resource exhaustion
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "write_file"
-    - field: "context.tool.args.content"
+      value: write_file
+    - field: context.tool.args.content
       operator: length_gt
       value: 10485760
 then:
   decision: DENY
-  instruction: "Write exceeds 10MB limit. Split into smaller files."
+  instruction: Write exceeds 10MB limit. Split into smaller files.
 ---
-# ERDL Rule: Block writes to temp directories containing sensitive data (Ring 1)
 name: block-sensitive-temp-writes
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 550
-description: "Block writes to /tmp if content contains passwords or tokens"
+description: Block writes to /tmp if content contains passwords or tokens
 when:
   conditions:
-    - field: "context.tool.args.path"
+    - field: context.tool.args.path
       operator: starts_with
-      value: "/tmp/"
-    - field: "context.tool.args.content"
+      value: /tmp/
+    - field: context.tool.args.content
       operator: matches
-      value: "(password|secret|token|api_key|private_key|-----BEGIN)"
-  conditionLogic: "OR"
+      value: (password|secret|token|api_key|private_key|-----BEGIN)
+  conditionLogic: OR
 then:
   decision: DENY
-  instruction: "Sensitive data in /tmp blocked. Use encrypted storage."
+  instruction: Sensitive data in /tmp blocked. Use encrypted storage.
 ---
-# ERDL Rule: Block shell meta-characters (Ring 1)
 name: block-shell-metachar
 version: 1
 category: security
 severity: high
 ring: 1
 priority: 750
-description: "Block commands containing shell meta-characters (command chaining, backticks, eval)"
+description: Block commands containing shell meta-characters (command chaining, backticks, eval)
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "exec"
-    - field: "context.tool.args.command"
+      value: exec
+    - field: context.tool.args.command
       operator: matches
-      value: "[;&|`$(){}]"
+      value: '[;&|`$(){}]'
 then:
   decision: DENY
-  instruction: "Shell meta-characters detected. Use parameterized command execution."
+  instruction: Shell meta-characters detected. Use parameterized command execution.
 ---
-# ERDL Rule: Block HTTP redirect following (Ring 1)
 name: block-open-redirect
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 500
-description: "Block HTTP URLs that appear to be open redirect targets"
+description: Block HTTP URLs that appear to be open redirect targets
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: context.tool.name
       operator: eq
-      value: "http_request"
-    - field: "context.tool.args.url"
+      value: http_request
+    - field: context.tool.args.url
       operator: contains
-      value: "redirect"
+      value: redirect
 then:
   decision: DENY
-  instruction: "Potential open redirect URL blocked."
+  instruction: Potential open redirect URL blocked.
 ---
-# ERDL Rule: CORRECT unsafe path to safe alternative (Ring 2)
 name: correct-unsafe-path
 version: 1
 category: security
 severity: medium
 ring: 2
 priority: 300
-description: "When write targets a restricted path, suggest correction to allowed app directory"
+description: When write targets a restricted path, suggest correction to allowed app directory
 when:
   conditions:
-    - field: "context.tool.args.path"
+    - field: context.tool.args.path
       operator: starts_with
-      value: "/etc/"
+      value: /etc/
 then:
   decision: CORRECT
-  instruction: "Change path from /etc/ to /var/app/. System paths are read-only."
-  correction: "Rewrite the write target to /var/app/ (or another application-owned directory) instead of /etc/."
+  instruction: Change path from /etc/ to /var/app/. System paths are read-only.
+  correction: Rewrite the write target to /var/app/ (or another application-owned directory) instead of /etc/.
 ---
-# ERDL Rule: Block multi-line command injection (Ring 0)
 name: block-multiline-cmd
 version: 1
 category: security
 severity: high
 ring: 0
 priority: 870
-description: "Block commands containing newline characters (injection via multi-line)"
+description: Block commands containing newline characters (injection via multi-line)
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: contains
-      value: "\n"
+      value: |+
+
 then:
   decision: DENY
-  instruction: "Multi-line command injection blocked."
+  instruction: Multi-line command injection blocked.
 ---
-# ERDL Rule: Block base64-encoded payloads (Ring 1)
 name: block-base64-payload
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 400
-description: "Block commands containing base64-encoded data (common obfuscation technique)"
+description: Block commands containing base64-encoded data (common obfuscation technique)
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: matches
-      value: "echo\\s+[A-Za-z0-9+/]{20,}=*\\s*\\|\\s*(base64|sh|bash)"
+      value: echo\s+[A-Za-z0-9+/]{20,}=*\s*\|\s*(base64|sh|bash)
 then:
   decision: DENY
-  instruction: "Base64-encoded command blocked. Use explicit, readable commands."
+  instruction: Base64-encoded command blocked. Use explicit, readable commands.
 ---
-# ERDL Rule: Block wget/curl to file output (Ring 1)
 name: block-download-to-file
 version: 1
 category: security
 severity: medium
 ring: 1
 priority: 600
-description: "Block wget/curl that saves output to filesystem without inspection"
+description: Block wget/curl that saves output to filesystem without inspection
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: matches
-      value: "(wget|curl).*(-o|-O)\\s+"
+      value: (wget|curl).*(-o|-O)\s+
 then:
   decision: DENY
-  instruction: "Download-to-file blocked. Use read tool for URL content inspection first."
+  instruction: Download-to-file blocked. Use read tool for URL content inspection first.
 ---
-# ERDL Rule: Block chmod 777 (Ring 1)
 name: block-chmod-777
 version: 1
 category: security
 severity: high
 ring: 1
 priority: 700
-description: "Block chmod 777 and other overly permissive permission changes"
+description: Block chmod 777 and other overly permissive permission changes
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: matches
-      value: "chmod.*777"
+      value: chmod.*777
 then:
   decision: DENY
-  instruction: "chmod 777 blocked. Use minimum required permissions."
-
+  instruction: chmod 777 blocked. Use minimum required permissions.
 ---
-# ERDL Rule: Block destructive DROP statements (Ring 0)
 name: block-sql-drop
 version: 1
 category: security
 severity: critical
 ring: 0
 priority: 885
-description: "Block DROP TABLE / DROP DATABASE statements in any tool argument"
+description: Block DROP TABLE / DROP DATABASE statements in any tool argument
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: contains
-      value: "DROP TABLE"
-    - field: "context.tool.args.command"
+      value: DROP TABLE
+    - field: context.tool.args.command
       operator: contains
-      value: "DROP DATABASE"
-    - field: "context.tool.args.url"
+      value: DROP DATABASE
+    - field: context.tool.args.url
       operator: contains
-      value: "DROP TABLE"
-    - field: "context.tool.args.content"
+      value: DROP TABLE
+    - field: context.tool.args.content
       operator: contains
-      value: "DROP TABLE"
-    - field: "context.tool.args.content"
+      value: DROP TABLE
+    - field: context.tool.args.content
       operator: contains
-      value: "DROP DATABASE"
-  conditionLogic: "OR"
+      value: DROP DATABASE
+  conditionLogic: OR
 then:
   decision: DENY
-  instruction: "Destructive DROP statement blocked. Use archived/soft-delete instead."
-
+  instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
 ---
-# ERDL Rule: Block privileged container execution (Ring 0)
 name: block-docker-privileged
 version: 1
 category: security
 severity: critical
 ring: 0
 priority: 860
-description: "Block docker run with --privileged (host-level escalation)"
+description: Block docker run with --privileged (host-level escalation)
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: contains
-      value: "docker run"
-    - field: "context.tool.args.command"
+      value: docker run
+    - field: context.tool.args.command
       operator: contains
-      value: "--privileged"
+      value: '--privileged'
 then:
   decision: DENY
-  instruction: "Privileged container execution blocked. Use a least-privilege container profile."
-
+  instruction: Privileged container execution blocked. Use a least-privilege container profile.
 ---
-# ERDL Rule: Block pipe-to-shell download (Ring 1)
 name: block-curl-pipe-shell
 version: 1
 category: security
 severity: high
 ring: 1
 priority: 680
-description: "Block piping a remote download straight into a shell (curl|sh, wget|bash)"
+description: Block piping a remote download straight into a shell (curl|sh, wget|bash)
 when:
   conditions:
-    - field: "context.tool.args.command"
+    - field: context.tool.args.command
       operator: matches
-      value: "(curl|wget).*\\|.*(sh|bash)"
+      value: (curl|wget).*\|.*(sh|bash)
 then:
   decision: DENY
-  instruction: "Pipe-to-shell download blocked. Inspect the content with the read tool before executing."
+  instruction: Pipe-to-shell download blocked. Inspect the content with the read tool before executing.

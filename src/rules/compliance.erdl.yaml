@@ -1,75 +1,43 @@
-# ERDL Rule: CORRECT over-large tool args (Ring 2)
-name: correct-oversize-args
-version: 1
-category: format
-severity: low
-ring: 2
-priority: 300
-description: "Correct commands with excessively long arguments (potential overflow attack)"
-when:
-  conditions:
-    - field: "context.tool.name"
-      operator: eq
-      value: "exec"
-    - field: "context.tool.args.command"
-      operator: length_gt
-      value: 4096
-then:
-  decision: CORRECT
-  instruction: "Command too long (>4KB). Split into smaller operations or write to file first."
----
-# ERDL Rule: CORRECT path traversal attempt (Ring 2)
-name: correct-path-traversal
-version: 1
-category: security
-severity: high
-ring: 2
-priority: 500
-description: "Correct path traversal (../) attempts to safe alternatives"
-when:
-  conditions:
-    - field: "context.tool.args.path"
-      operator: contains
-      value: "../"
-then:
-  decision: CORRECT
-  instruction: "Path traversal blocked. Use absolute paths within allowed directories."
----
-# ERDL Rule: DENY write with empty content (Ring 1)
-name: deny-empty-write
-version: 1
-category: format
-severity: low
-ring: 1
-priority: 300
-description: "Deny writes with empty content to prevent accidental file truncation"
-when:
-  conditions:
-    - field: "context.tool.name"
-      operator: eq
-      value: "write_file"
-    - field: "context.tool.args.content"
-      operator: eq
-      value: ""
-then:
-  decision: DENY
-  instruction: "Empty write blocked. If you intend to create an empty file, use touch instead."
----
-# ERDL Rule: Exists check for tool args (Ring 1)
+# ERDL Rule: Exists check for exec tool args (Ring 1)
+# Fixed: only applies to exec tools. write_file/read don't have command args.
 name: require-tool-args
 version: 1
 category: format
 severity: low
 ring: 1
 priority: 200
-description: "Ensure required arguments exist before tool execution"
+description: "Ensure exec commands have required arguments before execution"
 when:
   conditions:
+    - field: "context.tool.name"
+      operator: eq
+      value: "exec"
     - field: "context.tool.args.command"
       operator: not_exists
 then:
   decision: DENY
   instruction: "Missing required argument: command."
+---
+# ERDL Rule: Detect credential patterns in file writes (Ring 1)
+# Added per Experiment Round 3 — catches credential leaks in file content
+name: block-credential-in-files
+version: 1
+category: security
+severity: high
+ring: 1
+priority: 700
+description: "Detect and block credential patterns in file write content"
+when:
+  conditions:
+    - field: "context.tool.name"
+      operator: eq
+      value: "write_file"
+    - field: "context.tool.args.content"
+      operator: matches
+      value: "(DATABASE_URL|PASSWORD|SECRET|API_KEY|TOKEN|password)\\s*[=:]"
+then:
+  decision: DENY
+  instruction: "Credential pattern detected in file content. Use environment variables or a secrets manager."
 ---
 # ERDL Rule: Block exec during maintenance window (Ring 1)
 name: block-during-maintenance
