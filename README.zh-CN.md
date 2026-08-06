@@ -231,7 +231,7 @@ npx @openoba/audit-verify single decision.json
 
 MIT © 2026 OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
 
-> "大模型厂商交付智商，我们交付员工。"
+> "大模型厂商交付超群智商，我们交付恪守职业精神的员工。"
 
 ---
 

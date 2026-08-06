@@ -239,7 +239,7 @@ npx @openoba/audit-verify single decision.json
 
 MIT © 2026 OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))
 
-> "LLM vendors deliver IQ. We deliver employees."
+> "LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity."
 
 ---
 
