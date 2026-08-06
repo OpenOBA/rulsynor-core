@@ -214,6 +214,35 @@ human-gdpr-delete, human-large-transaction, block-docker-privileged, block-sql-d
 
 ---
 
+## Operator Alignment Verification
+
+Before applying rule changes, verified that all operators used in modified/new rules
+are supported by both SafeExpr and RuntimeEvaluator.
+
+### Rule operators in use (9 total)
+
+`contains, eq, gt, in, length_gt, match, matches, not_exists, starts_with`
+
+### SafeExpr operators (25 total)
+
+`and, contains, ends_with, eq, exists, gt, gte, in, length_eq, length_gt, length_gte,
+length_lt, length_lte, lt, lte, match, matches, ne, neq, not, not_contains, not_exists,
+not_in, or, starts_with`
+
+### RuntimeEvaluator operators (21 total)
+
+`contains, ends_with, eq, exists, gt, gte, in, length_eq, length_gt, length_gte,
+length_lt, length_lte, lt, lte, match, matches, ne, neq, not_exists, not_in, starts_with`
+
+### Result: ✅ No engine changes needed
+
+- Round 3's `block-credential-in-files` uses `matches` — supported by both engines
+- All 9 rule operators are a subset of both engine capabilities
+- SafeExpr has 4 extra operators (and/or/not/not_contains) not used by current rules
+- RuntimeEvaluator has 3 fewer (and/or/not are expression-level, not field-level)
+
+---
+
 ## Experiment Artifacts
 
 - `experiments/long-dev-task-guard-behavior.md` — this file
