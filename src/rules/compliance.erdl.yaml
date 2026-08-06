@@ -1,0 +1,186 @@
+# ERDL Rule: CORRECT over-large tool args (Ring 2)
+name: correct-oversize-args
+version: 1
+category: format
+severity: low
+ring: 2
+priority: 300
+description: "Correct commands with excessively long arguments (potential overflow attack)"
+when:
+  conditions:
+    - field: "context.tool.name"
+      operator: eq
+      value: "exec"
+    - field: "context.tool.args.command"
+      operator: gt
+      value: 4096
+then:
+  decision: CORRECT
+  instruction: "Command too long (>4KB). Split into smaller operations or write to file first."
+---
+# ERDL Rule: CORRECT path traversal attempt (Ring 2)
+name: correct-path-traversal
+version: 1
+category: security
+severity: high
+ring: 2
+priority: 500
+description: "Correct path traversal (../) attempts to safe alternatives"
+when:
+  conditions:
+    - field: "context.tool.args.path"
+      operator: contains
+      value: "../"
+then:
+  decision: CORRECT
+  instruction: "Path traversal blocked. Use absolute paths within allowed directories."
+---
+# ERDL Rule: DENY write with empty content (Ring 1)
+name: deny-empty-write
+version: 1
+category: format
+severity: low
+ring: 1
+priority: 300
+description: "Deny writes with empty content to prevent accidental file truncation"
+when:
+  conditions:
+    - field: "context.tool.name"
+      operator: eq
+      value: "write_file"
+    - field: "context.tool.args.content"
+      operator: eq
+      value: ""
+then:
+  decision: DENY
+  instruction: "Empty write blocked. If you intend to create an empty file, use touch instead."
+---
+# ERDL Rule: Exists check for tool args (Ring 1)
+name: require-tool-args
+version: 1
+category: format
+severity: low
+ring: 1
+priority: 200
+description: "Ensure required arguments exist before tool execution"
+when:
+  conditions:
+    - field: "context.tool.args.command"
+      operator: not_exists
+then:
+  decision: DENY
+  instruction: "Missing required argument: command."
+---
+# ERDL Rule: Block exec during maintenance window (Ring 1)
+name: block-during-maintenance
+version: 1
+category: workflow
+severity: medium
+ring: 1
+priority: 400
+description: "Block exec calls during system maintenance windows"
+when:
+  conditions:
+    - field: "context.maintenance_mode"
+      operator: eq
+      value: true
+    - field: "context.tool.name"
+      operator: eq
+      value: "exec"
+then:
+  decision: DENY
+  instruction: "System is in maintenance mode. Exec calls are suspended."
+---
+# ERDL Rule: REQUEST_HUMAN for GDPR delete (Ring 1)
+name: human-gdpr-delete
+version: 1
+category: compliance
+severity: high
+ring: 1
+priority: 600
+description: "Require human approval for GDPR-related data deletion and right-to-be-forgotten operations"
+when:
+  conditions:
+    - field: "context.operation"
+      operator: eq
+      value: "delete"
+    - field: "context.gdpr_relevant"
+      operator: eq
+      value: true
+then:
+  decision: REQUEST_HUMAN
+  instruction: "GDPR delete operation requires human approval. Please review and confirm deletion scope."
+---
+# ERDL Rule: REQUEST_HUMAN for transactions > $5000 (Ring 1)
+name: human-large-transaction
+version: 1
+category: compliance
+severity: medium
+ring: 1
+priority: 500
+description: "Require human approval for financial transactions exceeding $5,000"
+when:
+  conditions:
+    - field: "context.amount"
+      operator: gt
+      value: 5000
+    - field: "context.transaction_type"
+      operator: eq
+      value: "financial"
+then:
+  decision: REQUEST_HUMAN
+  instruction: "Transaction exceeds $5,000 threshold. Human approval required."
+---
+# ERDL Rule: EMERGENCY_HALT on credential leak (Ring 0)
+name: halt-credential-leak
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 1000
+description: "Emergency halt when credential leak or secret exposure is detected"
+when:
+  conditions:
+    - field: "context.event_type"
+      operator: eq
+      value: "credential_leak"
+then:
+  decision: EMERGENCY_HALT
+  instruction: "Credential leak detected. All operations halted. Rotate keys immediately."
+---
+# ERDL Rule: QUARANTINE suspicious tool pattern (Ring 1)
+name: quarantine-suspicious
+version: 1
+category: security
+severity: high
+ring: 1
+priority: 800
+description: "Quarantine tool calls matching suspicious reconnaissance patterns"
+when:
+  conditions:
+    - field: "context.tool.name"
+      operator: eq
+      value: "exec"
+    - field: "context.tool.args.command"
+      operator: matches
+      value: "(whoami|id|uname\\s+-a|cat\\s+/etc/passwd|netstat|ss\\s+-tlnp|ps\\s+aux|env|printenv)"
+then:
+  decision: QUARANTINE
+  instruction: "Suspicious reconnaissance command quarantined. Review required before execution."
+---
+# ERDL Rule: ALLOW read-only operations unconditionally (Ring 3)
+name: allow-readonly
+version: 1
+category: convention
+severity: none
+ring: 3
+priority: 100
+description: "Always allow read-only tool operations (read, search, list)"
+when:
+  conditions:
+    - field: "context.tool.name"
+      operator: in
+      value: ["read", "search", "list", "get", "find", "query", "ls"]
+then:
+  decision: ALLOW
+  instruction: "Read-only operation allowed."

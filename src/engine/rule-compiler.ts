@@ -13,6 +13,7 @@
 import { createHash } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import * as yaml from 'js-yaml';
 import {
   RuleCompiler,
   CompiledRuleSet,
@@ -76,9 +77,7 @@ export class RuleCompilerImpl implements RuleCompiler {
    * 从文件路径加载 ERDL 规则集
    */
   load(filePath: string): ERDLRuleSet {
-    const fs = require('fs');
-    const yaml = require('js-yaml');
-    const raw = fs.readFileSync(filePath, 'utf-8');
+    const raw = readFileSync(filePath, 'utf-8');
     return yaml.load(raw) as ERDLRuleSet;
   }
 
