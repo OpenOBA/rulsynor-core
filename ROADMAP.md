@@ -1,6 +1,6 @@
 # Roadmap — @rulsynor/core
 
-## v2.0.0 (Current)
+## v1.0 (Current)
 
 - [x] ERDL rule engine with 16 SafeExpr operators
 - [x] 25-field Decision Object (JCS+SHA-256 cryptographic audit)
@@ -14,7 +14,7 @@
 - [x] 76 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Preflight, Guidance, Runtime)
 - [x] MIT licensed. Zero framework dependencies.
 
-## v2.1 (Planned)
+## v1.1 (Planned)
 
 - [ ] `trustLabel()` full implementation (currently stub)
 - [ ] `parseToolCalls()` full implementation (currently stub)
@@ -24,7 +24,7 @@
 - [ ] Custom business rule hot-reload
 - [ ] OpenTelemetry / Prometheus metrics export
 
-## v2.2 (Planned)
+## v1.2 (Planned)
 
 - [ ] Sequence-aware detection — multi-step attack patterns
 - [ ] Audit chain Merkle tree (previous_hash chain verification)
@@ -32,7 +32,7 @@
 - [ ] Training Ground: sandbox evaluation for custom rules
 - [ ] Rule marketplace: community-contributed rule packs
 
-## v3.0 (Future)
+## v2.0 (Future)
 
 - [ ] Multi-Agent coordination (IAGP protocol)
 - [ ] Cross-session correlation (cross-task risk detection)

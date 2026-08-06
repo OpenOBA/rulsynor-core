@@ -19,7 +19,7 @@ export const PROVENANCE = {
   vendor: 'OpenOBA (Shenzhen Miaojing Technology Co., Ltd.)',
 
   /** Build artifact version — MUST match package.json version at build time */
-  version: '2.0.0',
+  version: '1.0.0',
 
   /** Canonical repository reference */
   repository: 'https://github.com/OpenOBA/rulsynor-core',
