@@ -1,9 +1,17 @@
-import { rmSync, cpSync, readdirSync, copyFileSync, mkdirSync } from 'node:fs';
+import { rmSync, cpSync, readdirSync, copyFileSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Clean old dist/rules
-rmSync('dist/rules', { recursive: true, force: true });
-mkdirSync('dist/rules', { recursive: true });
+// Clean old YAML files in dist/rules (preserve tsc-compiled .js/.d.ts)
+if (existsSync('dist/rules')) {
+  const distFiles = readdirSync('dist/rules');
+  for (const f of distFiles) {
+    if (f.endsWith('.erdl.yaml')) {
+      unlinkSync(join('dist/rules', f));
+    }
+  }
+} else {
+  mkdirSync('dist/rules', { recursive: true });
+}
 
 // Copy only .yaml files (not .ts source files)
 const srcDir = 'src/rules';
