@@ -2,7 +2,7 @@
 
 > **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
 >
-> You can hire a genius. Would you give them the keys to your company safe?
+> Trillion-parameter LLMs have made raw intelligence a commodity. But an unsupervised genius can destroy everything you've built.
 
 ```bash
 npm install @rulsynor/core
