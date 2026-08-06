@@ -59,7 +59,7 @@ console.log('Compliance:', do1.compliance_profile.jurisdictions); // → ['CN']
 | **Decision Object** | Every Guard evaluation produces a 25-field, [JCS (RFC 8785)](https://datatracker.ietf.org/doc/rfc8785/) + SHA-256 hashed audit record. Tamper-evident and cross-implementation verifiable. |
 | **14-Regulation Compliance** | Pre-built jurisdiction-aware compliance profiles for EU AI Act, GB/Z 185, NIST AI RMF, COSO 2026, and more. |
 | **GB/Z 185 AID** | OID-prefixed Agent Identity Codes (`1.2.156.3088.1.xxx.xxx.xxxxxxxx`) compliant with China's Agent Interconnection standard. |
-| **Preset Rules** | 3 security rules out of the box: destructive command blocking, system write prevention, SSRF protection. |
+| **Preset Rules** | 32 security rules out of the box: destructive commands, SSRF, SQL injection, path traversal, fork bombs, credential leaks, and more. |
 | **Zero Framework Dependency** | Core engine has zero NestJS/framework dependencies. Use it in any Node.js project. |
 
 ## API Reference
