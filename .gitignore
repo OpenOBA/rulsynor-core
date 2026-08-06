@@ -1,0 +1,7 @@
+dist/
+node_modules/
+coverage/
+.temp-removed*/
+*.tsbuildinfo
+pnpm-lock.yaml
+test/*.bak

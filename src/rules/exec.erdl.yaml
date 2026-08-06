@@ -1,0 +1,17 @@
+# ERDL Rule: Block destructive exec commands
+name: block-destructive-exec
+version: 1
+category: security
+severity: critical
+description: "Block rm -rf, format, and other destructive shell commands"
+when:
+  conditions:
+    - field: "context.tool.name"
+      operator: eq
+      value: "exec"
+    - field: "context.tool.args.command"
+      operator: regex
+      value: "(rm\\s+-rf|shutdown|reboot|mkfs\\.|dd\\s+if=|>\\s*/dev/sda)"
+then:
+  decision: DENY
+  instruction: "Destructive command blocked. Use safe alternatives or request human approval."

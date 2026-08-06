@@ -1,0 +1,51 @@
+{
+  "name": "@rulsynor/core",
+  "version": "2.0.0-alpha.1",
+  "description": "ERDL deterministic Guard engine — open-source Agent runtime with cryptographic audit chain",
+  "license": "MIT",
+  "repository": "https://github.com/OpenOBA/rulsynor-core",
+  "type": "module",
+  "files": [
+    "dist/",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./engine": "./dist/engine/index.js",
+    "./rules": "./dist/rules/index.js",
+    "./provenance": "./dist/provenance.js",
+    "./compliance": "./dist/compliance/index.js",
+    "./guard": "./dist/guard/index.js",
+    "./preflight": "./dist/preflight/index.js",
+    "./guidance": "./dist/guidance/index.js",
+    "./runtime": "./dist/runtime.js",
+    "./playground": "./dist/playground.js"
+  },
+  "bin": {
+    "rulsynor-playground": "./dist/playground.js"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/copy-rules.mjs",
+    "dev": "tsc --watch",
+    "test": "jest --passWithNoTests",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "json-canonicalize": "^1.0.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.0"
+  },
+  "keywords": ["erdl","agent","guard","audit","decision-object","rulsynor","openoba","gbz-185","eu-ai-act","compliance"],
+  "engines": { "node": ">=20.0.0" }
+}
