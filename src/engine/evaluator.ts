@@ -11,7 +11,8 @@
  */
 
 import { GuardStateManager } from './guard-state-manager.js';
-import { findFirstMatchingRule } from './static-rule-tree.js';
+import { sortRulesByRingAndPriority, evaluateConditionGroup } from './static-rule-tree.js';
+import { evaluateCondition } from './runtime-evaluator.js';
 
 /** 评估上下文 */
 export interface EvalContext {
@@ -22,7 +23,7 @@ export interface EvalContext {
   [key: string]: unknown;
 }
 
-/** ���配条件 */
+/** 匹配条件 */
 export interface MatchCondition {
   field: string;
   operator: string;
@@ -58,9 +59,9 @@ export interface EvalResult {
 /**
  * Evaluator — 规则评估引擎（编排层）
  *
- * 组合 StaticRuleTree + RuntimeEvaluator + GuardStateManager。
- * 按 Ring+Priority 排序规则，first-match-wins。
- * 无规则匹配 → ALLOW（默认放行）。
+ * Ring+Priority 排序后 first-match-wins。
+ * within/rate 条件仅做只读查询（不写），避免副作用污染计数器。
+ * 时序计数器由调用方在 actionTaken='allowed' 后通过 commitTemporal 提交。
  */
 export class Evaluator {
   private stateManager: GuardStateManager;
@@ -72,56 +73,99 @@ export class Evaluator {
   /**
    * 评估 tool_call 是否通过所有规则
    *
-   * 对齐 SPEC §3.3 within/rate：评估前先检查有状态 operator。
-   * within 跨步窗口追踪由 GuardStateManager 管理。
+   * Ring+Priority 排序后 first-match-wins。
+   * within/rate 仅查询（不写），避免 DENY 污染计数器。
    */
   evaluate(context: EvalContext, rules: CompiledRule[]): EvalResult {
-    // Pre-check: 对含有 within/rate 条件的规则，先检查状态窗口
-    for (const rule of rules) {
+    const sorted = sortRulesByRingAndPriority(rules);
+
+    for (const rule of sorted) {
       if (!rule.enabled) continue;
+
+      // Separate temporal (within/rate) from stateless conditions
       const temporalConditions = rule.conditions.filter(
         c => c.operator === 'within' || c.operator === 'rate',
       );
-      if (temporalConditions.length === 0) continue;
+      const statelessConditions = rule.conditions.filter(
+        c => c.operator !== 'within' && c.operator !== 'rate',
+      );
 
-      for (const c of temporalConditions) {
-        if (c.operator === 'within' && typeof c.value === 'number') {
-          const windowMs = c.windowMs || 60000;
-          const limit = c.value as number;
-          // Key includes the actual tool name so different tools have independent counters
-          const withinKey = `${rule.id}:${context.toolName}`;
-          const count = this.stateManager.recordWithin(withinKey, windowMs);
-          if (count > limit) {
-            return {
-              decision: rule.decision,
-              reason: `${rule.reason} (within: ${count}/${limit})`,
-              matchedRuleId: rule.id,
-              matchedRuleName: rule.name,
-              severity: rule.severity || 'HIGH',
-              ring: rule.ring,
-            };
+      // 1. Evaluate stateless conditions first (no side effects)
+      if (statelessConditions.length > 0) {
+        const matched = evaluateConditionGroup(statelessConditions, rule.conditionLogic, context);
+        if (!matched) continue;
+      }
+
+      // 2. Read-only temporal check (query, do NOT write)
+      if (temporalConditions.length > 0) {
+        for (const c of temporalConditions) {
+          if (c.operator === 'within' && typeof c.value === 'number') {
+            const windowMs = c.windowMs || 60000;
+            const limit = c.value as number;
+            const withinKey = `${rule.id}:${context.toolName}`;
+            const count = this.stateManager.getWithinCount(withinKey, windowMs);
+            if (count >= limit) {
+              return {
+                decision: rule.decision,
+                reason: `${rule.reason} (within: ${count}/${limit})`,
+                matchedRuleId: rule.id,
+                matchedRuleName: rule.name,
+                severity: rule.severity || 'HIGH',
+                ring: rule.ring,
+              };
+            }
           }
-        }
-        if (c.operator === 'rate' && typeof c.value === 'number') {
-          const windowMs = c.windowMs || 60000;
-          const limit = c.value as number;
-          const rateKey = `${rule.id}:${context.toolName}`;
-          const count = this.stateManager.recordRate(rateKey, windowMs);
-          if (count > limit) {
-            return {
-              decision: rule.decision,
-              reason: `${rule.reason} (rate: ${count}/${limit})`,
-              matchedRuleId: rule.id,
-              matchedRuleName: rule.name,
-              severity: rule.severity || 'HIGH',
-              ring: rule.ring,
-            };
+          if (c.operator === 'rate' && typeof c.value === 'number') {
+            const windowMs = c.windowMs || 60000;
+            const limit = c.value as number;
+            const rateKey = `${rule.id}:${context.toolName}`;
+            const count = this.stateManager.getRateCount(rateKey);
+            if (count >= limit) {
+              return {
+                decision: rule.decision,
+                reason: `${rule.reason} (rate: ${count}/${limit})`,
+                matchedRuleId: rule.id,
+                matchedRuleName: rule.name,
+                severity: rule.severity || 'HIGH',
+                ring: rule.ring,
+              };
+            }
           }
         }
       }
+
+      // Rule matched (all conditions passed)
+      return {
+        decision: rule.decision,
+        reason: rule.reason,
+        matchedRuleId: rule.id,
+        matchedRuleName: rule.name,
+        severity: rule.severity || 'LOW',
+        ring: rule.ring,
+      };
     }
 
-    // Standard evaluation: first-match-wins on stateless conditions
-    return findFirstMatchingRule(rules, context);
+    return {
+      decision: 'ALLOW',
+      reason: 'No rules matched — default ALLOW',
+    };
+  }
+
+  /**
+   * 提交时序计数器（调用方在 actionTaken='allowed' 后调用）
+   */
+  commitTemporal(context: EvalContext, matchedRules: CompiledRule[]): void {
+    const sorted = sortRulesByRingAndPriority(matchedRules);
+    for (const rule of sorted) {
+      const temporal = rule.conditions.filter(c => c.operator === 'within' || c.operator === 'rate');
+      for (const c of temporal) {
+        if (c.operator === 'within' && typeof c.value === 'number') {
+          this.stateManager.recordWithin(`${rule.id}:${context.toolName}`, c.windowMs || 60000);
+        }
+        if (c.operator === 'rate' && typeof c.value === 'number') {
+          this.stateManager.recordRate(`${rule.id}:${context.toolName}`, c.windowMs || 60000);
+        }
+      }
+    }
   }
 }

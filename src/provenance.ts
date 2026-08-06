@@ -38,14 +38,15 @@ export const PROVENANCE = {
     'English-language interface only; Chinese UI planned for V2.0',
     'Decision Object signature is a placeholder until ECDSA key infrastructure is deployed (Phase 2)',
     'AID is self-generated using OID prefix 1.2.156.3088; not yet registered with an external registration authority',
+    'Algorithm filing with China CAC not yet completed; algorithmFilingNo and modelRegistrationId are explicitly NOT_FILED',
   ],
 
-  /** Algorithm filing number (China CAC algorithm registration) */
-  algorithmFilingNo: 'NET-2026-000000',
+  /** Algorithm filing number (China CAC algorithm registration) — NOT_FILED until filing is complete */
+  algorithmFilingNo: 'NOT_FILED',
 
   /** GB/Z 185 Part 2 — OID prefix for AID generation */
   aidOidPrefix: '1.2.156.3088',
 
-  /** Model registration ID placeholder (China CAC model launch filing) */
-  modelRegistrationId: 'MR-2026-000000',
+  /** Model registration ID (China CAC model launch filing) — NOT_FILED until registration is complete */
+  modelRegistrationId: 'NOT_FILED',
 } as const;

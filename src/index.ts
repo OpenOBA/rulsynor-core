@@ -1,4 +1,4 @@
-export { Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, OpSemRegistry, GuardStateManager } from './engine/index.js';
+export { Evaluator, SafeExprEvaluator, ERDLFnRegistry, GuardStateManager } from './engine/index.js';
 export type { RuleDefinition, RuleMatch, CompiledRule, MatchCondition, EvalContext, EvalResult } from './engine/index.js';
 export { buildDecisionObject, generateAID } from './guard/index.js';
 export { getComplianceProfile } from './compliance/index.js';

@@ -12,8 +12,17 @@
 
 import { createHash } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import * as yaml from 'js-yaml';
+import { safeRegExp } from './safe-regex.js';
+
+/** Resolve path relative to this file.
+ * Uses `import.meta.dirname` (Node 21+) or falls back to `import.meta.url`. */
+function resolveRelative(relativePath: string): string {
+  // @ts-ignore TS1343 — import.meta.url is valid in ESM (module: nodenext)
+  const baseDir = dirname(new URL(import.meta.url).pathname);
+  return join(baseDir, relativePath);
+}
 import {
   RuleCompiler,
   CompiledRuleSet,
@@ -123,7 +132,7 @@ export class RuleCompilerImpl implements RuleCompiler {
 
     // Load vectors from erdl-vectors v1.3 if not provided
     if (!vectors || !vectors.vectors || vectors.vectors.length === 0) {
-      const vectorsPath = join(__dirname, '..', 'decision-object-vectors-v1.3.json');
+      const vectorsPath = resolveRelative('../decision-object-vectors-v1.3.json');
       if (existsSync(vectorsPath)) {
         vectors = JSON.parse(readFileSync(vectorsPath, 'utf-8'));
       }
@@ -606,7 +615,7 @@ export class RuleCompilerImpl implements RuleCompiler {
       case 'contains': return typeof fieldValue === 'string' && typeof value === 'string' && fieldValue.includes(value);
       case 'match': case 'matches':
         if (typeof fieldValue !== 'string' || typeof value !== 'string') return false;
-        try { return new RegExp(value).test(fieldValue); } catch { return false; }
+        try { return safeRegExp(value).test(fieldValue); } catch { return false; }
       case 'exists': return fieldValue !== undefined && fieldValue !== null;
       case 'gt': return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue > value;
       case 'gte': return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue >= value;

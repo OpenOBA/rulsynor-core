@@ -16,7 +16,7 @@
 
 import { Evaluator } from './evaluator.js';
 import { GuardStateManager } from './guard-state-manager.js';
-import { VirtualClock } from './clock.js';
+import { SystemClock } from './clock.js';
 import type { CompiledRule, EvalContext, EvalResult } from './evaluator.js';
 
 /**
@@ -142,7 +142,7 @@ export class EvaluatorAdapter {
   private readonly engine: Evaluator;
 
   constructor() {
-    const clock = new VirtualClock();
+    const clock = new SystemClock();
     const stateManager = new GuardStateManager(clock);
     this.engine = new Evaluator(stateManager);
   }

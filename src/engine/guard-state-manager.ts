@@ -5,7 +5,7 @@
  * Phase 0 从 evaluator.ts 提取为独立类，支持热更新保守冻结。
  */
 
-import { Clock, VirtualClock } from './clock.js';
+import { Clock, SystemClock, VirtualClock } from './clock.js';
 
 /** 时间窗口计数器 */
 interface WindowCounter {
@@ -32,7 +32,7 @@ export class GuardStateManager {
   private clock: Clock;
   private freezeWindowMs: number;
 
-  constructor(clock: Clock = new VirtualClock(), freezeWindowMs: number = 60000) {
+  constructor(clock: Clock = new SystemClock(), freezeWindowMs: number = 60000) {
     this.clock = clock;
     this.freezeWindowMs = freezeWindowMs;
   }

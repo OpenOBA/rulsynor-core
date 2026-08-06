@@ -8,6 +8,7 @@
  */
 
 import { MatchCondition, EvalContext } from './evaluator.js';
+import { safeRegExp } from './safe-regex.js';
 
 /** 评估单个 operator 条件 */
 export function evaluateCondition(
@@ -71,7 +72,7 @@ export function evaluateCondition(
     case 'matches':
       if (typeof fieldValue !== 'string' || typeof value !== 'string') return false;
       try {
-        return new RegExp(value).test(fieldValue);
+        return safeRegExp(value).test(fieldValue);
       } catch {
         return false;
       }

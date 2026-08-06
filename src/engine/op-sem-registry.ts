@@ -18,6 +18,14 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as yaml from 'js-yaml'
 
+/** Resolve path relative to this file.
+ * Uses `import.meta.dirname` (Node 21+) or falls back to `import.meta.url`. */
+function resolveRelative(relativePath: string): string {
+  // @ts-ignore TS1343 — import.meta.url is valid in ESM (module: nodenext)
+  const baseDir = path.dirname(new URL(import.meta.url).pathname);
+  return path.resolve(baseDir, relativePath);
+}
+
 // ── Type definitions ──
 
 export type OpSemCode = 'OP_READ' | 'OP_WRITE' | 'OP_DELETE' | 'OP_EXEC' | 'OP_NETWORK' | 'OP_MEMORY'
@@ -60,7 +68,7 @@ export class OpSemRegistry {
 
   /** Load registry from YAML file */
   load(yamlPath?: string): void {
-    const defaultPath = path.resolve(__dirname, 'op-sem-registry.yaml')
+    const defaultPath = resolveRelative('op-sem-registry.yaml')
     const filePath = yamlPath ?? defaultPath
 
     if (!fs.existsSync(filePath)) {

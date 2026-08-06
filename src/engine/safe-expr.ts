@@ -8,6 +8,10 @@
  */
 
 import { SafeExpr, RuleCondition } from './types.js';
+import { safeRegExp } from './safe-regex.js';
+
+/** AST depth limit to prevent stack-overflow DoS */
+const MAX_AST_DEPTH = 50;
 
 /**
  * SafeExprEvaluator — 在上下文中评估 SafeExpr AST
@@ -21,7 +25,10 @@ export class SafeExprEvaluator {
    * @throws 当 operator 未知时抛出错误
    * @throws 当类型不匹配时（如 gt 用于 string）抛出错误
    */
-  evaluate(expr: SafeExpr, context: Record<string, unknown>): boolean {
+  evaluate(expr: SafeExpr, context: Record<string, unknown>, depth: number = 0): boolean {
+    if (depth > MAX_AST_DEPTH) {
+      throw new Error(`SafeExprEvaluator: AST depth exceeded ${MAX_AST_DEPTH} (potential DoS)`);
+    }
     const { type, args } = expr;
 
     switch (type) {
@@ -68,11 +75,11 @@ export class SafeExprEvaluator {
       case 'ends_with':
         return this.evalEndsWith(args, context);
       case 'and':
-        return this.evalAnd(args, context);
+        return this.evalAnd(args, context, depth);
       case 'or':
-        return this.evalOr(args, context);
+        return this.evalOr(args, context, depth);
       case 'not':
-        return this.evalNot(args, context);
+        return this.evalNot(args, context, depth);
       default:
         throw new Error(`SafeExprEvaluator: unknown operator '${type}'`);
     }
@@ -149,7 +156,7 @@ export class SafeExprEvaluator {
     if (typeof right !== 'string') {
       throw new Error(`SafeExprEvaluator: 'match' operator requires string pattern as right operand, got ${typeof right}`);
     }
-    const regex = new RegExp(right);
+    const regex = safeRegExp(right);
     return regex.test(left);
   }
 
@@ -209,35 +216,35 @@ export class SafeExprEvaluator {
 
   // ─── 逻辑操作符 ───────────────────────────────────────────────
 
-  private evalAnd(args: unknown[], context: Record<string, unknown>): boolean {
+  private evalAnd(args: unknown[], context: Record<string, unknown>, depth: number): boolean {
     if (args.length < 2) {
       throw new Error(`SafeExprEvaluator: 'and' operator requires at least 2 arguments`);
     }
     for (const arg of args) {
-      if (!this.evaluate(arg as SafeExpr, context)) {
+      if (!this.evaluate(arg as SafeExpr, context, depth + 1)) {
         return false;
       }
     }
     return true;
   }
 
-  private evalOr(args: unknown[], context: Record<string, unknown>): boolean {
+  private evalOr(args: unknown[], context: Record<string, unknown>, depth: number): boolean {
     if (args.length < 2) {
       throw new Error(`SafeExprEvaluator: 'or' operator requires at least 2 arguments`);
     }
     for (const arg of args) {
-      if (this.evaluate(arg as SafeExpr, context)) {
+      if (this.evaluate(arg as SafeExpr, context, depth + 1)) {
         return true;
       }
     }
     return false;
   }
 
-  private evalNot(args: unknown[], context: Record<string, unknown>): boolean {
+  private evalNot(args: unknown[], context: Record<string, unknown>, depth: number): boolean {
     if (args.length < 1) {
       throw new Error(`SafeExprEvaluator: 'not' operator requires at least 1 argument`);
     }
-    return !this.evaluate(args[0] as SafeExpr, context);
+    return !this.evaluate(args[0] as SafeExpr, context, depth + 1);
   }
 
   // ─── 辅助方法 ─────────────────────────────────────────────────

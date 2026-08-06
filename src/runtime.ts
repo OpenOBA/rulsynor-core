@@ -14,7 +14,7 @@
  *   });
  */
 
-import { Evaluator } from './engine/evaluator.js';
+import { Evaluator, type CompiledRule } from './engine/evaluator.js';
 import { buildDecisionObject } from './guard/index.js';
 
 export interface RuntimeOptions {
@@ -22,7 +22,9 @@ export interface RuntimeOptions {
   llm: (messages: LLMMessage[]) => Promise<LLMResponse>;
   /** ERDL rule evaluator */
   evaluator: Evaluator;
-  /** Rules to evaluate against tool calls */
+  /** Compiled rules for Guard evaluation (actual enforcement) */
+  compiledRules: CompiledRule[];
+  /** Rule metadata for Decision Object (name/version only) */
   rules: Array<{ name: string; version: number }>;
   /** Tool executors */
   tools: Record<string, ToolExecutor>;
@@ -99,8 +101,9 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         agentId,
       };
 
-      // Guard evaluation
-      const evalResult = evaluator.evaluate(ctx as any, []);
+      // Guard evaluation — uses compiled rules for actual enforcement
+      const evalStart = performance.now();
+      const evalResult = evaluator.evaluate(ctx, opts.compiledRules);
 
       // Build DO
       const do1 = buildDecisionObject({
@@ -112,7 +115,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         totalEvaluated: rules.length,
         totalMatched: evalResult.matchedRuleId ? 1 : 0,
         rules,
-        evaluationDurationMs: 5,
+        evaluationDurationMs: Math.round(performance.now() - evalStart),
       });
 
       const auditHash = (do1 as any).audit.hash;

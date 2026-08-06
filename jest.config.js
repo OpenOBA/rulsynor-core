@@ -10,7 +10,8 @@ export default {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
       useESM: true,
-      tsconfig: { module: 'nodenext', moduleResolution: 'nodenext' },
+      tsconfig: { module: 'nodenext', moduleResolution: 'nodenext', target: 'ES2022', lib: ['ES2022'] },
+      diagnostics: { ignoreCodes: ['TS151002', 'TS1343'] },
     }],
   },
 };
