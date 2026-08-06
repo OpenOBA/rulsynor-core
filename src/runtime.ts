@@ -15,7 +15,6 @@
  */
 
 import { Evaluator } from './engine/evaluator.js';
-import { GuardStateManager } from './engine/guard-state-manager.js';
 import { buildDecisionObject } from './guard/index.js';
 
 export interface RuntimeOptions {

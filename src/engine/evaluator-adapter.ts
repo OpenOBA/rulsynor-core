@@ -17,7 +17,7 @@
 import { Evaluator } from './evaluator.js';
 import { GuardStateManager } from './guard-state-manager.js';
 import { VirtualClock } from './clock.js';
-import type { CompiledRule, MatchCondition, EvalContext, EvalResult } from './evaluator.js';
+import type { CompiledRule, EvalContext, EvalResult } from './evaluator.js';
 
 /**
  * Legacy-compatible evaluation result (mirrors repos/rulsynor EvaluationResult)

@@ -314,7 +314,8 @@ export class RuleCompilerImpl implements RuleCompiler {
 
     // Golden Test 1: Empty rule set → ALLOW
     const emptyResult = this.compile({ protocol: 'erdl/v1', version: '1.0', metadata: {}, rules: [] });
-    tests.push({ id: 'GOLDEN-01', name: 'empty set yields default ALLOW', passed: true });
+    const emptyPassed = emptyResult.guardDirectives.length === 0;
+    tests.push({ id: 'GOLDEN-01', name: 'empty set yields default ALLOW', passed: emptyPassed });
 
     // Golden Test 2: Single DENY rule on exec → DENY
     const denyRule: RuleDefinition = {
@@ -394,7 +395,7 @@ export class RuleCompilerImpl implements RuleCompiler {
     const hash = createHash('sha256').update(JSON.stringify([denyRule, allowRule])).digest('hex');
     tests.push({ id: 'GOLDEN-10', name: 'source hash computed', passed: hash.length === 64 });
 
-    const failed = tests.filter((t: any) => !t.passed).length;
+    const failed = tests.filter((t: unknown) => !(t as { passed: boolean }).passed).length;
     return { passed: tests.length - failed, failed, total: tests.length, tests };
   }
 
@@ -655,16 +656,6 @@ export class RuleCompilerImpl implements RuleCompiler {
         auditAs: rule.then || 'ALLOW',
         unlessAudit: null,
       }));
-  }
-
-  private compileAuditTemplate(rule: RuleDefinition): AuditTemplate {
-    return {
-      ruleId: rule.id,
-      decisionType: rule.then || 'ALLOW',
-      severity: CATEGORY_SEVERITY[rule.category] || 'medium',
-      auditAs: rule.then || 'ALLOW',
-      unlessAudit: null,
-    };
   }
 
   /**
