@@ -89,7 +89,7 @@ console.log(record.agent.aid);   // → 1.2.156.3088.1... (has credentials)
 | Human Professionalism | Mapped to Agent |
 |------|------|
 | Onboarding training | **32 preset rules + YAML custom business rules** — hard constraints compiled into the engine, not a "please behave" note in a prompt |
-| Certified and badged | **GB/Z 185 standard Agent Identity Code** — unique, verifiable employee ID |
+| Certified and badged | **Agent Identity Code (AID)** — customizable identity system, compatible with GB/Z 185 OID format. Enterprises define their own namespace or reference third-party certificate authorities |
 | Documented actions | **JCS+SHA-256 cryptographic audit records** — 25-field Decision Object. Tamper with it, and the hash breaks. Third-party verifiable with no SDK |
 | Learns from mistakes | **CORRECT feedback loop + Navigation Guide** — DENY is not the end. Tells the Agent why, how to fix, and what alternative to use. 3 auto-retry rounds before escalating to a human |
 | Regulatory awareness | **4 regulations × 4 jurisdictions** — EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI. Jurisdiction-aware, auto-activated compliance fields |
