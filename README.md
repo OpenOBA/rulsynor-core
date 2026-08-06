@@ -1,8 +1,14 @@
 # @rulsynor/core
 
 > **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
->
-> Give your Agent a rulebook. Let it work with confidence. Every action documented, every decision provable.
+
+**rulsynor-core** is the core framework of **rulsynor** — the Professional Digital Employee, built on **OpenOBA**, the Digital Intelligence Resource Platform.
+
+- **OpenOBA**: 数字智力资源平台 — the platform
+- **rulsynor**: 职业化数字员工 — the product
+- **rulsynor-core**: 职业化数字员工核心框架 — this package
+
+Give your Agent a rulebook. Let it work with confidence. Every action documented, every decision provable.
 
 ```bash
 npm install @rulsynor/core

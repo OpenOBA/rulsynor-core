@@ -1,7 +1,11 @@
 /**
  * Provenance — immutable product watermark.
  *
- * These constants identify the Rulsynor Agent Engine in every Decision Object,
+ * OpenOBA: 数字智力资源平台 (Digital Intelligence Resource Platform)
+ * rulsynor: 职业化数字员工 (Professional Digital Employee)
+ * rulsynor-core: 职业化数字员工核心框架 (Professional Digital Employee Core Framework)
+ *
+ * These constants identify the rulsynor engine in every Decision Object,
  * satisfying EU AI Act Art.50(2) transparency and GB/Z 185 Part 2 identity
  * requirements. All values enter the JCS preimage and are cryptographically
  * protected by the audit hash chain.
@@ -12,8 +16,14 @@
  */
 
 export const PROVENANCE = {
-  /** Product name — appears in DO agent sub-fields and SSE watermark */
-  product: 'Rulsynor Agent Engine',
+  /** Platform name */
+  platform: 'OpenOBA',
+
+  /** Product name — 职业化数字员工 */
+  product: 'rulsynor',
+
+  /** Package — 职业化数字员工核心框架 */
+  package: 'rulsynor-core',
 
   /** Vendor / legal entity */
   vendor: 'OpenOBA (Shenzhen Miaojing Technology Co., Ltd.)',

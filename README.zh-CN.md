@@ -1,8 +1,14 @@
 # @rulsynor/core
 
 > **大模型厂商交付超群智商，我们交付恪守职业操守的数字员工。**
->
-> 给 Agent 一本规则手册。放手让它干活。每一步都经得起审计。
+
+**rulsynor-core** 是 **rulsynor**（职业化数字员工）的核心框架，构建于 **OpenOBA**（数字智力资源平台）之上。
+
+- **OpenOBA**：数字智力资源平台
+- **rulsynor**：职业化数字员工
+- **rulsynor-core**：职业化数字员工核心框架（本包）
+
+给 Agent 一本规则手册。放手让它干活。每一步都经得起审计。
 
 ```bash
 npm install @rulsynor/core
