@@ -44,13 +44,13 @@ npx @rulsynor/core --tool=exec --cmd="rm -rf /"
 ```
 
 ```
-📋 Trained: 32 rules loaded
-🛡️ Decision: DENY
-📝 Reason: Dangerous command. Not your fault — this command should never run.
-🧾 Recorded: sha256:d72a... (tamper-evident)
-🪪 Employee ID: 1.2.156.3088.1.000001.000001.7521ba66
+📋 Trained:    32 rules loaded
+🛡️  Decision:   DENY
+📝 Reason:     Destructive command blocked. Use safe alternatives or request human approval.
+🧾 Recorded:   sha256:18ce857657f61beff08ac0ffc8f6cb09a7e64cb0c0c772f1a55c02dccaa1e882 (tamper-evident)
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.28027273
 📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
-🧭 Alternative: Use the read tool instead — safer, and gets you what you need.
+🧭 Alternative: Use the read tool to inspect the target first, or request explicit human approval before any destructive command.
 ```
 
 **Not "no." — "Not like this. But here's how."**
@@ -58,30 +58,55 @@ npx @rulsynor/core --tool=exec --cmd="rm -rf /"
 ## 10 Lines to Give Your Agent a Professional Baseline
 
 ```typescript
-import { Evaluator, GuardStateManager, buildDecisionObject, loadPresetRules, toERDLRuleSet } from '@rulsynor/core';
+import {
+  Evaluator,
+  GuardStateManager,
+  buildDecisionObject,
+  loadPresetRules,
+  toCompiledRules,
+} from '@rulsynor/core';
 
-// Train
-const rules = toERDLRuleSet(loadPresetRules());
+// Train: compile the bundled preset rules into the shape the engine consumes.
+const rules = toCompiledRules(loadPresetRules());
 
-// Deploy
+// Deploy: evaluate the tool call *before* it runs.
 const evaluator = new Evaluator(new GuardStateManager());
-const decision = evaluator.evaluate(rules, {
-  toolName: 'exec', toolArgs: { command: 'rm -rf /' },
-  sessionId: 's1', agentId: 'my-agent',
-});
+const decision = evaluator.evaluate(
+  {
+    toolName: 'exec',
+    toolArgs: { command: 'rm -rf /' },
+    sessionId: 's1',
+    agentId: 'my-agent',
+  },
+  rules,
+);
 
-// Record
+// Record: build a tamper-evident Decision Object.
 const record = buildDecisionObject({
-  input: { runId: 'r1', step: 0, toolName: 'exec', toolArgs: { command: 'rm -rf /' },
-           context: {}, agentId: 'my-agent', sessionId: 's1' },
-  decision: decision.decision, actionTaken: 'blocked', reason: decision.reason,
-  matchedRules: [], totalEvaluated: 1, totalMatched: 0,
-  rules: [], evaluationDurationMs: 5,
+  input: {
+    runId: 'r1',
+    step: 0,
+    toolName: 'exec',
+    toolArgs: { command: 'rm -rf /' },
+    context: {},
+    agentId: 'my-agent',
+    sessionId: 's1',
+  },
+  decision: decision.decision,
+  actionTaken: decision.decision === 'DENY' ? 'blocked' : 'allowed',
+  reason: decision.reason,
+  matchedRules: decision.matchedRuleId
+    ? [{ ruleId: decision.matchedRuleId, decision: decision.decision, reason: decision.reason }]
+    : [],
+  totalEvaluated: rules.length,
+  totalMatched: decision.matchedRuleId ? 1 : 0,
+  rules: rules.map((r) => ({ name: r.name, version: 1 })),
+  evaluationDurationMs: 0,
 });
 
-console.log(decision);           // → DENY (has boundaries)
-console.log(record.audit.hash);  // → sha256:a1b2c3... (has proof)
-console.log(record.agent.aid);   // → 1.2.156.3088.1... (has credentials)
+console.log(decision.decision);          // → DENY (has boundaries)
+console.log(record.audit.hash);          // → sha256:... (has proof)
+console.log(record.agent.aid);           // → 1.2.156.3088.1... (has credentials)
 ```
 
 ## The Infrastructure of Professional Integrity

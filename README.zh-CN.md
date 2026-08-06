@@ -46,13 +46,13 @@ npx @rulsynor/core --tool=exec --cmd="rm -rf /"
 ```
 
 ```
-📋 已培训：32 条岗位规则
-🛡️ 拒绝执行
-📝 原因：危险命令。这不是你做错了，是这条命令本身就不该被执行。
-🧾 操作留痕：sha256:d72a...（不可篡改）
-🪪 执行者：工号 1.2.156.3088.1.000001.000001.7521ba66
-📊 合规辖区：CN（符合 GB/Z 185-2026 标准）
-🧭 替代建议：使用 read 工具代替 exec，安全且能满足你的需求
+📋 已培训：    32 条岗位规则
+🛡️  决策：     DENY
+📝 原因：      Destructive command blocked. Use safe alternatives or request human approval.
+🧾 操作留痕：  sha256:18ce857657f61beff08ac0ffc8f6cb09a7e64cb0c0c772f1a55c02dccaa1e882（不可篡改）
+🪪 执行者：    工号 1.2.156.3088.1.000001.000001.28027273
+📊 合规辖区：  CN（符合 GB/Z 185-2026 标准）
+🧭 替代建议：  Use the read tool to inspect the target first, or request explicit human approval before any destructive command.
 ```
 
 **不是"不行"。是"这样不行，但这个可以。"**
@@ -60,35 +60,55 @@ npx @rulsynor/core --tool=exec --cmd="rm -rf /"
 ## 10 行代码，给你的 Agent 一个职业底线
 
 ```typescript
-import { Evaluator, GuardStateManager, buildDecisionObject, loadPresetRules, toERDLRuleSet } from '@rulsynor/core';
+import {
+  Evaluator,
+  GuardStateManager,
+  buildDecisionObject,
+  loadPresetRules,
+  toCompiledRules,
+} from '@rulsynor/core';
 
-// 培训
-const rules = toERDLRuleSet(loadPresetRules());
+// 培训：将内置岗位规则编译成引擎可直接消费的结构。
+const rules = toCompiledRules(loadPresetRules());
 
-// 上岗
+// 上岗：在工具真正执行前，先让规则引擎评估。
 const evaluator = new Evaluator(new GuardStateManager());
-const decision = evaluator.evaluate(rules, {
-  toolName: 'exec',
-  toolArgs: { command: 'rm -rf /' },
-  sessionId: 'session-1',
-  agentId: 'my-agent',
-});
+const decision = evaluator.evaluate(
+  {
+    toolName: 'exec',
+    toolArgs: { command: 'rm -rf /' },
+    sessionId: 'session-1',
+    agentId: 'my-agent',
+  },
+  rules,
+);
 
-// 留痕
+// 留痕：构建不可篡改的决策对象。
 const record = buildDecisionObject({
-  input: { runId: 'r1', step: 0, toolName: 'exec', toolArgs: { command: 'rm -rf /' },
-           context: {}, agentId: 'my-agent', sessionId: 's1' },
+  input: {
+    runId: 'r1',
+    step: 0,
+    toolName: 'exec',
+    toolArgs: { command: 'rm -rf /' },
+    context: {},
+    agentId: 'my-agent',
+    sessionId: 'session-1',
+  },
   decision: decision.decision,
-  actionTaken: 'blocked',
+  actionTaken: decision.decision === 'DENY' ? 'blocked' : 'allowed',
   reason: decision.reason,
-  matchedRules: [],
-  totalEvaluated: 1, totalMatched: 0,
-  rules: [], evaluationDurationMs: 5,
+  matchedRules: decision.matchedRuleId
+    ? [{ ruleId: decision.matchedRuleId, decision: decision.decision, reason: decision.reason }]
+    : [],
+  totalEvaluated: rules.length,
+  totalMatched: decision.matchedRuleId ? 1 : 0,
+  rules: rules.map((r) => ({ name: r.name, version: 1 })),
+  evaluationDurationMs: 0,
 });
 
-console.log(decision);           // → DENY（有底线）
-console.log(record.audit.hash);  // → sha256:a1b2c3...（有据可查）
-console.log(record.agent.aid);   // → 1.2.156.3088.1...（有工号）
+console.log(decision.decision);          // → DENY（有底线）
+console.log(record.audit.hash);          // → sha256:...（有据可查）
+console.log(record.agent.aid);           // → 1.2.156.3088.1...（有工号）
 ```
 
 ## 职业道德基础设施
@@ -110,7 +130,7 @@ console.log(record.agent.aid);   // → 1.2.156.3088.1...（有工号）
 
 这不是功能差异。这是价值观差异。
 
-## 谁在用
+## 开始使用
 
 ```bash
 npm install @rulsynor/core

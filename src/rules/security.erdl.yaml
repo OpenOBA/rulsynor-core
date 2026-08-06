@@ -35,6 +35,7 @@ when:
 then:
   decision: DENY
   instruction: "Destructive command blocked. Use safe alternatives or request human approval."
+  alternative: "Use the read tool to inspect the target first, or request explicit human approval before any destructive command."
 ---
 # ERDL Rule: Block fork bomb pattern (Ring 0)
 name: block-fork-bomb
@@ -75,6 +76,7 @@ when:
 then:
   decision: DENY
   instruction: "System file write blocked. Use application directory only."
+  alternative: "Write to your application's working directory (e.g. /var/app/) instead of system paths like /etc, /sys, or /proc."
 ---
 # ERDL Rule: Block writes to dot-files (Ring 1)
 name: block-dotfile-writes
@@ -95,6 +97,7 @@ when:
 then:
   decision: DENY
   instruction: "Write to sensitive dot-file blocked. Review and approve manually."
+  alternative: "Store secrets in a secrets manager or environment injection, not in dot-files under version control."
 ---
 # ERDL Rule: Block SSRF (internal IP requests) (Ring 0)
 name: block-ssrf
@@ -115,6 +118,7 @@ when:
 then:
   decision: DENY
   instruction: "SSRF blocked. Internal IP / metadata endpoint access denied."
+  alternative: "Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata endpoint."
 ---
 # ERDL Rule: Block HTTP to non-standard ports (Ring 1)
 name: block-nonstandard-ports
@@ -212,7 +216,7 @@ when:
       operator: eq
       value: "write_file"
     - field: "context.tool.args.content"
-      operator: gt
+      operator: length_gt
       value: 10485760
 then:
   decision: DENY
@@ -295,6 +299,7 @@ when:
 then:
   decision: CORRECT
   instruction: "Change path from /etc/ to /var/app/. System paths are read-only."
+  correction: "Rewrite the write target to /var/app/ (or another application-owned directory) instead of /etc/."
 ---
 # ERDL Rule: Block multi-line command injection (Ring 0)
 name: block-multiline-cmd
@@ -363,3 +368,73 @@ when:
 then:
   decision: DENY
   instruction: "chmod 777 blocked. Use minimum required permissions."
+
+---
+# ERDL Rule: Block destructive DROP statements (Ring 0)
+name: block-sql-drop
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 885
+description: "Block DROP TABLE / DROP DATABASE statements in any tool argument"
+when:
+  conditions:
+    - field: "context.tool.args.command"
+      operator: contains
+      value: "DROP TABLE"
+    - field: "context.tool.args.command"
+      operator: contains
+      value: "DROP DATABASE"
+    - field: "context.tool.args.url"
+      operator: contains
+      value: "DROP TABLE"
+    - field: "context.tool.args.content"
+      operator: contains
+      value: "DROP TABLE"
+    - field: "context.tool.args.content"
+      operator: contains
+      value: "DROP DATABASE"
+  conditionLogic: "OR"
+then:
+  decision: DENY
+  instruction: "Destructive DROP statement blocked. Use archived/soft-delete instead."
+
+---
+# ERDL Rule: Block privileged container execution (Ring 0)
+name: block-docker-privileged
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 860
+description: "Block docker run with --privileged (host-level escalation)"
+when:
+  conditions:
+    - field: "context.tool.args.command"
+      operator: contains
+      value: "docker run"
+    - field: "context.tool.args.command"
+      operator: contains
+      value: "--privileged"
+then:
+  decision: DENY
+  instruction: "Privileged container execution blocked. Use a least-privilege container profile."
+
+---
+# ERDL Rule: Block pipe-to-shell download (Ring 1)
+name: block-curl-pipe-shell
+version: 1
+category: security
+severity: high
+ring: 1
+priority: 680
+description: "Block piping a remote download straight into a shell (curl|sh, wget|bash)"
+when:
+  conditions:
+    - field: "context.tool.args.command"
+      operator: matches
+      value: "(curl|wget).*\\|.*(sh|bash)"
+then:
+  decision: DENY
+  instruction: "Pipe-to-shell download blocked. Inspect the content with the read tool before executing."

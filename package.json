@@ -26,7 +26,8 @@
     "./playground": "./dist/playground.js"
   },
   "bin": {
-    "rulsynor": "./dist/playground.js"
+    "rulsynor": "./dist/playground.js",
+    "@rulsynor/core": "./dist/playground.js"
   },
   "scripts": {
     "build": "tsc && node scripts/copy-rules.mjs",

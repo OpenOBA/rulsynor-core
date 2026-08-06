@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import * as yaml from 'js-yaml';
+import type { CompiledRule } from '../engine/evaluator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -69,9 +70,51 @@ export function toERDLRuleSet(rules: PresetRule[]): { protocol: string; version:
       })) || [],
       conditionLogic: (when?.logic as 'AND' | 'OR') || 'AND',
       enabled: true,
-      action: then ? { decision: then.decision as string, reason: (then.instruction as string) || '', ring: (p.ring as number) || 0 } : undefined,
+      action: then ? {
+        decision: then.decision as string,
+        reason: (then.instruction as string) || '',
+        ring: (p.ring as number) || 0,
+        alternative: (then.alternative as string | { en: string }) || undefined,
+        correction: (then.correction as string) || undefined,
+      } : undefined,
     };
   });
 
   return { protocol: 'erdl-v1', version: '1.0', metadata: { source: 'rulsynor-core-preset' }, rules: defs };
+}
+
+/**
+ * Convert preset rules into `CompiledRule[]` — the exact shape consumed by
+ * `new Evaluator(new GuardStateManager())`.
+ *
+ * This is the blessed entry point for using the bundled rules:
+ *
+ * ```ts
+ * import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '@rulsynor/core';
+ *
+ * const evaluator = new Evaluator(new GuardStateManager());
+ * const rules = toCompiledRules(loadPresetRules());
+ * const decision = evaluator.evaluate(
+ *   { toolName: 'exec', toolArgs: { command: 'rm -rf /' }, sessionId: 's1', agentId: 'my-agent' },
+ *   rules,
+ * );
+ * ```
+ */
+export function toCompiledRules(presetRules: PresetRule[]): CompiledRule[] {
+  return toERDLRuleSet(presetRules).rules.map((r) => ({
+    id: (r.id as string) || (r.name as string),
+    name: (r.name as string) || (r.id as string),
+    priority: (r.priority as number) || 100,
+    ring: (r.ring as number) || 0,
+    decision: (r.then as string) || 'DENY',
+    reason: (r.message as string) || (r.description as string) || 'Rule matched',
+    severity: (r.severity as string) || undefined,
+    conditions: ((r.conditions as Array<Record<string, unknown>>) || []).map((c) => ({
+      field: (c.field as string) || '',
+      operator: (c.operator as string) || 'eq',
+      value: c.value ?? undefined,
+    })),
+    conditionLogic: ((r.conditionLogic as 'AND' | 'OR') || 'AND'),
+    enabled: true,
+  }));
 }

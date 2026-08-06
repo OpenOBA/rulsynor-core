@@ -28,6 +28,7 @@ export class SafeExprEvaluator {
       case 'eq':
         return this.evalEq(args, context);
       case 'ne':
+      case 'neq':
         return this.evalNe(args, context);
       case 'gt':
         return this.evalGt(args, context);
@@ -43,10 +44,25 @@ export class SafeExprEvaluator {
         return this.evalNotIn(args, context);
       case 'contains':
         return this.evalContains(args, context);
+      case 'not_contains':
+        return !this.evalContains(args, context);
       case 'match':
+      case 'matches':
         return this.evalMatch(args, context);
       case 'exists':
         return this.evalExists(args, context);
+      case 'not_exists':
+        return !this.evalExists(args, context);
+      case 'length_gt':
+        return this.evalLengthCompare(args, context, (len, v) => len > v);
+      case 'length_gte':
+        return this.evalLengthCompare(args, context, (len, v) => len >= v);
+      case 'length_lt':
+        return this.evalLengthCompare(args, context, (len, v) => len < v);
+      case 'length_lte':
+        return this.evalLengthCompare(args, context, (len, v) => len <= v);
+      case 'length_eq':
+        return this.evalLengthCompare(args, context, (len, v) => len === v);
       case 'starts_with':
         return this.evalStartsWith(args, context);
       case 'ends_with':
@@ -157,6 +173,25 @@ export class SafeExprEvaluator {
       throw new Error(`SafeExprEvaluator: 'ends_with' operator requires string as right operand, got ${typeof right}`);
     }
     return left.endsWith(right);
+  }
+
+  /**
+   * length_gt / length_gte / length_lt / length_lte — compare the length of a
+   * string or array against a numeric threshold.
+   */
+  private evalLengthCompare(
+    args: unknown[],
+    context: Record<string, unknown>,
+    op: (len: number, value: number) => boolean,
+  ): boolean {
+    const [left, right] = this.resolveBinaryArgs(args, context);
+    if (typeof left !== 'string' && !Array.isArray(left)) {
+      throw new Error(`SafeExprEvaluator: length operator requires string or array as left operand, got ${typeof left}`);
+    }
+    if (typeof right !== 'number') {
+      throw new Error(`SafeExprEvaluator: length operator requires number as right operand, got ${typeof right}`);
+    }
+    return op(left.length, right);
   }
 
   // ─── 存在性检查 ───────────────────────────────────────────────

@@ -12,7 +12,7 @@ when:
       operator: eq
       value: "exec"
     - field: "context.tool.args.command"
-      operator: gt
+      operator: length_gt
       value: 4096
 then:
   decision: CORRECT

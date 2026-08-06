@@ -3,7 +3,7 @@ export type { RuleDefinition, RuleMatch, CompiledRule, MatchCondition, EvalConte
 export { buildDecisionObject, generateAID } from './guard/index.js';
 export { getComplianceProfile } from './compliance/index.js';
 export { PROVENANCE } from './provenance.js';
-export { loadPresetRules, toRuleDefinitions, toERDLRuleSet } from './rules/index.js';
+export { loadPresetRules, toRuleDefinitions, toERDLRuleSet, toCompiledRules } from './rules/index.js';
 export { advanceCorrectLoop, parseRequestHumanSignal, buildDoPayload, assignAbArm, trustLabel, parseToolCalls } from './preflight/index.js';
 export type { CorrectLoopState, CorrectLoopContext, RequestHumanSignal, DoPayload, AbArm, ToolEnhancement, ToolEngineResult } from './preflight/index.js';
 export { extractNavigationGuide } from './guidance/index.js';

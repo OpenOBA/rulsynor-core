@@ -79,6 +79,34 @@ export function evaluateCondition(
     case 'exists':
       return fieldValue !== undefined && fieldValue !== null;
 
+    case 'not_exists':
+      return fieldValue === undefined || fieldValue === null;
+
+    case 'length_gt':
+      return typeof fieldValue === 'string' || Array.isArray(fieldValue)
+        ? fieldValue.length > (value as number)
+        : false;
+
+    case 'length_gte':
+      return typeof fieldValue === 'string' || Array.isArray(fieldValue)
+        ? fieldValue.length >= (value as number)
+        : false;
+
+    case 'length_lt':
+      return typeof fieldValue === 'string' || Array.isArray(fieldValue)
+        ? fieldValue.length < (value as number)
+        : false;
+
+    case 'length_lte':
+      return typeof fieldValue === 'string' || Array.isArray(fieldValue)
+        ? fieldValue.length <= (value as number)
+        : false;
+
+    case 'length_eq':
+      return typeof fieldValue === 'string' || Array.isArray(fieldValue)
+        ? fieldValue.length === (value as number)
+        : false;
+
     case 'starts_with':
       return typeof fieldValue === 'string' && typeof value === 'string'
         ? fieldValue.startsWith(value)
