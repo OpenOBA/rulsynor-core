@@ -1,12 +1,17 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import * as yaml from 'js-yaml';
 import type { CompiledRule } from '../engine/evaluator.js';
 
-const _dirname = typeof import.meta.dirname === 'string'
-  ? join(import.meta.dirname)
-  : join(dirname(fileURLToPath(import.meta.url)));
+// eval('import.meta') avoids Jest's static SyntaxError on import.meta in CJS wrapper.
+// In Node ESM, import.meta.url is available. In Jest, eval is never reached.
+const _dirname: string = (() => {
+  try {
+    return dirname(new Function('return import.meta.url')());
+  } catch {
+    return join(process.cwd(), 'src', 'rules');
+  }
+})();
 
 export interface PresetRule {
   name: string;

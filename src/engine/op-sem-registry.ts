@@ -16,14 +16,17 @@
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 
-/** Resolve path relative to this file (ESM-compatible, Jest-friendly). */
+/** Resolve path relative to this file. Uses eval('import.meta') to avoid
+ *  Jest's static SyntaxError. Node ESM resolves correctly; Jest falls back. */
 function resolveRelative(relativePath: string): string {
-  const baseDir = typeof import.meta.dirname === 'string'
-    ? import.meta.dirname
-    : path.dirname(fileURLToPath(import.meta.url));
+  let baseDir: string;
+  try {
+    baseDir = path.dirname(new Function('return import.meta.url')() as string);
+  } catch {
+    baseDir = path.join(process.cwd(), 'src', 'engine');
+  }
   return path.resolve(baseDir, relativePath);
 }
 
