@@ -94,7 +94,7 @@ src/
 test/
 ├── core.test.ts                # Core API + Decision Object tests
 ├── core-extended.test.ts       # SafeExpr/Evaluator boundary tests
-├── operators.test.ts           # All 22 operators via SafeExpr + Evaluator
+├── operators.test.ts           # All 20 operators via SafeExpr + Evaluator
 ├── guard-state-manager.test.ts # Temporal counter tests
 └── evaluator-adapter.test.ts   # Adapter conversion tests
 ```
@@ -230,7 +230,7 @@ it('chain link via previous_hash', () => {
      │  Integration │  core.test.ts: full buildDecisionObject flow
      │   + Smoke    │  core-extended.test.ts: Evaluator boundary
      ├─────────────┤  CI smoke: playground CLI DENY assertion
-     │   Engine     │  operators.test.ts: all 22 operators
+     │   Engine     │  operators.test.ts: all 20 operators
      │              │  guard-state-manager.test.ts: temporal counters
      ├─────────────┤
      │    Unit      │  evaluator-adapter.test.ts: conversion functions

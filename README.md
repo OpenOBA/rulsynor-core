@@ -474,7 +474,7 @@ registry.register({
 │  │                          │           │
 │  │  Ring 0 → Ring 3         │           │
 │  │  29 preset + your rules  │           │
-│  │  SafeExpr (22 ops)       │           │
+│  │  SafeExpr (20 ops)       │           │
 │  │  within / rate trackers  │           │
 │  │  CORRECT auto-retry      │           │
 │  │  Guidance for LLM        │           │
@@ -509,7 +509,7 @@ registry.register({
 |------|------|
 | `Evaluator` | Rule engine — ring-sorted, first-match-wins |
 | `GuardStateManager` | Stateful `within`/`rate` counter manager |
-| `SafeExprEvaluator` | Safe expression evaluator (16 operators) |
+| `SafeExprEvaluator` | Safe expression evaluator (20 operators) |
 | `safeRegExp()` | ReDoS-protected regex constructor |
 | `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object (return type: `DecisionObject`) |
 | `generateAID()` | Generate Agent Identity Code (OID 1.2.156.3088) |

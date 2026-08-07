@@ -38,7 +38,7 @@ when:                             # "Under what conditions does this fire?"
   conditionLogic: AND             # AND = all conditions match; OR = any matches
   conditions:
     - field: "toolName"           # Field path in the tool-call context
-      operator: eq                # One of the 22 operators (§2)
+      operator: eq                # One of the 20 operators (§2)
       value: "exec"               # Expected value (type depends on operator)
 
 then:                             # "What happens when conditions match?"
@@ -62,7 +62,7 @@ Note: `context.tool.name` / `context.tool.args.<arg>` are accepted aliases for
 `toolName` / `toolArgs.<arg>`.
 
 ═══════════════════════════════════════════════════════
-2. THE 22 OPERATORS
+2. THE 20 operators
 ═══════════════════════════════════════════════════════
 
 Equality & comparison:

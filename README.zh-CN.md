@@ -473,7 +473,7 @@ registry.register({
 │  │                          │           │
 │  │  环 0 → 环 3             │           │
 │  │  29 条预设 + 你的规则    │           │
-│  │  SafeExpr（22 种运算符） │           │
+│  │  SafeExpr（20 种运算符） │           │
 │  │  within / rate 追踪      │           │
 │  │  CORRECT 自动重试        │           │
 │  │  Guidance 引导 LLM       │           │
@@ -508,7 +508,7 @@ registry.register({
 |------|------|
 | `Evaluator` | 规则引擎——按环排序，first-match-wins |
 | `GuardStateManager` | `within`/`rate` 有状态计数器管理 |
-| `SafeExprEvaluator` | 安全表达式评估器（22 种运算符） |
+| `SafeExprEvaluator` | 安全表达式评估器（20 种运算符） |
 | `safeRegExp()` | ReDoS 防护的正则构造器 |
 | `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象（返回类型：`DecisionObject`） |
 | `generateAID()` | 生成 Agent 身份标识码（OID 1.2.156.3088） |

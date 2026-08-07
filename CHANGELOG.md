@@ -5,7 +5,7 @@
 ### First public release
 
 **Core Engine**
-- ERDL rule evaluator with 22 operators (eq, neq, gt, gte, lt, lte, in, not_in, contains, not_contains, match/matches, starts_with, ends_with, exists, not_exists, length_gt/gte/lt/lte/eq)
+- ERDL rule evaluator with 20 operators (eq, neq, gt, gte, lt, lte, in, not_in, contains, not_contains, match/matches, starts_with, ends_with, exists, not_exists, length_gt/gte/lt/lte/eq)
 - 25-field Decision Object builder with JCS (RFC 8785) + SHA-256 cryptographic audit hash
 - RuleCompiler: ERDL YAML -> four parallel products (ComplianceSchema, GuidanceArtifact, GuardDirective, AuditTemplate)
 - GuardStateManager with within/rate temporal tracking + hot-reload freeze migration
