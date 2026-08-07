@@ -103,13 +103,38 @@ rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上�
 ```yaml
 # rules/finance-team.erdl.yaml
 
+# "我就看看，不动。" Agent 说完这句话，伸手就去写文件。
+# 这条规则是每个新员工的入职第一课：说到做到，言行一致。
+name: promise-readonly-writes
+version: 1
+category: integrity
+severity: high
+ring: 0                        # 0=最先评估, 3=最后评估
+priority: 850                  # 数字越小越先检查
+when:
+  conditions:
+    - field: "context.previous_promise"
+      operator: eq
+      value: "read_only"
+    - field: "context.tool.name"
+      operator: in
+      value: ["write_file", "exec", "apply_patch", "delete"]
+  conditionLogic: AND
+then:
+  decision: REQUEST_HUMAN      # 不是 DENY——是"说清楚再动手"
+  instruction: "你声明了只读意图，但现在尝试写入操作。言行一致是专业操守的底线——请解释或由主管批准。"
+  alternative:
+    en: "如果确实需要写入，请说明理由并获取审批。不需要写入的话，继续只读操作即可。"
+  correction: "撤回写入请求，回到只读模式。如需写入，在下一轮对话中说明理由并申请权限。"
+
+---
 # 财务团队需要查生产库做报表——但要审批
 name: production-db-needs-approval
 version: 1
 category: workflow
 severity: high
-ring: 0                        # 0=最先评估, 3=最后评估
-priority: 500                  # 数字越小越先检查
+ring: 0
+priority: 500
 when:
   conditions:
     - field: "toolName"
@@ -122,7 +147,7 @@ when:
 then:
   decision: REQUEST_HUMAN      # 不是 DENY——是"找你领导审批"
   instruction: "生产数据库访问需要审批。"
-  alternative:                 # 告诉它正确的做法：
+  alternative:
     en: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"
   correction: "把连接字符串改成 STAGING_DATABASE 然后重试。"
 

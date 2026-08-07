@@ -99,13 +99,38 @@ Rules are ERDL YAML. Each rule says: under these conditions, guide the Agent tow
 ```yaml
 # rules/finance-team.erdl.yaml
 
+# "I'm just going to read." Your Agent says that, then reaches for a write.
+# A rule like this is the first thing you teach any new hire: your word matters.
+name: promise-readonly-writes
+version: 1
+category: integrity
+severity: high
+ring: 0                        # 0=evaluate first, 3=evaluate last
+priority: 850                  # lower number = checked first
+when:
+  conditions:
+    - field: "context.previous_promise"
+      operator: eq
+      value: "read_only"
+    - field: "context.tool.name"
+      operator: in
+      value: ["write_file", "exec", "apply_patch", "delete"]
+  conditionLogic: AND
+then:
+  decision: REQUEST_HUMAN      # Not DENY — just "explain yourself"
+  instruction: "You stated read-only intent, but are now attempting a write. Integrity means doing what you said."
+  alternative:
+    en: "If you need to write, state your reason and get approval. Otherwise, stay in read-only mode."
+  correction: "Withdraw the write request and continue with read-only operations."
+
+---
 # Finance team needs production DB access for reports — but with approval
 name: production-db-needs-approval
 version: 1
 category: workflow
 severity: high
-ring: 0                        # 0=evaluate first, 3=evaluate last
-priority: 500                  # lower number = checked first
+ring: 0
+priority: 500
 when:
   conditions:
     - field: "toolName"
@@ -118,7 +143,7 @@ when:
 then:
   decision: REQUEST_HUMAN      # Not DENY — just "ask your manager"
   instruction: "Production database access requires approval."
-  alternative:                 # Here's the right way:
+  alternative:
     en: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
   correction: "Change connection string to STAGING_DATABASE and retry."
 

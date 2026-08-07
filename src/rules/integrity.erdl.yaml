@@ -1,0 +1,29 @@
+# Integrity — 专业操守规则包
+# 每一条规则都定义了 Agent 应该恪守的职业底线。
+# 用普通人能看懂的语言：when = "在什么情况下"，then = "应该怎么做"
+
+# ── C1: 说到做到（Promise vs Action）──
+# HR 秒懂版本：Agent 承诺了"我只读不写"，转头就去写文件。
+# 技术实现：上一步 LLM 声明了 read_only 意图 → 下一步检测到写入操作 → 请求人工审批
+name: INT-C01-promise-readonly-writes
+version: 1
+category: integrity
+severity: high
+ring: 0
+priority: 850
+description: "当 Agent 声明了只读意图（read_only）但随后尝试写入操作时，拦截并要求人工审批"
+when:
+  conditions:
+    - field: "context.previous_promise"
+      operator: eq
+      value: "read_only"
+    - field: "context.tool.name"
+      operator: in
+      value: ["write_file", "exec", "apply_patch", "delete"]
+  conditionLogic: AND
+then:
+  decision: REQUEST_HUMAN
+  instruction: "你之前声明了只读操作，但现在尝试写入。言行一致是专业操守的底线——请解释意图，或由主管批准。"
+  alternative:
+    en: "如果确实需要写入，请先说明原因，等待人工审批后再执行。不需要写入的话，请继续只读操作。"
+  correction: "撤回写入请求，回到只读模式。如需写入，在下一轮对话中说明理由并申请权限。"
