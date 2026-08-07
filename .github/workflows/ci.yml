@@ -23,6 +23,4 @@ jobs:
       - run: npm test
       - name: Smoke test — dangerous command must be DENY
         run: |
-          OUTPUT=$(node dist/playground.js --tool=exec --cmd="rm -rf /")
-          echo "$OUTPUT"
-          echo "$OUTPUT" | grep -q "DENY" || { echo "FAIL: rm -rf / was not denied"; exit 1; }
+          node dist/playground.js --tool=exec --cmd="rm -rf /" | tee /dev/stderr | grep -q "DENY" || { echo "FAIL: expected DENY"; exit 1; }
