@@ -97,11 +97,12 @@ Rules are ERDL YAML. Each rule says: under these conditions, guide the Agent tow
 # Finance team needs production DB access for reports — but with approval
 name: production-db-needs-approval
 version: 1
-category: business-logic
+category: workflow
 severity: high
-ring: 0                        # 0=evaluate first, 3=evaluate last
-priority: 500                  # lower number = checked first
+ring: 0
+priority: 500
 when:
+  conditionLogic: AND
   conditions:
     - field: "toolName"
       operator: eq
@@ -109,11 +110,10 @@ when:
     - field: "toolArgs.command"
       operator: contains
       value: "PRODUCTION_DATABASE"
-  conditionLogic: AND
 then:
-  decision: REQUEST_HUMAN      # Not DENY — just "ask your manager"
+  decision: REQUEST_HUMAN
   instruction: "Production database access requires approval."
-  alternative:                 # Here's the right way:
+  alternative:
     en: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
   correction: "Change connection string to STAGING_DATABASE and retry."
 
@@ -121,20 +121,21 @@ then:
 # Large writes happen in batch jobs — warn, don't block
 name: large-write-advisory
 version: 1
-category: resource-management
+category: convention
 severity: low
-ring: 3                        # Passive ring — warn, don't block
+ring: 3
 priority: 300
 when:
+  conditionLogic: AND
   conditions:
     - field: "toolName"
       operator: eq
       value: "write_file"
     - field: "toolArgs.content"
       operator: length_gt
-      value: 10485760          # 10MB
+      value: 10485760
 then:
-  decision: ALLOW              # Let it through — it's a batch job
+  decision: ALLOW
   instruction: "Large file write (>10MB) logged. Consider chunking for reliability."
 ```
 
@@ -162,6 +163,39 @@ then:
 | 2 | Evaluated after | Correct path typos, suggest better ports |
 | 3 | Evaluated last | Read-only allowlist, logging-only advisory |
 
+#### Writing Rules in Plain Language
+
+You don't need to know YAML to write rules. Describe what you want in plain language, and any LLM translates it into ERDL YAML for you:
+
+> "If the agent runs a command containing `rm -rf`, block it and tell it to inspect the file first."
+
+The LLM returns a rule ready to save:
+
+```yaml
+name: block-destructive-rm
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 900
+when:
+  conditionLogic: AND
+  conditions:
+    - field: "toolName"
+      operator: eq
+      value: "exec"
+    - field: "toolArgs.command"
+      operator: contains
+      value: "rm -rf"
+then:
+  decision: DENY
+  instruction: "Destructive command blocked."
+  alternative:
+    en: "Use the read tool to inspect the target first, or request human approval."
+```
+
+Copy the prompt template from [`docs/RULE-PROMPT.md`](docs/RULE-PROMPT.md), paste it into ChatGPT, Claude, or any other LLM, describe your rules, and save the output as `.erdl.yaml`. The compiler validates every rule (ReDoS safety, operator whitelist, required fields) before it loads — and you should always review generated rules before deploying them. The LLM writes the draft; you own the rulebook.
+
 ---
 
 ### 2. Train — Compile and Load
@@ -169,7 +203,7 @@ then:
 ```typescript
 import { loadPresetRules, toCompiledRules } from '@rulsynor/core';
 
-// 28 built-in security rules + your business rules
+// 29 built-in rules + your business rules
 const presetRules = loadPresetRules();           // PresetRule[]
 const rules = toCompiledRules(presetRules);       // CompiledRule[] — ready for the engine
 

@@ -107,7 +107,7 @@ rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上�
 # 财务团队需要查生产库做报表——但要审批
 name: production-db-needs-approval
 version: 1
-category: business-logic
+category: workflow
 severity: high
 ring: 0                        # 0=最先评估, 3=最后评估
 priority: 500                  # 数字越小越先检查
@@ -131,7 +131,7 @@ then:
 # 大批量写入是正常的批处理任务——告警就好，不拦截
 name: large-write-advisory
 version: 1
-category: resource-management
+category: convention
 severity: low
 ring: 3                        # 被动环——记录即可，不拦截
 priority: 300
@@ -172,6 +172,39 @@ then:
 | 1 | 其次 | 参数缺失、超大载荷、chmod 777 |
 | 2 | 再次 | 修正路径错误、建议更好端口 |
 | 3 | 最后 | 只读 allowlist、纯日志告警 |
+
+#### 用自然语言写规则
+
+写规则不需要会 YAML。用大白话描述你想要什么，任何大模型都能把它翻译成 ERDL YAML：
+
+> "如果 Agent 执行的命令里包含 m -rf，直接拦截，并告诉它先检查文件。"
+
+模型返回一条可直接保存的规则：
+
+`yaml
+name: block-destructive-rm
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 900
+when:
+  conditionLogic: AND
+  conditions:
+    - field: "toolName"
+      operator: eq
+      value: "exec"
+    - field: "toolArgs.command"
+      operator: contains
+      value: "rm -rf"
+then:
+  decision: DENY
+  instruction: "Destructive command blocked."
+  alternative:
+    en: "Use the read tool to inspect the target first, or request human approval."
+`
+
+把 [docs/RULE-PROMPT.md](docs/RULE-PROMPT.md) 中的提示词模板复制出来，粘贴到 ChatGPT、Claude 或任何大模型中，描述你的规则，把输出保存为 .erdl.yaml 即可。编译器在加载前会验证每条规则（ReDoS 安全、运算符白名单、必填字段）——部署前请务必人工复核。模型负责起草，规则手册由你定稿。
 
 ---
 
