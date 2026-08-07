@@ -141,6 +141,11 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       }
 
       const toolResult = await executor.execute(tc.arguments);
+
+      // Commit temporal counters after successful tool execution.
+      // within/rate rules rely on these counters being incremented on ALLOW.
+      evaluator.commitTemporal(ctx, opts.compiledRules);
+
       onToolResult?.(toolResult, step);
 
       messages.push({ role: 'assistant', content: response.content });

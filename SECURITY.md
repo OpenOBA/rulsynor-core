@@ -1,12 +1,12 @@
-# Security Policy â€” @rulsynor/core
+# Security Policy â€?@rulsynor/core
 
 ## Design Principles
 
-@rulsynor/core is a **deterministic Guard engine** â€” every tool call is intercepted BEFORE execution, evaluated against ERDL rules, and documented with cryptographically verifiable audit evidence.
+@rulsynor/core is a **deterministic Guard engine** â€?every tool call is intercepted BEFORE execution, evaluated against ERDL rules, and documented with cryptographically verifiable audit evidence.
 
 ### 1. Prompt-based safety is not safety
 
-LLM prompt constraints ("please don't do X") are not security boundaries. @rulsynor/core evaluates tool calls using a **deterministic expression engine** (SafeExpr) â€” not LLM prompts.
+LLM prompt constraints ("please don't do X") are not security boundaries. @rulsynor/core evaluates tool calls using a **deterministic expression engine** (SafeExpr) â€?not LLM prompts.
 
 ### 2. Zero code injection surface
 
@@ -59,4 +59,4 @@ No other runtime dependencies.
 - TypeScript strict mode enabled
 - Zero `@ts-ignore` directives
 - Zero unused imports/locals (tsc --noUnusedLocals --noUnusedParameters)
-- 67 automated tests covering SafeExpr (16 operators), Evaluator (rule matching), Decision Object (tamper detection), Compliance, Guidance, Runtime, Preflight
+- 100 automated tests covering SafeExpr (16 operators), Evaluator (rule matching), Decision Object (tamper detection), Compliance, Guidance, Runtime, Preflight

@@ -91,13 +91,14 @@ export class ERDLFnRegistry {
 
     const start = Date.now()
     const timeout = reg.timeoutMs || 5000
+    let timer: ReturnType<typeof setTimeout> | undefined
 
     try {
       const result = await Promise.race([
         Promise.resolve(reg.impl(...args)),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Function "${name}" timed out after ${timeout}ms`)), timeout)
-        ),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Function "${name}" timed out after ${timeout}ms`)), timeout)
+        }),
       ])
 
       this.callLog.push({ fn: name, args, result, elapsedMs: Date.now() - start })
@@ -108,6 +109,8 @@ export class ERDLFnRegistry {
       const err = e instanceof Error ? e.message : String(e)
       this.callLog.push({ fn: name, args, result: undefined, error: err, elapsedMs: Date.now() - start })
       throw e
+    } finally {
+      if (timer) clearTimeout(timer)
     }
   }
 

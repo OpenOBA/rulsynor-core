@@ -240,8 +240,9 @@ export class RuleCompilerImpl implements RuleCompiler {
     }
 
     if (mode === 'symbolic' || mode === 'full') {
-      // Delegate to Z3 verifier for decidable fragment
-      // (Z3 verifier is in @rulsynor/verifier-z3 optional package)
+      // Symbolic verification delegate (Z3) not yet implemented.
+      // See @rulsynor/verifier-z3 (planned optional package).
+      return { passed: false, divergenceCount: 0, samples: [{ note: 'Symbolic verification not yet implemented — use fuzz mode instead' }] };
     }
 
     return { passed: true, divergenceCount: 0, samples };

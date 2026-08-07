@@ -45,7 +45,7 @@ export const PROVENANCE = {
 
   /** Known limitations declaration (EU AI Act Art.13 compliance) */
   knownLimitations: [
-    'English-language interface only; Chinese UI planned for V2.0',
+    'Bilingual (English + Chinese) documentation; runtime supports any language via LLM',
     'Decision Object signature is a placeholder until ECDSA key infrastructure is deployed (Phase 2)',
     'AID is self-generated using OID prefix 1.2.156.3088; not yet registered with an external registration authority',
     'Algorithm filing with China CAC not yet completed; algorithmFilingNo and modelRegistrationId are explicitly NOT_FILED',

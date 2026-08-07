@@ -89,16 +89,14 @@ export class GuardStateManager {
 
   /**
    * 获取当前 rate 窗口内的事件数。
-   * 如果窗口已过期，返回 0（不清理——清理在 recordRate 写入时做）。
+   * 如果窗口已过期，返回 0（清理在 recordRate 写入时做）。
    */
-  getRateCount(key: string): number {
+  getRateCount(key: string, windowMs: number = 60000): number {
     const tracker = this.rateTrackers.get(key);
     if (!tracker) return 0;
-    // Check if the window has expired
+    // Prune expired window: return 0 if window has elapsed
     const now = this.clock.now();
-    // windowStart 0 means never reset (first use), check against reasonable max
-    // We can't know windowMs here, so return 0 if windowStart is 0 and there's been a large gap.
-    // Best-effort: if there's a tracker, return its count. Cleanup happens on next recordRate.
+    if ((now - tracker.windowStart) > windowMs) return 0;
     return tracker.count;
   }
 

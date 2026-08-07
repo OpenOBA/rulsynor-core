@@ -32,5 +32,5 @@
 **Packaging**
 - MIT License
 - Zero framework dependencies (only json-canonicalize + js-yaml)
-- 76 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Guidance, Runtime, Preflight)
+- 100 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Guidance, Runtime, Preflight)
 - npm package: 155 kB, 10 sub-path exports

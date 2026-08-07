@@ -104,7 +104,9 @@ export class Evaluator {
       if (!rule.enabled) continue;
       totalEvaluated++;
 
-      // Rule with zero conditions → match-all (safety: require explicit ALLOW; deny by deafult for catch-all)
+      // Rule with zero conditions → match-all. Returns the rule's own decision.
+      // WARNING: a zero-condition ALLOW rule will short-circuit and bypass all other rules.
+      // Zero-condition DENY rules will block everything. Design such rules with extreme care.
       if (!rule.conditions || rule.conditions.length === 0) {
         totalMatched++;
         return this.buildResult(rule, totalEvaluated, totalMatched);
@@ -153,7 +155,12 @@ export class Evaluator {
 
       // If temporal conditions exist and threshold NOT exceeded, the rule does NOT fire.
       // within/rate are inverse: they only fire when the threshold IS exceeded.
+      // EXCEPTION: OR logic — if stateless already matched, the rule fires regardless of temporal.
       if (temporalConditions.length > 0) {
+        if (rule.conditionLogic === 'OR' && hasStateless && statelessMatched) {
+          // Stateless side of OR already won — rule fires without temporal check
+          return this.buildResult(rule, totalEvaluated, totalMatched);
+        }
         const temporalFired = this.checkTemporalExceeded(temporalConditions, rule, context);
         if (!temporalFired) continue; // threshold not reached → skip this rule
         return temporalFired;
@@ -211,7 +218,7 @@ export class Evaluator {
         }
       }
       if (c.operator === 'rate') {
-        const count = this.stateManager.getRateCount(tKey);
+        const count = this.stateManager.getRateCount(tKey, windowMs);
         if (count >= limit) {
           return {
             decision: rule.decision,
