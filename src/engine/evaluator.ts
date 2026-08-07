@@ -129,7 +129,7 @@ export class Evaluator {
       }
 
       if (temporalConditions.length > 0) {
-        temporalMatched = this.evaluateTemporalConditions(temporalConditions, rule, context);
+        temporalMatched = this.evaluateTemporalConditions(temporalConditions);
       }
 
       // Combine based on rule's condition logic
@@ -151,13 +151,15 @@ export class Evaluator {
 
       totalMatched++;
 
-      // Check if temporal threshold was exceeded (triggers DENY/HALT even on match)
-      const temporalExceeded = this.checkTemporalExceeded(temporalConditions, rule, context);
-      if (temporalExceeded) {
-        return temporalExceeded;
+      // If temporal conditions exist and threshold NOT exceeded, the rule does NOT fire.
+      // within/rate are inverse: they only fire when the threshold IS exceeded.
+      if (temporalConditions.length > 0) {
+        const temporalFired = this.checkTemporalExceeded(temporalConditions, rule, context);
+        if (!temporalFired) continue; // threshold not reached → skip this rule
+        return temporalFired;
       }
 
-      // Rule matched (all conditions passed)
+      // Rule matched (all stateless conditions passed, no temporal conditions)
       return this.buildResult(rule, totalEvaluated, totalMatched);
     }
 
@@ -169,28 +171,15 @@ export class Evaluator {
     };
   }
 
-  /** Evaluate temporal conditions (return true if they pass, false if not) */
-  private evaluateTemporalConditions(
-    temporalConditions: MatchCondition[],
-    rule: CompiledRule,
-    context: EvalContext,
-  ): boolean {
+  /** Evaluate temporal conditions — check if the temporal pattern matches (not threshold). */
+  private evaluateTemporalConditions(temporalConditions: MatchCondition[]): boolean {
+    // Temporal conditions are always considered "matching" if they exist —
+    // the runtime counter is the actual gate. We only reject if the value is
+    // unparseable (which means the condition is malformed).
     for (const c of temporalConditions) {
       const numericValue = typeof c.value === 'number' ? c.value
         : typeof c.value === 'string' ? Number(c.value) : NaN;
-      if (isNaN(numericValue)) continue;
-      const windowMs = c.windowMs || 60000;
-      const limit = numericValue;
-      const tKey = `${rule.id}\u0000${context.toolName}`;
-      if (c.operator === 'within') {
-        const count = this.stateManager.getWithinCount(tKey, windowMs);
-        // within passes if count < limit (not exceeded yet); fails if count >= limit
-        if (count >= limit) return false;
-      }
-      if (c.operator === 'rate') {
-        const count = this.stateManager.getRateCount(tKey);
-        if (count >= limit) return false;
-      }
+      if (isNaN(numericValue)) return false; // malformed condition → no match
     }
     return true;
   }
