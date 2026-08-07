@@ -1,5 +1,5 @@
 /**
- * Extended test suite â€?SafeExpr, Evaluator, Preflight boundary.
+ * Extended test suite -?SafeExpr, Evaluator, Preflight boundary.
  * Uses ESM import (ts-jest transforms .ts).
  */
 import { SafeExprEvaluator } from '../src/engine/safe-expr.js';

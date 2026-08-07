@@ -1,12 +1,12 @@
 /**
- * Operator test suite â€?covers all operators used in preset .erdl.yaml files.
+ * Operator test suite -?covers all operators used in preset .erdl.yaml files.
  * Ensures SafeExpr, RuntimeEvaluator, and RuleCompiler produce consistent results.
  */
 import { SafeExprEvaluator } from '../src/engine/safe-expr.js';
 import { Evaluator } from '../src/engine/evaluator.js';
 import { GuardStateManager } from '../src/engine/guard-state-manager.js';
 
-describe('SafeExpr â€?all YAML-used operators', () => {
+describe('SafeExpr -?all YAML-used operators', () => {
   const e = new SafeExprEvaluator();
 
   // Standard operators (already tested, verify still pass)
@@ -41,7 +41,7 @@ describe('SafeExpr â€?all YAML-used operators', () => {
   it('length_eq', () => { expect(e.evaluate({ type: 'length_eq', args: ['x', 3] }, { x: 'abc' })).toBe(true); });
 });
 
-describe('Evaluator â€?YAML rule equivalents', () => {
+describe('Evaluator -?YAML rule equivalents', () => {
   const state = new GuardStateManager();
   const ev = new Evaluator(state);
 
