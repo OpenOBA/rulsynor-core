@@ -132,6 +132,16 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         return { decision: evalResult.decision, thought: response.content, steps: step + 1, auditHashes, finalResponse };
       }
 
+      if (evalResult.decision === 'QUARANTINE') {
+        finalResponse = `Tool call quarantined for review: ${evalResult.reason || 'suspicious pattern'}`;
+        return { decision: 'QUARANTINE', thought: response.content, steps: step + 1, auditHashes, finalResponse };
+      }
+
+      if (evalResult.decision === 'ROLLBACK') {
+        finalResponse = `Rollback triggered: ${evalResult.reason || 'previous operation rolled back'}`;
+        return { decision: 'ROLLBACK', thought: response.content, steps: step + 1, auditHashes, finalResponse };
+      }
+
       // Execute tool
       const executor = tools[tc.name];
       if (!executor) {
@@ -157,7 +167,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
     finalResponse = 'Max steps reached without completion.';
   }
 
-  return { decision: 'ALLOW', thought: '', steps: step, auditHashes, finalResponse };
+  return { decision: step >= maxSteps ? 'MAX_STEPS' : 'ALLOW', thought: '', steps: step, auditHashes, finalResponse };
 }
 
 /** Create a simple tool executor from a plain function */

@@ -7,30 +7,10 @@
  * Usage: npx tsx examples/openai-guard.ts
  */
 
-import { Evaluator, GuardStateManager, loadPresetRules, toERDLRuleSet, buildDecisionObject } from '@rulsynor/core';
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@rulsynor/core';
 
-// 1. Train: load preset security rules (32 rules out of the box)
-const presetRules = loadPresetRules();
-const ruleSet = toERDLRuleSet(presetRules);
-
-const compiledRules = ruleSet.rules.map((r: Record<string, unknown>, i: number) => {
-  const conditions: Array<Record<string, unknown>> = (r.conditions as Array<Record<string, unknown>>) || [];
-  return {
-    id: (r.id as string) || (r.name as string) || `rule-${i}`,
-    name: (r.name as string) || `rule-${i}`,
-    priority: (r.priority as number) || 100,
-    ring: (r.ring as number) || 0,
-    decision: (r.then as string) || 'DENY',
-    reason: (r.message as string) || (r.description as string) || '',
-    conditions: conditions.map((c: Record<string, unknown>) => ({
-      field: (c.field as string) || '',
-      operator: (c.operator as string) || 'eq',
-      value: c.value ?? undefined,
-    })),
-    conditionLogic: ((r.conditionLogic as 'AND' | 'OR') || 'AND'),
-    enabled: true,
-  };
-});
+// 1. Train: compile preset rules (29 rules)
+const rules = toCompiledRules(loadPresetRules());
 
 // 2. Deploy: create the Guard evaluator
 const evaluator = new Evaluator(new GuardStateManager());
@@ -42,10 +22,12 @@ async function guardedToolCall(
   sessionId: string,
   agentId: string,
 ) {
+  const evalStart = performance.now();
   const result = evaluator.evaluate(
     { toolName, toolArgs, sessionId, agentId },
-    compiledRules,
+    rules,
   );
+  const duration = Math.round(performance.now() - evalStart);
 
   if (result.decision === 'DENY' || result.decision === 'EMERGENCY_HALT') {
     console.log(`🛑 Guard blocked: ${result.reason}`);
@@ -57,23 +39,34 @@ async function guardedToolCall(
     return { paused: true, reason: result.reason };
   }
 
+  if (result.decision === 'QUARANTINE') {
+    console.warn(`🧪 Quarantine: ${result.reason} — flag for review`);
+  }
+
   // Build audit record
   const do1 = buildDecisionObject({
     input: { runId: `run-${Date.now()}`, step: 0, toolName, toolArgs, context: {}, agentId, sessionId },
     decision: result.decision,
-    actionTaken: 'allowed',
+    actionTaken: result.decision === 'DENY' ? 'blocked' : 'allowed',
     reason: result.reason,
-    matchedRules: result.matchedRuleId
+    matchedRules: result.matchedRules ?? (result.matchedRuleId
       ? [{ ruleId: result.matchedRuleId, decision: result.decision, ring: result.ring || 0 }]
-      : [],
-    totalEvaluated: compiledRules.length,
-    totalMatched: result.matchedRuleId ? 1 : 0,
-    rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
-    evaluationDurationMs: 0,
+      : []),
+    totalEvaluated: rules.length,
+    totalMatched: result.totalMatched ?? (result.matchedRuleId ? 1 : 0),
+    rules: rules.map(r => ({ name: r.name, version: 1 })),
+    evaluationDurationMs: duration,
   });
 
-  console.log(`✅ Allowed: ${toolName} — audit hash: ${(do1 as any).audit.hash.substring(0, 18)}...`);
-  return { allowed: true, auditHash: (do1 as any).audit.hash };
+  console.log(`✅ Allowed: ${toolName} — audit hash: ${do1.audit.hash.substring(0, 18)}...`);
+
+  // After ALLOW, commit temporal counters (required for within/rate rules)
+  evaluator.commitTemporal(
+    { toolName, toolArgs, sessionId, agentId },
+    rules,
+  );
+
+  return { allowed: true, auditHash: do1.audit.hash };
 }
 
 // 4. Demo: simulate an OpenAI function call

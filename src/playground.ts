@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import type { DecisionObject } from './guard/index.js';
 import {
   Evaluator,
   GuardStateManager,
@@ -64,10 +65,10 @@ const record = buildDecisionObject({
   totalMatched: result.totalMatched ?? (result.matchedRuleId ? 1 : 0),
   rules: evalRules.map((r) => ({ name: r.name, version: 1 })),
   evaluationDurationMs: duration,
-});
+}) as DecisionObject;
 
-const aid = (record as any).agent.aid as string;
-const jurisdictions = (record as any).compliance_profile.jurisdictions as string[];
+const aid = record.agent.aid;
+const jurisdictions = record.compliance_profile.jurisdictions as string[];
 
 // Turn a DENY/CORRECT into guidance the agent can act on.
 const guidanceRules = presetRules.map((r) => ({
@@ -94,7 +95,7 @@ const alt = guide.alternatives.length ? guide.alternatives.join('; ') : '—';
 console.log('📋 Trained:    ' + evalRules.length + ' rules loaded');
 console.log('🛡️  Decision:   ' + result.decision);
 console.log('📝 Reason:     ' + (result.reason || 'none'));
-console.log('🧾 Recorded:   ' + (record as any).audit.hash + ' (tamper-evident)');
+console.log('🧾 Recorded:   ' + record.audit.hash + ' (tamper-evident)');
 console.log('🪪 Employee ID:' + ' ' + aid);
 console.log('📊 Jurisdiction:' + ' ' + jurisdictions.join(',') + ' (GB/Z 185-2026 compliant)');
 console.log('🧭 Alternative:' + ' ' + alt);

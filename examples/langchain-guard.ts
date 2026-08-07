@@ -12,34 +12,10 @@
  * Usage: npx tsx examples/langchain-guard.ts
  */
 
-import { Evaluator, GuardStateManager, loadPresetRules, toERDLRuleSet, buildDecisionObject } from '@rulsynor/core';
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@rulsynor/core';
 
-// 1. Train: load rules (29 after experiment-verified cleanup)
-const presetRules = loadPresetRules();
-const ruleSet = toERDLRuleSet(presetRules);
-
-function toCompiledRules(ruleSet: ReturnType<typeof toERDLRuleSet>) {
-  return ruleSet.rules.map((r: Record<string, unknown>, i: number) => {
-    const conditions: Array<Record<string, unknown>> = (r.conditions as Array<Record<string, unknown>>) || [];
-    return {
-      id: (r.id as string) || (r.name as string) || `rule-${i}`,
-      name: (r.name as string) || `rule-${i}`,
-      priority: (r.priority as number) || 100,
-      ring: (r.ring as number) || 0,
-      decision: (r.then as string) || 'DENY',
-      reason: (r.message as string) || (r.description as string) || '',
-      conditions: conditions.map((c: Record<string, unknown>) => ({
-        field: (c.field as string) || '',
-        operator: (c.operator as string) || 'eq',
-        value: c.value ?? undefined,
-      })),
-      conditionLogic: ((r.conditionLogic as 'AND' | 'OR') || 'AND'),
-      enabled: true,
-    };
-  });
-}
-
-const rules = toCompiledRules(ruleSet);
+// 1. Train: compile preset rules (29 rules)
+const rules = toCompiledRules(loadPresetRules());
 
 // 2. Create the Guard
 const evaluator = new Evaluator(new GuardStateManager());
@@ -54,10 +30,12 @@ async function guardedToolExecutor(
   agentId: string,
   executeTool: () => Promise<string>,
 ): Promise<string> {
+  const evalStart = performance.now();
   const result = evaluator.evaluate(
     { toolName, toolArgs, sessionId, agentId },
     rules,
   );
+  const duration = Math.round(performance.now() - evalStart);
 
   // Block dangerous calls
   if (result.decision === 'DENY' || result.decision === 'EMERGENCY_HALT') {
@@ -69,25 +47,38 @@ async function guardedToolExecutor(
     throw new Error(`Human approval required: ${result.reason}`);
   }
 
+  // Quarantine suspicious patterns
+  if (result.decision === 'QUARANTINE') {
+    console.warn(`[Guard] QUARANTINE ${toolName}: ${result.reason} — executing with review flag`);
+  }
+
   // Build audit record
   const do1 = buildDecisionObject({
     input: { runId: `run-${Date.now()}`, step: 0, toolName, toolArgs, context: {}, agentId, sessionId },
     decision: result.decision,
-    actionTaken: 'allowed',
+    actionTaken: result.decision === 'DENY' ? 'blocked' : 'allowed',
     reason: result.reason,
-    matchedRules: result.matchedRuleId
+    matchedRules: result.matchedRules ?? (result.matchedRuleId
       ? [{ ruleId: result.matchedRuleId, decision: result.decision, ring: result.ring || 0 }]
-      : [],
+      : []),
     totalEvaluated: rules.length,
-    totalMatched: result.matchedRuleId ? 1 : 0,
+    totalMatched: result.totalMatched ?? (result.matchedRuleId ? 1 : 0),
     rules: rules.map(r => ({ name: r.name, version: 1 })),
-    evaluationDurationMs: 0,
+    evaluationDurationMs: duration,
   });
 
-  console.log(`[Guard] ALLOW ${toolName} — audit: ${(do1 as any).audit.hash.substring(0, 18)}...`);
+  console.log(`[Guard] ALLOW ${toolName} — audit: ${do1.audit.hash.substring(0, 18)}...`);
 
   // Execute the actual tool
-  return executeTool();
+  const toolResult = await executeTool();
+
+  // After successful execution, commit temporal counters (required for within/rate rules)
+  evaluator.commitTemporal(
+    { toolName, toolArgs, sessionId, agentId },
+    rules,
+  );
+
+  return toolResult;
 }
 
 // 4. LangChain integration pseudocode:
