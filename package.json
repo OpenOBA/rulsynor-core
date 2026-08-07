@@ -1,5 +1,5 @@
 {
-  "name": "@rulsynor/core",
+  "name": "@openoba/rulsynor-core",
   "version": "1.0.0",
   "description": "ERDL deterministic Guard engine \u2014 open-source Agent runtime with cryptographic audit chain",
   "license": "MIT",

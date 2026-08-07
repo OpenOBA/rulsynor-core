@@ -1,4 +1,4 @@
-# Contributing to @rulsynor/core
+# Contributing to @openoba/rulsynor-core
 
 Thanks for your interest in contributing. Rulsynor is an open-source project and we welcome improvements.
 

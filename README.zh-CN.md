@@ -1,11 +1,11 @@
-# @rulsynor/core
+# @openoba/rulsynor-core
 
 > **大模型厂商交付的是卓越智力，我们交付的是可问责的执行。**
 
 **rulsynor-core** 恪守职业道德的 Harness Engineering，用规则驾驭行为，让 AI Agent 的能力安全释放，而每一次行动的执行路径记录清晰、有据可查、可独立验证。
 
 ```bash
-npm install @rulsynor/core
+npm install @openoba/rulsynor-core
 ```
 
 [![立即体验](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40rulsynor%2Fcore-black)](#30-秒见证)  ·  [示例](examples/)  ·  [API 参考](#api-参考)  ·  [规范文档](docs/SPEC/)  ·  [参与贡献](CONTRIBUTING.md)
@@ -54,7 +54,7 @@ AI 的效率，每一家企业都看得见，但经常会因为一段模糊的�
 ## 30 秒见证
 
 ```bash
-npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
+npx @openoba/rulsynor-core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
@@ -71,7 +71,7 @@ Agent 的请求被拦截——但它同时获知了原因，以及正确的做�
 再看一个 Agent 正常执行操作的情形：
 
 ```bash
-npx @rulsynor/core --tool=read --path="docs/api-spec.md"
+npx @openoba/rulsynor-core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
@@ -89,13 +89,13 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 
 ```bash
 # 执行危险命令 — 被拦截
-npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 
 # 读取文件 — 放行
-npx @rulsynor/core --tool=read --path="README.md"
+npx @openoba/rulsynor-core --tool=read --path="README.md"
 
 # 写入系统目录 — 被拦截
-npx @rulsynor/core --tool=write_file --path="/etc/cron.d/x"
+npx @openoba/rulsynor-core --tool=write_file --path="/etc/cron.d/x"
 ```
 
 > 💡 以上演示的是单次工具调用的 CLI 评估（不包含 LLM）。
@@ -236,7 +236,7 @@ then:
 ### 二、培训 —— 编译并加载
 
 ```typescript
-import { loadPresetRules, toCompiledRules } from '@rulsynor/core';
+import { loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
 // 29 条内置安全规则 + 你的业务规则
 const presetRules = loadPresetRules();           // PresetRule[]
@@ -245,7 +245,7 @@ const rules = toCompiledRules(presetRules);       // CompiledRule[] — 引擎�
 // 自定义规则：加载自己的 .erdl.yaml
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
-// 用 RuleCompilerImpl 编译（从 @rulsynor/core/engine 导入）
+// 用 RuleCompilerImpl 编译（从 @openoba/rulsynor-core/engine 导入）
 ```
 
 **培训即编译**：YAML 规则被解析、验证（ReDoS 检测、运算符白名单、必填字段检查），编译为静态决策树。引擎运行时不再解析。
@@ -257,7 +257,7 @@ const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
 Guard 放在 Agent 的工具调用边界。执行前评估——按环排序，first-match-wins，亚毫秒级开销。
 
 ```typescript
-import { Evaluator, GuardStateManager } from '@rulsynor/core';
+import { Evaluator, GuardStateManager } from '@openoba/rulsynor-core';
 
 const evaluator = new Evaluator(new GuardStateManager());
 
@@ -303,7 +303,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 规则触发后，Agent 得到的不是"不行"。**Navigation Guide** 把 LLM 需要的回复信息全部返回：
 
 ```typescript
-import { extractNavigationGuide } from '@rulsynor/core/guidance';
+import { extractNavigationGuide } from '@openoba/rulsynor-core/guidance';
 
 const guide = extractNavigationGuide({
   matchedRules: [{ ruleId: 'production-db-needs-approval', decision: 'REQUEST_HUMAN', reason: '...' }],
@@ -322,7 +322,7 @@ const guide = extractNavigationGuide({
 **CORRECT 纠正循环**：当 `decision === 'CORRECT'` 时，`advanceCorrectLoop()` 自动应用修正、递增重试计数、重新评估。3 轮成功 → 继续任务。3 轮失败 → 升级人工。
 
 ```typescript
-import { advanceCorrectLoop } from '@rulsynor/core/preflight';
+import { advanceCorrectLoop } from '@openoba/rulsynor-core/preflight';
 
 const state = advanceCorrectLoop(
   {
@@ -345,7 +345,7 @@ const state = advanceCorrectLoop(
 每一次评估——ALLOW、DENY、CORRECT 都算——生成一个 25 字段决策对象。JCS 规范化（RFC 8785），SHA-256 哈希。记录不可篡改，任何人可独立验证，无需 SDK：
 
 ```typescript
-import { buildDecisionObject } from '@rulsynor/core';
+import { buildDecisionObject } from '@openoba/rulsynor-core';
 
 const record = buildDecisionObject({
   input: {
@@ -409,7 +409,7 @@ npx @openoba/audit-verify decision-object.json
 ### 六、Agent 身份 —— 每个员工都有工牌
 
 ```typescript
-import { generateAID } from '@rulsynor/core';
+import { generateAID } from '@openoba/rulsynor-core';
 
 // 默认自生成（OID 前缀 1.2.156.3088）
 const aid = generateAID();
@@ -433,7 +433,7 @@ export RULSYNOR_RISK_LEVEL="high"
 ```
 
 ```typescript
-import { getComplianceProfile } from '@rulsynor/core/compliance';
+import { getComplianceProfile } from '@openoba/rulsynor-core/compliance';
 
 const profile = getComplianceProfile();
 // activated_fields 自动填充 CN（GB/Z 185）+ EU（AI Act）所需字段
@@ -447,7 +447,7 @@ const profile = getComplianceProfile();
 ### 八、扩展 —— 你的业务逻辑，你的规则
 
 ```typescript
-import { ERDLFnRegistry } from '@rulsynor/core/engine';
+import { ERDLFnRegistry } from '@openoba/rulsynor-core/engine';
 
 const registry = new ERDLFnRegistry();
 registry.register({
@@ -519,7 +519,7 @@ registry.register({
 
 ## API 参考
 
-### 核心导出（`@rulsynor/core`）
+### 核心导出（`@openoba/rulsynor-core`）
 
 | 导出 | 说明 |
 |------|------|
@@ -548,13 +548,13 @@ registry.register({
 
 | 路径 | 内容 |
 |------|------|
-| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, 类型 |
-| `@rulsynor/core/guard` | buildDecisionObject, generateAID, DecisionObject 类型 |
-| `@rulsynor/core/compliance` | getComplianceProfile, ComplianceProfile 类型, 4 框架合规 |
-| `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule 类型 |
-| `@rulsynor/core/guidance` | extractNavigationGuide — 告诉 LLM 怎么恢复 |
-| `@rulsynor/core/runtime` | runReActLoop, createToolExecutor |
-| `@rulsynor/core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
+| `@openoba/rulsynor-core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, 类型 |
+| `@openoba/rulsynor-core/guard` | buildDecisionObject, generateAID, DecisionObject 类型 |
+| `@openoba/rulsynor-core/compliance` | getComplianceProfile, ComplianceProfile 类型, 4 框架合规 |
+| `@openoba/rulsynor-core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule 类型 |
+| `@openoba/rulsynor-core/guidance` | extractNavigationGuide — 告诉 LLM 怎么恢复 |
+| `@openoba/rulsynor-core/runtime` | runReActLoop, createToolExecutor |
+| `@openoba/rulsynor-core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
 
 ### Decision Object — 25 字段
 

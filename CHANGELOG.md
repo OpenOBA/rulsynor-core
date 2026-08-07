@@ -1,4 +1,4 @@
-# Changelog — @rulsynor/core
+# Changelog — @openoba/rulsynor-core
 
 ## v1.0.0 (2026-08-07)
 
@@ -26,7 +26,7 @@
 - DO Payload builder for RAG traceability
 
 **Developer Experience**
-- Playground CLI: `npx @rulsynor/core --tool=exec --cmd="rm -rf /"` shows Guard interception
+- Playground CLI: `npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"` shows Guard interception
 - Minimal Chat Runtime: ReAct loop + Guard + Tool executor in one file
 - 29 preset rules (20 security + 8 compliance + 1 integrity)
 - integrity.erdl.yaml: professional ethics detection (promise vs action, no cover-up, transparency)

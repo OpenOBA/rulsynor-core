@@ -1,4 +1,4 @@
-# Developer Guide — @rulsynor/core
+# Developer Guide — @openoba/rulsynor-core
 
 > For end users writing ERDL rules, see [RULE-AUTHORING.md](./RULE-AUTHORING.md).
 > For the submission workflow, see [CONTRIBUTING.md](../CONTRIBUTING.md).
@@ -54,7 +54,7 @@ The three layers are deliberately **redundant** for safety — each implements o
 ```
 src/
 ├── index.ts                    # Public API barrel export
-├── playground.ts               # CLI entry: npx @rulsynor/core
+├── playground.ts               # CLI entry: npx @openoba/rulsynor-core
 ├── runtime.ts                  # Minimal ReAct loop
 ├── provenance.ts               # Build identity watermark
 ├── engine/

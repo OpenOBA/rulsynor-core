@@ -1,11 +1,11 @@
-# @rulsynor/core
+# @openoba/rulsynor-core
 
 > **LLM vendors deliver exceptional intelligence. We deliver accountability.**
 
 **rulsynor-core** is ethics-first Harness Engineering: rules as the reins, accountability as the baseline — safely channeling AI Agent capabilities while ensuring every autonomous action is traceable, auditable, and verifiable.
 
 ```bash
-npm install @rulsynor/core
+npm install @openoba/rulsynor-core
 ```
 
 [![Try it now](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40rulsynor%2Fcore-black)](#30-seconds-to-see-it-work)  ·  [Examples](examples/)  ·  [API Reference](#api-reference)  ·  [Specs](docs/SPEC/)  ·  [Contributing](CONTRIBUTING.md)
@@ -54,7 +54,7 @@ The result: **you can verify every decision your Agent makes.** Audit trail to p
 ## 30 Seconds to See It Work
 
 ```bash
-npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
+npx @openoba/rulsynor-core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
@@ -72,7 +72,7 @@ The Agent got blocked — but it was told why, and how to do it right.
 Now try something the Agent *should* be able to do:
 
 ```bash
-npx @rulsynor/core --tool=read --path="docs/api-spec.md"
+npx @openoba/rulsynor-core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
@@ -91,13 +91,13 @@ When the tool call is safe, rulsynor gets out of the way. The Agent works. The a
 
 ```bash
 # Try something dangerous — blocked
-npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 
 # Try something safe — allowed  
-npx @rulsynor/core --tool=read --path="README.md"
+npx @openoba/rulsynor-core --tool=read --path="README.md"
 
 # Try writing to /etc — blocked
-npx @rulsynor/core --tool=write_file --path="/etc/cron.d/x"
+npx @openoba/rulsynor-core --tool=write_file --path="/etc/cron.d/x"
 ```
 
 > 💡 These CLI demos evaluate a single tool call without an LLM.
@@ -233,7 +233,7 @@ Copy the prompt template from [`docs/RULE-PROMPT.md`](docs/RULE-PROMPT.md), past
 ### 2. Train — Compile and Load
 
 ```typescript
-import { loadPresetRules, toCompiledRules } from '@rulsynor/core';
+import { loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
 // 29 built-in rules + your business rules
 const presetRules = loadPresetRules();           // PresetRule[]
@@ -242,7 +242,7 @@ const rules = toCompiledRules(presetRules);       // CompiledRule[] — ready fo
 // Custom rules: load your own .erdl.yaml files
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
-// Compile with RuleCompilerImpl (from @rulsynor/core/engine)
+// Compile with RuleCompilerImpl (from @openoba/rulsynor-core/engine)
 ```
 
 **Training is compilation**: YAML rules are parsed, validated (ReDoS check, operator whitelist, missing-field detection), and compiled into a static decision tree. The engine doesn't re-parse at runtime.
@@ -254,7 +254,7 @@ const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
 The Guard sits at your Agent's tool-call boundary. It evaluates before execution — ring-sorted, first-match-wins, sub-millisecond overhead.
 
 ```typescript
-import { Evaluator, GuardStateManager } from '@rulsynor/core';
+import { Evaluator, GuardStateManager } from '@openoba/rulsynor-core';
 
 const evaluator = new Evaluator(new GuardStateManager());
 
@@ -300,7 +300,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 When a rule fires, the agent gets more than "no." The **Navigation Guide** gives the LLM what it needs to respond correctly:
 
 ```typescript
-import { extractNavigationGuide } from '@rulsynor/core/guidance';
+import { extractNavigationGuide } from '@openoba/rulsynor-core/guidance';
 
 const guide = extractNavigationGuide({
   matchedRules: [{ ruleId: 'production-db-needs-approval', decision: 'REQUEST_HUMAN', reason: '...' }],
@@ -319,7 +319,7 @@ Pass `guide.corrections` and `guide.alternatives` back to the LLM in the next `a
 **CORRECT loop**: When `decision === 'CORRECT'`, the engine's `advanceCorrectLoop()` auto-applies the correction, increments the retry counter, and re-evaluates. After 3 successful rounds, the task continues. After 3 failures, the task escalates.
 
 ```typescript
-import { advanceCorrectLoop } from '@rulsynor/core/preflight';
+import { advanceCorrectLoop } from '@openoba/rulsynor-core/preflight';
 
 const state = advanceCorrectLoop(
   {
@@ -342,7 +342,7 @@ const state = advanceCorrectLoop(
 Every evaluation — ALLOW, DENY, CORRECT, anything — produces a 25-field Decision Object. JCS-canonicalized (RFC 8785), SHA-256 hashed. The record is tamper-evident and verifiable by anyone, with no SDK:
 
 ```typescript
-import { buildDecisionObject } from '@rulsynor/core';
+import { buildDecisionObject } from '@openoba/rulsynor-core';
 
 const record = buildDecisionObject({
   input: {
@@ -406,7 +406,7 @@ npx @openoba/audit-verify decision-object.json
 ### 6. Agent Identity — Every employee has a badge
 
 ```typescript
-import { generateAID } from '@rulsynor/core';
+import { generateAID } from '@openoba/rulsynor-core';
 
 // Default: self-generated under OID 1.2.156.3088
 const aid = generateAID();
@@ -430,7 +430,7 @@ export RULSYNOR_RISK_LEVEL="high"
 ```
 
 ```typescript
-import { getComplianceProfile } from '@rulsynor/core/compliance';
+import { getComplianceProfile } from '@openoba/rulsynor-core/compliance';
 
 const profile = getComplianceProfile();
 // activated_fields auto-populated for CN (GB/Z 185) + EU (AI Act)
@@ -444,7 +444,7 @@ const profile = getComplianceProfile();
 ### 8. Extend — Your business logic, your rules
 
 ```typescript
-import { ERDLFnRegistry } from '@rulsynor/core/engine';
+import { ERDLFnRegistry } from '@openoba/rulsynor-core/engine';
 
 const registry = new ERDLFnRegistry();
 registry.register({
@@ -516,7 +516,7 @@ registry.register({
 
 ## API Reference
 
-### Core (`@rulsynor/core`)
+### Core (`@openoba/rulsynor-core`)
 
 | Export | Description |
 |------|------|
@@ -545,13 +545,13 @@ registry.register({
 
 | Path | Contents |
 |------|------|
-| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, types |
-| `@rulsynor/core/guard` | buildDecisionObject, generateAID, DecisionObject types |
-| `@rulsynor/core/compliance` | getComplianceProfile, ComplianceProfile type, 4-framework compliance |
-| `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule type |
-| `@rulsynor/core/guidance` | extractNavigationGuide — tell the LLM how to recover |
-| `@rulsynor/core/runtime` | runReActLoop, createToolExecutor |
-| `@rulsynor/core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
+| `@openoba/rulsynor-core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, types |
+| `@openoba/rulsynor-core/guard` | buildDecisionObject, generateAID, DecisionObject types |
+| `@openoba/rulsynor-core/compliance` | getComplianceProfile, ComplianceProfile type, 4-framework compliance |
+| `@openoba/rulsynor-core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule type |
+| `@openoba/rulsynor-core/guidance` | extractNavigationGuide — tell the LLM how to recover |
+| `@openoba/rulsynor-core/runtime` | runReActLoop, createToolExecutor |
+| `@openoba/rulsynor-core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
 
 ### Decision Object — 25 fields
 

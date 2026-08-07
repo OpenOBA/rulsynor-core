@@ -191,15 +191,15 @@ Test rules instantly without writing code:
 
 ```bash
 # Test a dangerous command
-npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 # → DENY
 
 # Test a safe command
-npx @rulsynor/core --tool=read --path="README.md"
+npx @openoba/rulsynor-core --tool=read --path="README.md"
 # → ALLOW
 
 # Test SSRF
-npx @rulsynor/core --tool=http_request --url="http://169.254.169.254/latest/meta-data/"
+npx @openoba/rulsynor-core --tool=http_request --url="http://169.254.169.254/latest/meta-data/"
 # → DENY
 ```
 
