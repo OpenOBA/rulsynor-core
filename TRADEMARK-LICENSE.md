@@ -3,6 +3,7 @@
 
 > 版本 Version: 1.0 | 生效 Effective: 2026-06-10
 > 许可方 Licensor: 深圳市秒镜科技有限公司 (Shenzhen Miaojing Technology Co., Ltd.)
+> 适用商标 Applicable Marks: **OpenOBA™, ERDL™, ERA-Chat™, Rulsynor™, rulsynor-core™**
 > 商标状态 Trademark Status: **申请中 Pending** (CNIPA 第 9 类 / 第 42 类)
 > ⚠️ 注意：上述商标目前处于申请阶段，尚未获准注册。在注册获批前，商标保护力度有限。如商标注册申请被驳回，本协议将自动终止，已支付费用按剩余期限比例退还。
 

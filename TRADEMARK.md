@@ -14,6 +14,8 @@
 | **OpenOBA™** | Pending (CNIPA Class 9, 42) |
 | **ERDL™** | Pending (CNIPA Class 9) |
 | **ERA-Chat™** | Pending (CNIPA Class 9, 42) |
+| **Rulsynor™** | Pending (CNIPA Class 9) |
+| **rulsynor-core™** | Pending (CNIPA Class 9) |
 | **OpenOBA Logo** | Pending (CNIPA Class 9) |
 
 > Status: Application pending with China National Intellectual Property Administration. ™ denotes unregistered trademark claim.
@@ -34,9 +36,9 @@
 
 ## Prohibited Use
 
-- Impersonating official OpenOBA accounts or identity
-- Using OpenOBA/ERDL/ERA-Chat as primary product or company name
-- Domain squatting (openoba.cloud, openoba-erp.com, etc.)
+- Impersonating official OpenOBA or Rulsynor accounts or identity
+- Using OpenOBA/ERDL/ERA-Chat/Rulsynor/rulsynor-core as primary product or company name
+- Domain squatting (openoba.cloud, rulsynor.io, etc.)
 - Modifying the OpenOBA logo
 - Implying official endorsement without written authorization
 
