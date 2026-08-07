@@ -73,7 +73,7 @@ When the tool call is safe, rulsynor gets out of the way. The Agent works. The a
 
 ---
 
-## The Full Lifecycle: Train → Work → Correct → Prove
+## The Full Lifecycle: Train → Deploy → Correct → Prove
 
 rulsynor maps the HR lifecycle professionals already trust onto your AI Agent:
 
@@ -138,7 +138,7 @@ then:
 
 **The key insight**: rules don't block work. They define *how* work gets done.
 
-**Available operators** (16): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**Available operators** (22): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
 
 **Decisions your rules can make**:
 
@@ -400,7 +400,7 @@ registry.register('isBusinessHours', (args: unknown[]) => {
 │  │                          │           │
 │  │  Ring 0 → Ring 3         │           │
 │  │  29 preset + your rules  │           │
-│  │  SafeExpr (16 ops)       │           │
+│  │  SafeExpr (22 ops)       │           │
 │  │  within / rate trackers  │           │
 │  │  CORRECT auto-retry      │           │
 │  │  Guidance for LLM        │           │
@@ -477,6 +477,19 @@ human_oversight · audit { previous_hash, commitment, hash }
 | `RULSYNOR_MODEL_ID` | LLM model in DO | `unknown` |
 | `RULSYNOR_AID_REGISTRAR` | Organization code in AID | `000001` |
 | `RULSYNOR_AID_REQUESTER` | Department code in AID | `000001` |
+
+---
+
+## Specifications
+
+This package bundles the normative reference specifications:
+
+| Document | Path | Description |
+|------|------|------|
+| ERDL Spec v1.1 | [`docs/SPEC/erdl-spec-v1.1.md`](docs/SPEC/erdl-spec-v1.1.md) | ERDL language specification (Chinese) |
+| ERDL Spec v1.1 (EN) | [`docs/SPEC/erdl-spec-v1.1.en.md`](docs/SPEC/erdl-spec-v1.1.en.md) | ERDL language specification (English) |
+| RFC 001 | [`docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md`](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object audit standard v1.3 (Chinese) |
+| RFC 001 (EN) | [`docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md`](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object audit standard v1.3 (English) |
 
 ---
 
