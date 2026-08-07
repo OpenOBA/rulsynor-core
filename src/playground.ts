@@ -92,10 +92,24 @@ const guide = extractNavigationGuide({
 
 const alt = guide.alternatives.length ? guide.alternatives.join('; ') : '—';
 
-console.log('📋 Trained:    ' + evalRules.length + ' rules loaded');
-console.log('🛡️  Decision:   ' + result.decision);
-console.log('📝 Reason:     ' + (result.reason || 'none'));
-console.log('🧾 Recorded:   ' + record.audit.hash + ' (tamper-evident)');
-console.log('🪪 Employee ID:' + ' ' + aid);
-console.log('📊 Jurisdiction:' + ' ' + jurisdictions.join(',') + ' (GB/Z 185-2026 compliant)');
-console.log('🧭 Alternative:' + ' ' + alt);
+const jsonMode = args.includes('--json');
+
+if (jsonMode) {
+  console.log(JSON.stringify({
+    decision: result.decision,
+    reason: result.reason || null,
+    auditHash: record.audit.hash,
+    rulesEvaluated: evalRules.length,
+    aid,
+    jurisdictions,
+    alternative: alt,
+  }));
+} else {
+  console.log('📋 Trained:    ' + evalRules.length + ' rules loaded');
+  console.log('🛡️  Decision:   ' + result.decision);
+  console.log('📝 Reason:     ' + (result.reason || 'none'));
+  console.log('🧾 Recorded:   ' + record.audit.hash + ' (tamper-evident)');
+  console.log('🪪 Employee ID:' + ' ' + aid);
+  console.log('📊 Jurisdiction:' + ' ' + jurisdictions.join(',') + ' (GB/Z 185-2026 compliant)');
+  console.log('🧭 Alternative:' + ' ' + alt);
+}
