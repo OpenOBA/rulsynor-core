@@ -12,25 +12,24 @@ npm install @rulsynor/core
 
 ## 商业命题：缺乏治理的 AI Agent，是企业尚未引爆的运营风险
 
-你的企业即将部署能够读写数据库、操作文件、调用 API、执行系统命令的 AI Agent。
+AI 的效率，每一家企业都看得见，但经常会因为一段模糊的提示词而破坏成果，在一个长任务中偏离方向，在错误的执行中放大错误。
 
-这些 Agent 可能在某个午夜犯下错误——并非代码缺陷，而是任何新员工入职首周都可能出现的判断失误。你的 HR、合规、法务团队数十年沉淀的治理流程，能否同样约束它？
+就象一个初入职场的新人，渴望表现自己，但它并不熟悉企业的制度、流程、缺乏基本的职业道德。培训，象对待一名新员工一样。
 
-> 谁在培训你的 AI Agent 走完上岗流程？
-> 谁在考核它是否掌握了岗位规则？
-> 谁在记录它的每一步操作——不是可篡改的日志，而是法庭上站得住的审计证据？
+> 雇佣它：给它一个AID，然后给它上职业化路上的第一课：诚实
+> 培训它：用when/then句式告诉它，岗位职责、流程、该怎么做、向谁汇报。
+> 记录它：每一步操作自动生成 JCS + SHA-256 密封的 25 字段 Decision Object——内审可回溯、第三方可验证、法庭可呈堂。
+> 考核它：基于实际表现持续优化规则——表现好的放权，反复出错的回炉。像带团队一样持续迭代。
 
-每位员工必经的路径：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 年审**。你的 AI Agent 理应走同样的路径。并非因为它危险，而是因为它——正如人类员工一样——是承担责任的主体。
+对标人力资源管理的最佳实践：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 总结**。将Agent职业化，象对待人类员工一样成为承担职责的主体。
 
-**rulsynor-core** 正是这条路径的执行引擎——它是 **rulsynor**（职业化数字员工）的核心框架，构建于 **OpenOBA**（数字智力资源平台）之上：
+**rulsynor-core** 沿用这条路径的执行引擎——它是 **rulsynor**（职业化数字员工）的核心框架，构建于 **OpenOBA**（数字智力资源平台）之上：
 
 | 层级 | 名称 | 定位 |
 |------|------|------|
-| 平台 | **OpenOBA** | 数字智力资源平台 — 企业 AI 治理基础设施 |
-| 产品 | **rulsynor** | 职业化数字员工 — 覆盖 HR 全生命周期的 AI Agent 治理方案 |
-| 引擎 | **rulsynor-core** | Harness Engineering — ERDL 规则引擎 + 加密审计（本包） |
-
-**rulsynor-core** 是恪守职业道德的 Harness Engineering——它不是一个"安全手铐"，而是一套可靠的行为约束框架，让 AI Agent 的能力安全释放，让每一次自动操作都问责清晰、有据可查、符合职业标准。
+| 平台 | **OpenOBA** | 数字智力资源平台 — 基于治理合规的AI Agent应用平台 |
+| 产品 | **rulsynor** | 职业化数字员工 — 能1：1对齐人类的数字员工|
+| 引擎 | **rulsynor-core** | Harness Engineering — ERDL 规则引擎 + 加密审计 |
 
 ---
 
@@ -45,7 +44,7 @@ npm install @rulsynor/core
 - **合规层**：辖区感知字段自动激活（EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI）
 - **可信层**：每个员工有工牌（AID）。每条 Decision Object 可零 SDK 独立验证。
 
-结果：**你可以放心地将真实业务交托给 Agent——而每一步都经得起审计。**
+结果：**你可以放心地将真实业务托付给 Agent——而每一步都经得起审计。**
 
 ---
 
@@ -112,6 +111,7 @@ severity: high
 ring: 0                        # 0=最先评估, 3=最后评估
 priority: 500                  # 数字越小越先检查
 when:
+  conditionLogic: AND
   conditions:
     - field: "toolName"
       operator: eq
@@ -136,6 +136,7 @@ severity: low
 ring: 3                        # 被动环——记录即可，不拦截
 priority: 300
 when:
+  conditionLogic: AND
   conditions:
     - field: "toolName"
       operator: eq
@@ -177,12 +178,11 @@ then:
 
 写规则不需要会 YAML。用大白话描述你想要什么，任何大模型都能把它翻译成 ERDL YAML：
 
-> "如果 Agent 执行的命令里包含 
-m -rf，直接拦截，并告诉它先检查文件。"
+> "如果 Agent 执行的命令里包含 `rm -rf`，直接拦截，并告诉它先检查文件。"
 
 模型返回一条可直接保存的规则：
 
-`yaml
+```yaml
 name: block-destructive-rm
 version: 1
 category: security
@@ -203,7 +203,7 @@ then:
   instruction: "Destructive command blocked."
   alternative:
     en: "Use the read tool to inspect the target first, or request human approval."
-`
+```
 
 把 [docs/RULE-PROMPT.md](docs/RULE-PROMPT.md) 中的提示词模板复制出来，粘贴到 ChatGPT、Claude 或任何大模型中，描述你的规则，把输出保存为 .erdl.yaml 即可。编译器在加载前会验证每条规则（ReDoS 安全、运算符白名单、必填字段）——部署前请务必人工复核。模型负责起草，规则手册由你定稿。
 
@@ -336,10 +336,10 @@ const record = buildDecisionObject({
   actionTaken: 'allowed',
   reason: '构建命令 — allow-readonly 规则放行',
   matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: '只读操作允许。' }],
-  totalEvaluated: 28,
+  totalEvaluated: 29,
   totalMatched: 1,
   rules: rules.map(r => ({ name: r.name, version: 1 })),
-  evaluationDurationMs: 0.8,  // 实际测量值
+  evaluationDurationMs: 1,  // 实际测量值（毫秒）
 });
 
 // record.audit.hash            → "sha256:a1b2c3..." — 不可变
@@ -557,13 +557,16 @@ human_oversight · audit { previous_hash, commitment, hash }
 | ERDL 规范 v1.1 (EN) | [docs/SPEC/erdl-spec-v1.1.en.md](docs/SPEC/erdl-spec-v1.1.en.md) | ERDL 语言规范（英文） |
 | RFC 001 | [docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object 审计标准 v1.3（中文） |
 | RFC 001 (EN) | [docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object 审计标准 v1.3（英文） |
+
+---
+
 ## 许可证
 
 MIT © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
 
 > "大模型厂商交付的是卓越智力，我们交付的是恪守职业操守的数字员工。"
 >
-> 培训你的 Agent。信任它执行。证明每一步都对。。
+> 培训你的 Agent。信任它执行。证明每一步都对。
 
 ---
 

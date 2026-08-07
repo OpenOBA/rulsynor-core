@@ -12,15 +12,18 @@ npm install @rulsynor/core
 
 ## The Business Case: AI Agents Without Governance Are a Liability
 
-Your company is about to deploy AI Agents that can read your database, write files, call APIs, and execute commands.
+AI's efficiency is visible to every business — but it can wreck a project on a single ambiguous prompt, drift off-course in a long-running task, or amplify a mistake by blindly executing wrong instructions.
 
-What happens when one of them makes a mistake? Not a bug — a mistake. The kind every new employee makes in their first week. The kind your HR and compliance and legal departments have spent decades building processes to catch.
+It's like a new hire fresh into the workplace — eager to perform, but unfamiliar with your company's processes, culture, and lacking basic professional ethics. Train them. Treat them like you'd treat any new employee.
 
-Who is training your AI Agent before it starts work? Who is certifying that it knows the rules? Who is recording what it does — not in a log file that anyone can edit, but in an audit trail that stands up in court?
+> **Hire**: Give it an AID, then teach it the first lesson of professional life: honesty.
+> **Train**: Use when/then rules to define its responsibilities, workflows, what to do, and who to report to.
+> **Record**: Every action automatically generates a 25-field Decision Object — JCS + SHA-256 sealed. Traceable internally, verifiable by third parties, admissible in court.
+> **Evaluate**: Continuously refine rules based on actual performance — grant autonomy to those who earn it, retrain those who stumble. Quarterly reviews, just like managing a human team.
 
-Every human employee goes through: **hire → train → certify → badge → deploy → audit → review**. Your AI Agents should go through exactly the same thing. Not because they're dangerous. Because they're employees.
+Following HR best practices: **Hire → Train → Certify → Badge → Deploy → Audit → Review**. Professionalize your Agent — make it a responsible employee, not a black-box tool.
 
-**rulsynor-core** is the engine that makes this possible — the core framework of **rulsynor** (Professional Digital Employee), built on **OpenOBA** (Digital Intelligence Resource Platform):
+**rulsynor-core** is the engine that walks this path — the core framework of **rulsynor** (Professional Digital Employee), built on **OpenOBA** (Digital Intelligence Resource Platform):
 
 | Layer | Name | Role |
 |------|------|------|
@@ -51,11 +54,13 @@ npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
+📋 Trained:    29 rules loaded
 🛡️  Decision:   DENY
 📝 Reason:     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
-🧭 Guidance:   Use the read tool to fetch the URL content first, then review before executing.
-🧾 Recorded:   sha256:18ce857... (tamper-evident, 25-field Decision Object)
-🪪 Employee ID: 1.2.156.3088.1.000001.000001.28027273
+🧾 Recorded:   sha256:8274b0... (tamper-evident)
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.5ce550e5
+📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
+🧭 Alternative: Use the read tool to fetch the URL content first, then review before executing.
 ```
 
 The Agent got blocked — but it was told why, and how to do it right.
@@ -67,8 +72,13 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
+📋 Trained:    29 rules loaded
 ✅ Decision:   ALLOW
-🧾 Recorded:   sha256:b2f1a93... (logged, audit trail maintained)
+📝 Reason:     Read-only operation allowed.
+🧾 Recorded:   sha256:e71eb71... (tamper-evident)
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.4ebf704b
+📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
+🧭 Alternative: —
 ```
 
 When the tool call is safe, rulsynor gets out of the way. The Agent works. The audit trail grows.
@@ -150,6 +160,7 @@ then:
 | `ALLOW` | Go ahead, logged | Safe operations, batch jobs, known patterns |
 | `DENY` | Stop. Here's why. Here's how to fix it. | Dangerous operations with clear alternatives |
 | `CORRECT` | Auto-fix and retry. Up to 3 rounds. | Wrong path, wrong format, fixable mistakes |
+| `NOTIFY` | Log and continue — no interruption | Anomaly detected, threshold alert, compliance event |
 | `QUARANTINE` | Run in sandbox, flag for review | Suspicious but possibly legitimate |
 | `REQUEST_HUMAN` | Ask a person before proceeding | Production DB, GDPR delete, >$5K transactions |
 | `EMERGENCY_HALT` | Stop everything immediately | Credential leak, SSRF to internal IPs |
@@ -287,12 +298,18 @@ Pass `guide.corrections` and `guide.alternatives` back to the LLM in the next `a
 ```typescript
 import { advanceCorrectLoop } from '@rulsynor/core/preflight';
 
-const state = advanceCorrectLoop({
-  current: { round: 0, maxRounds: 3, lastCorrection: null },
-  correction: 'Change path from /etc/ to /var/app/',
-  agentResponse: revisedToolCall,
-});
-// state.corrected → true, round → 1. Retry with corrected tool call.
+const state = advanceCorrectLoop(
+  {
+    ruleId: 'correct-unsafe-path',
+    originalToolCall: { name: 'write_file', args: { path: '/etc/nginx/conf' } },
+    correction: 'Change path from /etc/ to /var/app/',
+    round: 1,
+    state: 'correct_round_1',
+  },
+  evaluationResult.decision,  // e.g. 'CORRECT' or 'ALLOW'
+);
+// state.execute → true (Agent adopted correction). Task continues.
+// After 3 failures: state.escalate → true. Trigger REQUEST_HUMAN.
 ```
 
 ---
@@ -319,10 +336,10 @@ const record = buildDecisionObject({
   actionTaken: 'allowed',
   reason: 'Build command — allowed by allow-readonly rule',
   matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: 'Read-only operation allowed.' }],
-  totalEvaluated: 28,
+  totalEvaluated: 29,
   totalMatched: 1,
   rules: rules.map(r => ({ name: r.name, version: 1 })),
-  evaluationDurationMs: 0.8,  // actual measurement
+  evaluationDurationMs: 1,  // actual measurement (milliseconds)
 });
 
 // record.audit.hash            → "sha256:a1b2c3..." — immutable
@@ -407,11 +424,22 @@ const profile = getComplianceProfile();
 import { ERDLFnRegistry } from '@rulsynor/core/engine';
 
 const registry = new ERDLFnRegistry();
-registry.register('isBusinessHours', (args: unknown[]) => {
-  const tz = (args[0] as string) || 'Asia/Shanghai';
-  const h = parseInt(new Date().toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
-  return h >= 9 && h < 18;
-}, { timeoutMs: 100 });
+registry.register({
+  signature: {
+    name: 'isBusinessHours',
+    signature: 'isBusinessHours(tz) → boolean',
+    params: ['tz'],
+    returns: 'boolean',
+  },
+  impl: (tz?: string) => {
+    const tzId = tz || 'Asia/Shanghai';
+    const h = parseInt(
+      new Date().toLocaleString('en-US', { timeZone: tzId, hour: 'numeric', hour12: false })
+    );
+    return h >= 9 && h < 18;
+  },
+  timeoutMs: 100,
+});
 
 // Now use in rules:
 //   - field: "fn:isBusinessHours"
@@ -473,7 +501,7 @@ registry.register('isBusinessHours', (args: unknown[]) => {
 | `GuardStateManager` | Stateful `within`/`rate` counter manager |
 | `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object |
 | `generateAID()` | Generate Agent Identity Code |
-| `loadPresetRules()` | Load 28 built-in ERDL YAML rules |
+| `loadPresetRules()` | Load 29 built-in ERDL YAML rules |
 | `toCompiledRules(rules)` | Convert preset rules → `CompiledRule[]` for Evaluator |
 | `toERDLRuleSet(rules)` | Convert preset rules → RuleCompiler format |
 | `PROVENANCE` | Version, vendor, OID prefix, known limitations |
