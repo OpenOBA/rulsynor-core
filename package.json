@@ -11,6 +11,7 @@
   "files": [
     "dist/",
     "src/",
+    "docs/",
     "LICENSE",
     "README.md",
     "README.zh-CN.md"
