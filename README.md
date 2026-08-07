@@ -555,6 +555,16 @@ This package bundles the normative reference specifications:
 | RFC 001 | [`docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md`](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object audit standard v1.3 (Chinese) |
 | RFC 001 (EN) | [`docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md`](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object audit standard v1.3 (English) |
 
+The package also includes a complete cross-implementation test vector set. Any conforming ERDL engine can self-test independently:
+
+| Resource | Path | Description |
+|------|------|------|
+| Test Vectors v1.3 | [docs/vectors/decision-object-vectors-v1.3.json](docs/vectors/decision-object-vectors-v1.3.json) | 101 cross-implementation vectors |
+| Verification Script | [docs/vectors/scripts/verify.js](docs/vectors/scripts/verify.js) | Zero-dependency vector verifier |
+| Implementation Registry | [docs/vectors/IMPLEMENTATIONS.md](docs/vectors/IMPLEMENTATIONS.md) | Third-party implementation records |
+| Verified Runners | [docs/vectors/verified-runners.json](docs/vectors/verified-runners.json) | Verified independent runner list |
+| Conformance Template | [docs/vectors/conformance/CONFORMANCE.md](docs/vectors/conformance/CONFORMANCE.md) | Auto-generated conformance report |
+
 ---
 
 ## License

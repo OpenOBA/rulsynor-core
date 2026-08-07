@@ -558,6 +558,18 @@ human_oversight · audit { previous_hash, commitment, hash }
 | RFC 001 | [docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object 审计标准 v1.3（中文） |
 | RFC 001 (EN) | [docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object 审计标准 v1.3（英文） |
 
+本包同时附带完整的跨实现测试向量集，任何兼容的 ERDL 引擎均可独立自测：
+
+| 资源 | 路径 | 说明 |
+|------|------|------|
+| 测试向量集 v1.3 | [docs/vectors/decision-object-vectors-v1.3.json](docs/vectors/decision-object-vectors-v1.3.json) | 101 条跨实现向量 |
+| 验证脚本 | [docs/vectors/scripts/verify.js](docs/vectors/scripts/verify.js) | 零依赖向量验证器 |
+| 跨实现注册表 | [docs/vectors/IMPLEMENTATIONS.md](docs/vectors/IMPLEMENTATIONS.md) | 第三方实现者验证记录 |
+| 已验证 Runner 列表 | [docs/vectors/verified-runners.json](docs/vectors/verified-runners.json) | 已验证的独立 Runner 清单 |
+| 合规报告模板 | [docs/vectors/conformance/CONFORMANCE.md](docs/vectors/conformance/CONFORMANCE.md) | 自动生成的一致性验证报告 |
+
+---
+
 ---
 
 ## 许可证
