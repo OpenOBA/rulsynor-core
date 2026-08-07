@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
-    "json-canonicalize": "^1.0.0"
+    "json-canonicalize": "^2.0.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
