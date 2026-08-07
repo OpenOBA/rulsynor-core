@@ -27,9 +27,9 @@ Following HR best practices: **Hire → Train → Certify → Badge → Deploy �
 
 | Layer | Name | Role |
 |------|------|------|
-| Platform | **OpenOBA** | Digital Intelligence Resource Platform — enterprise AI governance infrastructure |
-| Product | **rulsynor** | Professional Digital Employee — full HR lifecycle for AI Agents |
-| Engine | **rulsynor-core** | Harness Engineering — ERDL rule engine + cryptographic audit (this package) |
+| Platform | **OpenOBA** | Digital Intelligence Resource Platform — governance-compliant AI Agent application platform |
+| Product | **rulsynor** | Professional Digital Employee — 1:1 alignment with human employees |
+| Engine | **rulsynor-core** | Harness Engineering — ERDL rule engine + cryptographic audit |
 
 ---
 
@@ -274,7 +274,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 ### 4. The Guidance System — Help the Agent Succeed
 
-When a rule fires, the agent gets more than "no." The **Navigation Guide** gives the LLM what it needs to recover:
+When a rule fires, the agent gets more than "no." The **Navigation Guide** gives the LLM what it needs to respond correctly:
 
 ```typescript
 import { extractNavigationGuide } from '@rulsynor/core/guidance';

@@ -274,7 +274,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 ### 四、引导系统 —— 助 Agent 达成目标
 
-规则触发后，Agent 得到的不是"不行"。**Navigation Guide** 把 LLM 需要的恢复信息全部返回：
+规则触发后，Agent 得到的不是"不行"。**Navigation Guide** 把 LLM 需要的回复信息全部返回：
 
 ```typescript
 import { extractNavigationGuide } from '@rulsynor/core/guidance';
