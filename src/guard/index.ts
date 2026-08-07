@@ -55,9 +55,61 @@ export interface DecisionObjectInput {
   modelId?: string;
 }
 
+/** Strongly-typed Decision Object — for type-safe consumption by frontend and integrators. */
+export interface DecisionObject {
+  spec: string;
+  decision_id: string;
+  compliance_profile: Record<string, unknown>;
+  execution_trace_id: string;
+  timestamp: string;
+  evaluation_duration_ms: number;
+  agent: {
+    id: string;
+    role: string;
+    version: string;
+    aid: string;
+    algorithm_filing_no: string;
+    model_registration_id: string;
+    known_limitations: string[];
+    tool_registry_hash: string;
+  };
+  model_id: string;
+  context: Record<string, unknown>;
+  context_snapshot_hash: string;
+  sanitized_context: null | Record<string, unknown>;
+  rule_set_version: { id: string; timestamp: string };
+  policies: Array<{ id: string; name: string; author_id: string; version: number; hash: string }>;
+  evaluation: {
+    evaluation_details: { total_evaluated: number; total_matched: number; evaluation_duration_ms: number };
+    matched_rules: Array<Record<string, unknown>>;
+    triggered_rules: Array<Record<string, unknown>>;
+  };
+  result: {
+    applied_rule: string | null;
+    decision: string;
+    decision_type: string;
+    reason: string;
+    rules_matched: string[];
+  };
+  human_oversight: boolean;
+  audit: {
+    previous_hash: string | null;
+    commitment: string;
+    hash: string;
+  };
+  impact_assessment_id: string;
+  fairness_assessment: string;
+  autonomy_level: string;
+  confidence_score: number;
+  data_modification_expected: boolean;
+  extensions: unknown[];
+  signature: string;
+  signing_key_id: string;
+}
+
 // ── Public API ──
 
-export function buildDecisionObject(opts: DecisionObjectInput): Record<string, unknown> {
+export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const { input, decision, actionTaken, reason, matchedRules, totalEvaluated, totalMatched, rules, evaluationDurationMs, modelId } = opts;
   const timestamp = new Date().toISOString();
   const decisionId = crypto.randomUUID();
@@ -178,7 +230,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): Record<string, u
   return {
     ...recordWithoutHash,
     audit: { previous_hash: input.previousAuditHash ?? null, commitment, hash: `sha256:${hash}` },
-  };
+  } as DecisionObject;
 }
 
 // ── Helpers ──

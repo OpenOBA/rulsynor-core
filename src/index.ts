@@ -1,6 +1,8 @@
 export { Evaluator, SafeExprEvaluator, ERDLFnRegistry, GuardStateManager, type MatchedRuleDetail } from './engine/index.js';
 export type { RuleDefinition, RuleMatch, CompiledRule, MatchCondition, EvalContext, EvalResult } from './engine/index.js';
+export { safeExprFromCondition } from './engine/safe-expr.js';
 export { buildDecisionObject, generateAID } from './guard/index.js';
+export type { DecisionObject, DecisionObjectInput, GuardInput, RuleMatch as GuardRuleMatch, RuleDefinition as GuardRuleDefinition } from './guard/index.js';
 export { getComplianceProfile } from './compliance/index.js';
 export { PROVENANCE } from './provenance.js';
 export { loadPresetRules, toRuleDefinitions, toERDLRuleSet, toCompiledRules } from './rules/index.js';
