@@ -1,62 +1,130 @@
-# Security Policy �?@rulsynor/core
+# OpenOBA Security Policy
 
-## Design Principles
+> Version: 1.1 | Effective: 2026-06-10 | Updated: 2026-06-25
+> Maintainer: Shenzhen Miaojing Technology Co., Ltd.
 
-@rulsynor/core is a **deterministic Guard engine** �?every tool call is intercepted BEFORE execution, evaluated against ERDL rules, and documented with cryptographically verifiable audit evidence.
+---
 
-### 1. Prompt-based safety is not safety
+## 1. Reporting a Vulnerability
 
-LLM prompt constraints ("please don't do X") are not security boundaries. @rulsynor/core evaluates tool calls using a **deterministic expression engine** (SafeExpr) �?not LLM prompts.
+**If you discover a security vulnerability in OpenOBA, do NOT report it in public Issues, Discussions, or PRs.**
 
-### 2. Zero code injection surface
+Please report through:
 
-SafeExpr is a **pure recursive descent parser** with 16 whitelisted operators. No `eval()`. No dynamic code generation. Every operator is a hardcoded function.
+📧 **postmaster@openoba.com** (PGP encryption strongly recommended)
+🔑 **PGP Public Key URL**: `https://openoba.com/.well-known/security-pgp-key.asc`
+🔒 **security.txt**: `https://openoba.com/.well-known/security.txt` (RFC 9116 compliant)
 
-### 3. Cryptographic audit trail
+---
 
-Every Decision Object carries `audit.hash = SHA-256(JCS(all 25 fields minus audit.hash, signature, signing_key_id))`. Tampering with any field changes the hash. The vector set (erdl-vectors v1.3) provides 101 cross-implementation test vectors for independent verification.
+## 2. SLA Commitments
 
-### 4. Cross-implementation verifiable
+| Phase | SLA | Action |
+|-------|-----|--------|
+| Report received | Within 24 hours | Email confirmation, incident ID assignment |
+| Initial assessment | Within 7 business days | Severity evaluation, impact scope, reproduction |
+| Patch release | 30 days (High) / 90 days (Medium) | Patch version + security advisory |
+| Public acknowledgement | With patch release | Release Note credit (unless anonymity requested) |
 
-Any third party can verify a Decision Object using only RFC 8785 (JCS) + SHA-256. The `@openoba/audit-verify` CLI provides a zero-dependency reference implementation. No Rulsynor SDK required.
+---
 
-## Known Limitations
+## 3. Severity Classification
 
-| Limitation | Impact | Mitigation |
-|-----------|--------|-----------|
-| Decision Object signature is placeholder (`NOT_SIGNED`) | DOs are not cryptographically signed | ECDSA signing planned for Phase 2 |
-| AID is self-generated (OID prefix 1.2.156.3088) | Not registered with external authority | Registration planned for production |
-| trustLabel returns static placeholder | RAG trust labels not functional | Implementation planned for v2.1 |
-| No rate limiting on Guard evaluation itself | DoS via rapid tool calls | Handled by rulsynor server layer (NestJS ThrottlerModule) |
-| No built-in key rotation | Signing key management not implemented | Phase 2 |
+We use **CVSS 3.1** scoring.
 
-## Reporting a Vulnerability
+| Severity | CVSS Range | Patch SLA |
+|----------|-----------|-----------|
+| **Critical** | 9.0 - 10.0 | Patch within 24h, public advisory within 48h |
+| **High** | 7.0 - 8.9 | Within 30 days |
+| **Medium** | 4.0 - 6.9 | Within 90 days |
+| **Low** | 0.1 - 3.9 | Next regular release |
 
-Email: support@openoba.com
+---
 
-We aim to respond within 48 hours.
+## 4. Supported Versions
 
-## Third-Party Audit
+| Component | Supported Version |
+|-----------|------------------|
+| OpenOBA Starter (monorepo) | Latest release (V1.4.x) |
+| `packages/core/` | Latest release (BSL 1.1) |
 
-A formal independent security audit has not yet been conducted. We welcome security researchers to audit the codebase, particularly:
+Only the latest release receives security patches. Earlier versions receive critical fixes only.
 
-- SafeExpr expression parser for injection vulnerabilities
-- JCS (RFC 8785) serializer for canonicalization edge cases  
-- Decision Object hash preimage for hash length extension attacks
-- RuleCompiler for rule injection/evasion
+---
 
-## Dependencies
+## 5. Safe Harbor
 
-| Dependency | Version | Purpose | Audit |
-|-----------|---------|---------|-------|
-| json-canonicalize | ^1.0.0 | JCS (RFC 8785) serialization | npm package, MIT |
-| js-yaml | ^4.1.0 | ERDL rule YAML parsing | npm package, MIT |
+We will not pursue legal action against security researchers who act in good faith and comply with this disclosure policy.
 
-No other runtime dependencies.
+Specifically, security research activities meeting the following conditions are not considered violations:
+- Conducted for research purposes only, without actively exploiting vulnerabilities to cause harm
+- Did not access, modify, retain, transmit, or resell user data
+- Did not cause damage to service availability, performance, or integrity
+- Strictly complied with the reporting process and timelines specified in this policy
+- Provided at least 90 days for remediation before public disclosure
 
-## Build Integrity
+We will **not**:
+- File DMCA takedown notices against good-faith researchers
+- Pressure researchers' employers
+- Deny researchers legitimate use of OpenOBA based on their research activities
 
-- TypeScript strict mode enabled
-- Zero `@ts-ignore` directives
-- Zero unused imports/locals (tsc --noUnusedLocals --noUnusedParameters)
-- 100 automated tests covering SafeExpr (16 operators), Evaluator (rule matching), Decision Object (tamper detection), Compliance, Guidance, Runtime, Preflight
+---
+
+## 6. CVE Numbering
+
+We use **GitHub Security Advisories (GHSA)** for CVE assignment. Researchers do not need to apply for CVE numbers themselves — GHSA advisories automatically receive CVE numbers upon creation.
+
+---
+
+## 7. Production Deployment Best Practices
+
+If you deploy OpenOBA in production:
+
+1. **Never expose `.env` files** — excluded via `.gitignore`, CI scans with secrets detection
+2. **Enable JWT token expiration** — default 24h; production: 1-2h with refresh mechanism
+3. **Enforce HTTPS** — disable plaintext HTTP; CORS restricted to specified domains
+4. **Subscribe to security alerts** — GitHub Watch → Custom → Security Alerts
+5. **Audit logs** — cognitive audit trail; integrate with SIEM (Splunk / ELK) if available
+6. **Rotate secrets** — every 90 days in production; purge old keys from Git history
+7. **Encrypt backups** — AES-256 encryption for all database backups; key managed independently
+8. **Network isolation** — expose only required ports; restrict everything else via firewall
+
+---
+
+## 8. Authentication & Data Protection
+
+We commit to:
+
+- No plaintext password storage
+- All passwords hashed with **Argon2id** (preferred) or **bcrypt (cost ≥ 12)**
+- All Core engine SQL operations validated through **Action Guard** whitelist
+- ERDL rule changes validated via **SHA256 integrity check**
+
+We recommend deployers:
+
+- Enable **MFA** for administration panels
+- **Login failure lockout** (5 failures → 30-minute lockout)
+- **Session timeout** ≤ 24 hours
+- **Audit log retention** ≥ 180 days
+
+---
+
+## 9. Hall of Fame
+
+We publicly acknowledge all reporters (with their consent). Acknowledgements appear at:
+- GitHub Security Advisories
+- The version's Release Notes
+
+We do not currently offer a bug bounty program, but are evaluating future options.
+
+---
+
+## 10. Amendments
+
+Amendments to this security policy take effect 30 days after public release.
+
+---
+
+## 11. Governing Law
+
+This security policy is governed by the laws of the People's Republic of China.
