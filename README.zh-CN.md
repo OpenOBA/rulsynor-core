@@ -8,6 +8,15 @@
 npm install @rulsynor/core
 ```
 
+> ⚡ **30 秒接入真实 LLM 体验：**
+>
+> ```bash
+> export OPENAI_API_KEY=***
+> npx tsx examples/agent-demo.ts "列出当前目录的文件"
+> ```
+>
+> 兼容任何 OpenAI 接口协议（DeepSeek、Qwen、本地 vLLM…），详见 [`examples/agent-demo.ts`](examples/agent-demo.ts)。
+
 ---
 
 ## 商业命题：缺乏治理的 AI Agent，是企业尚未引爆的运营风险
@@ -81,6 +90,10 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 ```
 
 安全的操作，rulsynor 毫不干预。Agent 正常执行，审计链持续累积。
+
+> 💡 以上演示的是单次工具调用的 CLI 评估（不包含 LLM）。
+> 如需完整的 ReAct Agent + Guard + 审计链体验，请看
+> [`examples/agent-demo.ts`](examples/agent-demo.ts) — `npx tsx examples/agent-demo.ts "你的任务"`
 
 ---
 
@@ -269,6 +282,8 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 ```
 
 **LangChain**：wrap 工具。**MCP Server**：拦截 `CallToolRequest`。**自定义 ReAct 循环**：每次工具执行前调 `evaluator.evaluate()`。相同的模式，相同的 API。
+
+> 📦 **开箱即用的完整示例**：[`examples/agent-demo.ts`](examples/agent-demo.ts) — 包含 ReAct Agent + 29 条预设规则 + 审计链的完整实现。`export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "你的任务"`
 
 ---
 

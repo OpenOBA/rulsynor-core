@@ -8,6 +8,16 @@
 npm install @rulsynor/core
 ```
 
+> ⚡ **Try it with a real LLM in 30 seconds:**
+>
+> ```bash
+> export OPENAI_API_KEY=***
+> npx tsx examples/agent-demo.ts "List files in this project"
+> ```
+>
+> Works with any OpenAI-compatible provider (DeepSeek, Qwen, local vLLM…)
+> See [`examples/agent-demo.ts`](examples/agent-demo.ts) for setup.
+
 ---
 
 ## The Business Case: AI Agents Without Governance Are a Liability
@@ -82,6 +92,10 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 ```
 
 When the tool call is safe, rulsynor gets out of the way. The Agent works. The audit trail grows.
+
+> 💡 The CLI demo above evaluates a single tool call without an LLM.
+> For a full ReAct Agent with Guard, audit trail, and API key setup, see
+> [`examples/agent-demo.ts`](examples/agent-demo.ts) — `npx tsx examples/agent-demo.ts "Your task"`
 
 ---
 
@@ -269,6 +283,8 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 ```
 
 **LangChain**: wrap tools with `guardedToolExecutor`. **MCP Server**: intercept `CallToolRequest`. **Custom ReAct loop**: call `evaluator.evaluate()` before each tool execution. Same pattern. Same API.
+
+> 📦 **Ready-to-run demo**: [`examples/agent-demo.ts`](examples/agent-demo.ts) — a complete ReAct Agent with Guard, 29 preset rules, and audit chain. `export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "Your task"`
 
 ---
 
