@@ -177,7 +177,7 @@ then:
 
 **核心洞察**：规则不是阻碍工作的，规则定义的是工作的**正确方式**。
 
-**可用运算符**（22 种）：`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**可用运算符**（20 种——13 种为 SPEC v1.1 标准运算符，有跨实现向量验证；7 种为 rulsynor 扩展运算符，暂无向量覆盖）：`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
 
 **规则可以做的决策**：
 

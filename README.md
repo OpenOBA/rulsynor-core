@@ -174,7 +174,7 @@ then:
 
 **The key insight**: rules don't block work. They define *how* work gets done.
 
-**Available operators** (22): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**Available operators** (20 — 13 SPEC v1.1 operators with cross-implementation vectors; 7 rulsynor extensions, no vectors yet): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
 
 **Decisions your rules can make**:
 

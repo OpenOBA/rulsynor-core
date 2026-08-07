@@ -4,3 +4,5 @@ coverage/
 .temp-removed*/
 *.tsbuildinfo
 test/*.bak
+
+.workbuddy/

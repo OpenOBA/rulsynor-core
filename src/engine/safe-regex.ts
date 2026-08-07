@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SafeRegExp — ReDoS-protected regex construction.
  *
  * All pattern-based rule conditions (match, matches operators) MUST use
