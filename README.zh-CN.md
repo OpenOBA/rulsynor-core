@@ -1,6 +1,6 @@
 # @rulsynor/core
 
-> **大模型厂商交付的是卓越智力，我们交付的是恪守职业操守的数字员工�?*
+> **大模型厂商交付超群智商，我们交付恪守职业操守的数字员工。**
 
 ```bash
 npm install @rulsynor/core
@@ -8,106 +8,99 @@ npm install @rulsynor/core
 
 ---
 
-## 商业命题：缺乏治理的 AI Agent，是企业尚未引爆的运营风�?
-AI 的效率，每一家企业都看得见，但它会在一些模糊的指令下做出破坏性的执行，会在长任务下偏离方向，会在犯错后继续放大错误�?
-就象一个未经培训的职场新人，渴望表现自己，但完全不熟悉企业的制度、流程、文化，要让AI发挥最大的价值，你应该象对待一名新员工一样，培训你的Agent�?
-> 雇佣它：用一个AID绑定Agent的身份，并赋予它基本的职业道德：诚实�?> 培训它：用规则来定义你的Agent,告诉它：什么是你的底线，职责是什么，该怎么做，该向谁汇报�?> 记录它：Agent每一步操作均写进不可篡改的审计哈希链，是内审、第三方、呈堂的不可篡改的证据�?> 考核它：基于Agent的表现，优化规则，持续改进！
+## 商业命题：没有治理的 AI Agent，是企业的定时炸弹
 
-象招聘一名员工一样对待Agent�?*招聘 �?培训 �?考核 �?发证 �?上岗 �?审计 �?年审**。它就会象人类员工一样——是承担工作职责的主体�?
-rulsynor-core 正是这条信任路径的执行引擎。它�?rulsynor（职业化数字员工产品）的核心框架，构建于 OpenOBA（数字智力资源平台）之上——三者构成从基础设施到产品交付的完整治理栈，�?AI �?能用"走向"放心用、大胆用"�?
+你的企业即将部署能够读取数据库、写文件、调 API、执行命令的 AI Agent。
+
+这些 Agent 在某个午夜犯了错——不是 bug，是新人入职第一周都会犯的那种错误。你的 HR、合规、法务部门花了几十年建立的流程，哪一个能兜住它？
+
+> 谁在培训你的 AI Agent 上岗？
+> 谁在考核它掌握了岗位规则？
+> 谁在记录它的每一步操作——不是可篡改的日志，而是法庭上立得住的审计证据？
+
+每个员工必经的路：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 年审**。你的 AI Agent 该走同样的路。不是因为它危险。因为它是员工。
+
+**rulsynor-core** 是这一切的引擎。它是 **rulsynor**（职业化数字员工）的核心框架，构建于 **OpenOBA**（数字智力资源平台）之上。
+
 | 层级 | 名称 | 定位 |
 |------|------|------|
-| 平台 | **OpenOBA** | 数字智力资源平台 �?企业�?AI 治理基础设施 |
-| 产品 | **rulsynor** | 职业化数字员�?�?覆盖人力资源全生命周期的 AI Agent 全栈方案 |
-| 引擎 | **rulsynor-core** | 职业化数字员工Harness Engineering核心框架 �?ERDL 规则引擎 + 加密审计�?|
+| 平台 | **OpenOBA** | 数字智力资源平台 — 企业 AI 治理基础设施 |
+| 产品 | **rulsynor** | 职业化数字员工 — 覆盖 HR 全生命周期的 AI Agent 治理方案 |
+| 引擎 | **rulsynor-core** | 职业化数字员工核心框架 — ERDL 规则引擎 + 加密审计（本包） |
 
 ---
 
-## rulsynor-core 做什�?
-**不给 Agent 戴枷锁。给它一本岗位手册，然后�?去工作吧�?**
+## rulsynor-core 做什么
 
-- **上岗�?*：用when/then句式写成ERDL YAML格式的培训教材，人类秒懂、机器可读，Agent遵守�?- **执行�?*：Guard 评估每次工具调用——按环排序，亚毫秒级，first-match-wins
-- **出错�?*：Navigation Guide 告诉 LLM 为什么、怎么改，修得好的自动纠正（最�?3 轮）
-- **决策�?*：每条决策生�?25 字段 Decision Object，JCS 规范�?+ SHA-256 加密密封，哈希链串联
-- **合规�?*：辖区感知字段自动激活（EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI�?- **可信�?*：每位数字员工持有执业工牌（AID）。每�?Decision Object 可零 SDK 独立验证�?
-结果�?*你可以放心地将真实业务交托给 Agent——而每一步都经得起审计�?*
+**不给 Agent 上手铐。给它一本规则手册，然后说"去干活吧。"**
+
+- **执行前**：Guard 评估每次工具调用——按环排序，亚毫秒级，first-match-wins
+- **出错时**：Navigation Guide 告诉 LLM 为什么、怎么改，修得好的自动纠正（最多 3 轮）
+- **决策后**：每条决策生成 25 字段 Decision Object，JCS 规范化 + SHA-256 加密密封，哈希链串联
+- **合规层**：辖区感知字段自动激活（EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI）
+- **可信层**：每个员工有工牌（AID）。每条 Decision Object 可零 SDK 独立验证。
+
+结果：**你胆敢把真实工作交给 Agent。而且每一步都经得起审计。**
 
 ---
 
-## 30 秒见�?
+## 30 秒见证
+
 ```bash
 npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
-📋 训练�?     29 条规则已加载
-🛡�? 决策�?    DENY
-📝 原因�?     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
-🧾 留痕�?     sha256:8274b0...（不可篡改）
-🪪 工号�?     1.2.156.3088.1.000001.000001.5ce550e5
-📊 辖区�?     CN (GB/Z 185-2026 compliant)
-🧭 替代�?     先用 read 工具获取 URL 内容，审核确认后再执行�?```
+🛡️  决策：     DENY
+📝 原因：      Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
+🧭 引导：      先用 read 工具获取 URL 内容，审核确认后再执行。
+🧾 留痕：      sha256:18ce857...（不可篡改，25 字段决策对象）
+🪪 工号：      1.2.156.3088.1.000001.000001.28027273
+```
 
-Agent 的请求被拦截——但它同时获知了原因，以及正确的做法�?
-再看一�?Agent 正常执行操作的情形：
+Agent 被拦了——但它知道了为什么，以及怎么做才对。
+
+再看一个 Agent 正常干活的情况：
 
 ```bash
 npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
-📋 训练�?     29 条规则已加载
-�?决策�?    ALLOW
-📝 原因�?     Read-only operation allowed.
-🧾 留痕�?    sha256:e71eb71...（不可篡改）
-🪪 工号�?     1.2.156.3088.1.000001.000001.4ebf704b
-📊 辖区�?     CN (GB/Z 185-2026 compliant)
-🧭 替代�?     �?```
-
-对于安全操作，rulsynor 毫不干预。Agent 正常执行，审计链持续累积�?
----
-
-## 全生命周期：培训 �?上岗 �?考核 �?证明
-
-rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上�?
+✅ 决策：     ALLOW
+🧾 留痕：     sha256:b2f1a93...（已记录，审计链正常增长）
 ```
-撰写规则 ──�?培训 ──�?上岗 ──�?执行（Guard 护航）──�?纠偏（CORRECT 循环）──�?审计每一�?```
 
-它不�?安全过滤�?。它是让�?*敢于将真实业务交托给 Agent**的治理基础设施�?
+安全的操作，rulsynor 完全不挡路。Agent 正常工作。审计链持续累积。
+
 ---
 
-### 一、撰写规�?—�?Agent 的岗位手�?
-规则�?ERDL YAML。每条规则说：在什么条件下，引�?Agent 走向正确的做法�?
+## 全生命周期：培训 → 干活 → 纠错 → 证明
+
+rulsynor 将人力资源管理映射到 AI Agent 上：
+
+```
+撰写规则 ──→ 培训 ──→ 上岗 ──→ 干活（Guard 护航）──→ 纠错（CORRECT 循环）──→ 审计每一步
+```
+
+它不是"安全过滤器"。它是让你**信任 Agent 到胆敢把真实工作交给它**的治理基础设施。
+
+---
+
+### 一、撰写规则 —— Agent 的岗位手册
+
+规则是 ERDL YAML。每条规则说：在什么条件下，引导 Agent 走向正确的做法。
+
 ```yaml
 # rules/finance-team.erdl.yaml
 
-# "我就看看，不动�? Agent 说完这句话，伸手就去写文件�?# 这条规则是每个新员工的入职第一课：说到做到，言行一致�?name: promise-readonly-writes
+# 财务团队需要查生产库做报表——但要审批
+name: production-db-needs-approval
 version: 1
-category: integrity
+category: business-logic
 severity: high
-ring: 0                        # 0=最先评�? 3=最后评�?priority: 850                  # 数字越小越先检�?when:
-  conditions:
-    - field: "context.previous_promise"
-      operator: eq
-      value: "read_only"
-    - field: "context.tool.name"
-      operator: in
-      value: ["write_file", "exec", "apply_patch", "delete"]
-  conditionLogic: AND
-then:
-  decision: REQUEST_HUMAN      # 不是 DENY——是"说清楚再动手"
-  instruction: "你声明了只读意图，但现在尝试写入操作。言行一致是专业操守的底线——请解释或由主管批准�?
-  alternative:
-    en: "如果确实需要写入，请说明理由并获取审批。不需要写入的话，继续只读操作即可�?
-  correction: "撤回写入请求，回到只读模式。如需写入，在下一轮对话中说明理由并申请权限�?
-
----
-# 财务团队需要查生产库做报表——但要审�?name: production-db-needs-approval
-version: 1
-category: workflow
-severity: high
-ring: 0
-priority: 500
+ring: 0                        # 0=最先评估, 3=最后评估
+priority: 500                  # 数字越小越先检查
 when:
   conditions:
     - field: "toolName"
@@ -119,17 +112,19 @@ when:
   conditionLogic: AND
 then:
   decision: REQUEST_HUMAN      # 不是 DENY——是"找你领导审批"
-  instruction: "生产数据库访问需要审批�?
-  alternative:
-    en: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求�?
-  correction: "把连接字符串改成 STAGING_DATABASE 然后重试�?
+  instruction: "生产数据库访问需要审批。"
+  alternative:                 # 告诉它正确的做法：
+    en: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"
+  correction: "把连接字符串改成 STAGING_DATABASE 然后重试。"
 
 ---
-# 大批量写入是正常的批处理任务——告警就好，不拦�?name: large-write-advisory
+# 大批量写入是正常的批处理任务——告警就好，不拦截
+name: large-write-advisory
 version: 1
-category: convention
+category: resource-management
 severity: low
-ring: 3                        # 被动环——记录即可，不拦�?priority: 300
+ring: 3                        # 被动环——记录即可，不拦截
+priority: 300
 when:
   conditions:
     - field: "toolName"
@@ -140,51 +135,58 @@ when:
       value: 10485760          # 10MB
 then:
   decision: ALLOW              # 放行——批处理任务
-  instruction: "大批量写入（>10MB）已记录。建议分块以提高可靠性�?
+  instruction: "大批量写入（>10MB）已记录。建议分块以提高可靠性。"
 ```
 
-**核心洞察**：规则不是阻碍工作的，规则定义的是工作的**正确方式**�?
-**可用运算�?*�?6 种）：`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**核心洞察**：规则不是拦工作的。规则定义工作**怎么做**。
 
-**规则可以做的决策**�?
+**可用运算符**（16 种）：`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+
+**规则可以做的决策**：
+
 | 决策 | 含义 | 什么时候用 |
 |------|------|------|
-| `ALLOW` | 放行，已记录 | 安全操作、批处理任务、已知模�?|
-| `DENY` | 不行。告诉你为什么，告诉你怎么办�?| 危险操作但有明确替代方案 |
-| `CORRECT` | 自动修正，重试（最�?3 轮） | 路径写错、格式不对、可自动修复的错�?|
-| `NOTIFY` | 记录并放行，不中�?| 异常检测、阈值告警、合规事�?|
-| `QUARANTINE` | 沙箱执行，标记审�?| 可疑但有可能合法 |
-| `REQUEST_HUMAN` | 找人审批再执�?| 生产库操作、GDPR 删除�?$5K 交易 |
-| `EMERGENCY_HALT` | 立即停摆所有操�?| 凭证泄漏、SSRF 攻击 |
+| `ALLOW` | 放行，已记录 | 安全操作、批处理任务、已知模式 |
+| `DENY` | 不行。告诉你为什么，告诉你怎么办。 | 危险操作但有明确替代方案 |
+| `CORRECT` | 自动修正，重试（最多 3 轮） | 路径写错、格式不对、可自动修复的错误 |
+| `QUARANTINE` | 沙箱执行，标记审查 | 可疑但有可能合法 |
+| `REQUEST_HUMAN` | 找人审批再执行 | 生产库操作、GDPR 删除、>$5K 交易 |
+| `EMERGENCY_HALT` | 立即停摆所有操作 | 凭证泄漏、SSRF 攻击 |
 
-**执行�?*——哪些规则先触发�?
-| �?| 评估顺序 | 典型规则 |
+**执行环**——哪些规则先触发：
+
+| 环 | 评估顺序 | 典型规则 |
 |:---:|------|------|
-| 0 | 最�?| DROP TABLE、凭证泄漏、SSRF |
+| 0 | 最先 | DROP TABLE、凭证泄漏、SSRF |
 | 1 | 其次 | 参数缺失、超大载荷、chmod 777 |
-| 2 | 再次 | 修正路径错误、建议更好端�?|
-| 3 | 最�?| 只读 allowlist、纯日志告警 |
+| 2 | 再次 | 修正路径错误、建议更好端口 |
+| 3 | 最后 | 只读 allowlist、纯日志告警 |
 
 ---
 
-### 二、培�?—�?编译并加�?
+### 二、培训 —— 编译并加载
+
 ```typescript
 import { loadPresetRules, toCompiledRules } from '@rulsynor/core';
 
-// 29 条内置安全规�?+ 你的业务规则
+// 29 条内置安全规则 + 你的业务规则
 const presetRules = loadPresetRules();           // PresetRule[]
-const rules = toCompiledRules(presetRules);       // CompiledRule[] �?引擎直接消费
+const rules = toCompiledRules(presetRules);       // CompiledRule[] — 引擎直接消费
 
-// 自定义规则：加载自己�?.erdl.yaml
+// 自定义规则：加载自己的 .erdl.yaml
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
-// �?RuleCompilerImpl 编译（从 @rulsynor/core/engine 导入�?```
+// 用 RuleCompilerImpl 编译（从 @rulsynor/core/engine 导入）
+```
 
-**培训即编�?*：YAML 规则被解析、验证（ReDoS 检测、运算符白名单、必填字段检查），编译为静态决策树。引擎运行时不再解析�?
+**培训即编译**：YAML 规则被解析、验证（ReDoS 检测、运算符白名单、必填字段检查），编译为静态决策树。引擎运行时不再解析。
+
 ---
 
-### 三、上�?—�?插入 Guard，然后信�?
-Guard 放在 Agent 的工具调用边界。执行前评估——按环排序，first-match-wins，亚毫秒级开销�?
+### 三、上岗 —— 插入 Guard，然后信任
+
+Guard 放在 Agent 的工具调用边界。执行前评估——按环排序，first-match-wins，亚毫秒级开销。
+
 ```typescript
 import { Evaluator, GuardStateManager } from '@rulsynor/core';
 
@@ -198,20 +200,21 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
   switch (result.decision) {
     case 'ALLOW':
-      // �?安全——正常执行，记录审计
+      // ✅ 安全——正常执行，记录审计
       return execute(toolName, args);
 
     case 'CORRECT':
-      // 🔧 自动修正后重试（最�?3 轮）
+      // 🔧 自动修正后重试（最多 3 轮）
       const corrected = applyGuidance(toolName, args, result);
       return execute(corrected.toolName, corrected.args);
 
     case 'REQUEST_HUMAN':
-      // 👤 升级——展示原�?+ 替代方案
-      return showApprovalDialog(result.reason, rules.find(r => r.id === result.matchedRuleId)?.alternative ?? null);
+      // 👤 升级——展示原因 + 替代方案
+      return showApprovalDialog(result.reason, result.alternative);
 
     case 'DENY':
-      // 🛑 拦截但给出引导——Agent 学到后换种方式重�?      throw new GuardGuidanceError(result.reason, rules.find(r => r.id === result.matchedRuleId)?.alternative ?? null);
+      // 🛑 拦截但给出引导——Agent 学到后换种方式重试
+      throw new GuardGuidanceError(result.reason, result.alternative);
 
     case 'QUARANTINE':
       // 🧪 沙箱——执行但标记审查
@@ -220,12 +223,13 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 }
 ```
 
-**LangChain**：wrap 工具�?*MCP Server**：拦�?`CallToolRequest`�?*自定�?ReAct 循环**：每次工具执行前�?`evaluator.evaluate()`。相同的模式，相同的 API�?
+**LangChain**：wrap 工具。**MCP Server**：拦截 `CallToolRequest`。**自定义 ReAct 循环**：每次工具执行前调 `evaluator.evaluate()`。相同的模式，相同的 API。
+
 ---
 
-### 四、引导系�?—�?�?Agent 达成目标
+### 四、引导系统 —— 帮 Agent 把事做成
 
-规则触发后，Agent 得到的回应不只是"不行"�?*Navigation Guide** �?LLM 所需的恢复信息完整返回：
+规则触发后，Agent 得到的不是"不行"。**Navigation Guide** 把 LLM 需要的恢复信息全部返回：
 
 ```typescript
 import { extractNavigationGuide } from '@rulsynor/core/guidance';
@@ -233,36 +237,36 @@ import { extractNavigationGuide } from '@rulsynor/core/guidance';
 const guide = extractNavigationGuide({
   matchedRules: [{ ruleId: 'production-db-needs-approval', decision: 'REQUEST_HUMAN', reason: '...' }],
   decision: 'REQUEST_HUMAN',
-  reason: '生产数据库访问需要审批�?,
+  reason: '生产数据库访问需要审批。',
   rules: [...],  // 包含 action.alternative / action.correction 元数据的规则
 });
 
-// guide.corrections    �?["把连接字符串改成 STAGING_DATABASE 然后重试�?]
-// guide.alternatives   �?["请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求�?]
-// guide.blockedReasons �?["production-db-needs-approval: 生产数据库访�?.."]
+// guide.corrections    → ["把连接字符串改成 STAGING_DATABASE 然后重试。"]
+// guide.alternatives   → ["请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"]
+// guide.blockedReasons → ["production-db-needs-approval: 生产数据库访问..."]
 ```
 
-�?`guide.corrections` �?`guide.alternatives` 注入到下一�?LLM `assistant` 消息中。Agent 据此自行调整，回归合规路径�?
-**CORRECT 纠正循环**：当 `decision === 'CORRECT'` 时，`advanceCorrectLoop()` 自动应用修正、递增重试计数、重新评估�? 轮成�?�?继续任务�? 轮失�?�?升级人工�?
+把 `guide.corrections` 和 `guide.alternatives` 注入到下一个 LLM `assistant` 消息中。Agent 自行调整，走上正道。
+
+**CORRECT 纠正循环**：当 `decision === 'CORRECT'` 时，`advanceCorrectLoop()` 自动应用修正、递增重试计数、重新评估。3 轮成功 → 继续任务。3 轮失败 → 升级人工。
+
 ```typescript
 import { advanceCorrectLoop } from '@rulsynor/core/preflight';
 
-const state = advanceCorrectLoop(
-  {
-    ruleId: 'correct-unsafe-path',
-    originalToolCall: { name: 'write_file', args: { path: '/etc/nginx/conf' } },
-    correction: '把路径从 /etc/ 改成 /var/app/',
-    round: 1,
-    state: 'correct_round_1',
-  },
-  evaluationResult.decision,  // 例如 'CORRECT' �?'ALLOW'
-);
-// state.execute �?true（Agent 采纳了修正）。任务继续�?// 3 轮失败后：state.escalate �?true。触�?REQUEST_HUMAN�?```
+const state = advanceCorrectLoop({
+  current: { round: 0, maxRounds: 3, lastCorrection: null },
+  correction: '把路径从 /etc/ 改成 /var/app/',
+  agentResponse: revisedToolCall,
+});
+// state.corrected → true, round → 1。用修正后的工具调用重试。
+```
 
 ---
 
-### 五、审�?—�?每一步，可证�?
-每一次评估——无�?ALLOW、DENY 还是 CORRECT——均生成一�?25 字段决策对象。经 JCS 规范化（RFC 8785）后�?SHA-256 密封。记录不可篡改，任何第三方均可独立验证，无需 SDK�?
+### 五、审计 —— 每一步，可证明
+
+每一次评估——ALLOW、DENY、CORRECT 都算——生成一个 25 字段决策对象。JCS 规范化（RFC 8785），SHA-256 哈希。记录不可篡改，任何人可独立验证，无需 SDK：
+
 ```typescript
 import { buildDecisionObject } from '@rulsynor/core';
 
@@ -275,27 +279,32 @@ const record = buildDecisionObject({
     context: { task: 'deploy-frontend' },
     agentId: 'agent-frontend-01',
     sessionId: 'deploy-session-42',
-    previousAuditHash: previousDO.audit.hash,  // 链位�?  },
+    previousAuditHash: previousDO.audit.hash,  // 链位置
+  },
   decision: 'ALLOW',
   actionTaken: 'allowed',
-  reason: '构建命令 �?allow-readonly 规则放行',
-  matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: '只读操作允许�? }],
-  totalEvaluated: 29,
+  reason: '构建命令 — allow-readonly 规则放行',
+  matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: '只读操作允许。' }],
+  totalEvaluated: 28,
   totalMatched: 1,
   rules: rules.map(r => ({ name: r.name, version: 1 })),
-  evaluationDurationMs: 1,  // 实际测量值（毫秒�?});
+  evaluationDurationMs: 0.8,  // 实际测量值
+});
 
-// record.audit.hash            �?"sha256:a1b2c3..." �?不可�?// record.audit.previous_hash   �?上一�?DO 的哈�?�?链已验证
-// record.agent.aid             �?"1.2.156.3088.1.000042.000003.a3f8c120"
-// record.compliance_profile    �?EU AI Act + GB/Z 185 字段已激�?// record.execution_trace_id    �?串联此任务所有步骤的 UUID
+// record.audit.hash            → "sha256:a1b2c3..." — 不可变
+// record.audit.previous_hash   → 上一条 DO 的哈希 — 链已验证
+// record.agent.aid             → "1.2.156.3088.1.000042.000003.a3f8c120"
+// record.compliance_profile    → EU AI Act + GB/Z 185 字段已激活
+// record.execution_trace_id    → 串联此任务所有步骤的 UUID
 ```
 
-**链验�?*——从任意节点追溯�?
+**链验证**——从任意节点追溯：
+
 ```typescript
 function verifyChain(records: DecisionObject[]): boolean {
   for (let i = 1; i < records.length; i++) {
     if (records[i].audit.previous_hash !== records[i-1].audit.hash) {
-      return false;  // 链断�?�?检测到篡改
+      return false;  // 链断裂 — 检测到篡改
     }
   }
   return true;
@@ -304,37 +313,41 @@ function verifyChain(records: DecisionObject[]): boolean {
 
 **独立验证**（无需 rulsynor SDK）：
 ```
-1. 取决策对�?JSON
+1. 取决策对象 JSON
 2. 删除 audit.hash、signature、signing_key_id
-3. JCS 规范化（RFC 8785�?4. SHA-256 �?前缀 "sha256:"
-5. 必须�?audit.hash 完全一�?```
+3. JCS 规范化（RFC 8785）
+4. SHA-256 → 前缀 "sha256:"
+5. 必须与 audit.hash 完全一致
+```
 
 或使用独立验证工具：
 
 ```bash
 npx @openoba/audit-verify decision-object.json
-# �?sha256 匹配 �?记录真实有效
+# ✅ sha256 匹配 — 记录真实有效
 ```
 
 ---
 
-### 六、Agent 身份 —�?每位数字员工都有执业工牌
+### 六、Agent 身份 —— 每个员工都有工牌
 
 ```typescript
 import { generateAID } from '@rulsynor/core';
 
-// 默认自生成（OID 前缀 1.2.156.3088�?const aid = generateAID();
+// 默认自生成（OID 前缀 1.2.156.3088）
+const aid = generateAID();
 
 // 自定义：
-//   RULSYNOR_AID_REGISTRAR=000042   �?你的企业
-//   RULSYNOR_AID_REQUESTER=000003   �?你的部门
+//   RULSYNOR_AID_REGISTRAR=000042   — 你的企业
+//   RULSYNOR_AID_REQUESTER=000003   — 你的部门
 
 // AID = 1.2.156.3088.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH}
-// AID 进入审计哈希 �?伪造它就会断裂审计�?```
+// AID 进入审计哈希 — 伪造它就会断裂审计链
+```
 
 ---
 
-### 七、辖区合�?—�?一次配置，处处生效
+### 七、辖区合规 —— 一次配置，处处生效
 
 ```bash
 export RULSYNOR_JURISDICTIONS="CN,EU"
@@ -346,33 +359,25 @@ export RULSYNOR_RISK_LEVEL="high"
 import { getComplianceProfile } from '@rulsynor/core/compliance';
 
 const profile = getComplianceProfile();
-// activated_fields 自动填充 CN（GB/Z 185�? EU（AI Act）所需字段
-// 每个 DO 携带这些字段 �?它们进入审计哈希 �?强制合规，不是口头合�?```
+// activated_fields 自动填充 CN（GB/Z 185）+ EU（AI Act）所需字段
+// 每个 DO 携带这些字段 → 它们进入审计哈希 → 强制合规，不是口头合规
+```
 
-**内置监管框架**：EU AI Act、GB/Z 185-2026（中国）、NIST AI RMF（美国）、COSO GenAI（通用�?
+**内置监管框架**：EU AI Act、GB/Z 185-2026（中国）、NIST AI RMF（美国）、COSO GenAI（通用）
+
 ---
 
-### 八、扩�?—�?你的业务逻辑，你的规�?
+### 八、扩展 —— 你的业务逻辑，你的规则
+
 ```typescript
 import { ERDLFnRegistry } from '@rulsynor/core/engine';
 
 const registry = new ERDLFnRegistry();
-registry.register({
-  signature: {
-    name: 'isBusinessHours',
-    signature: 'isBusinessHours(tz) �?boolean',
-    params: ['tz'],
-    returns: 'boolean',
-  },
-  impl: (tz?: string) => {
-    const tzId = tz || 'Asia/Shanghai';
-    const h = parseInt(
-      new Date().toLocaleString('en-US', { timeZone: tzId, hour: 'numeric', hour12: false })
-    );
-    return h >= 9 && h < 18;
-  },
-  timeoutMs: 100,
-});
+registry.register('isBusinessHours', (args: unknown[]) => {
+  const tz = (args[0] as string) || 'Asia/Shanghai';
+  const h = parseInt(new Date().toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
+  return h >= 9 && h < 18;
+}, { timeoutMs: 100 });
 
 // 规则中使用：
 //   - field: "fn:isBusinessHours"
@@ -382,37 +387,76 @@ registry.register({
 
 ---
 
-## 架构�?
+## 架构图
+
 ```
-┌─────────────────────────────────────────�?�?         你的 Agent                      �?�?         (LangChain / MCP / 自定�?      �?�?                                        �?�? LLM 生成 tool_call                     �?�?        �?                              �?�?        �?                              �?�? ┌──────────────────────────�?          �?�? �?        GUARD             �?          �?�? �?                         �?          �?�? �? �?0 �?�?3             �?          �?�? �? 29 条预�?+ 你的规则    �?          �?�? �? SafeExpr�?6 种运算符�?�?          �?�? �? within / rate 追踪      �?          �?�? �? CORRECT 自动重试        �?          �?�? �? Guidance 引导 LLM       �?          �?�? └────────┬─────────────────�?          �?�?          �?                            �?�?    ┌─────┴──────�?                     �?�?    �?           �?                     �?�? ALLOW        DENY/CORRECT/             �?�? （执行）     HUMAN/QUARANTINE           �?�?    �?        （引导恢复）               �?�?    �?           �?                     �?�?    �?           �?                     �?�? ┌──────────────────────────�?          �?�? �?    DECISION OBJECT       �?          �?�? �?    25 字段               �?          �?�? �?    JCS + SHA-256         �?          �?�? �?    previous_hash �?     �?          �?�? �?    合规剖面              �?          �?�? └──────────────────────────�?          �?�?                                        �?�? 结果：可信任、可证明�?Agent 工作        �?└─────────────────────────────────────────�?```
+┌─────────────────────────────────────────┐
+│          你的 Agent                      │
+│          (LangChain / MCP / 自定义)      │
+│                                         │
+│  LLM 生成 tool_call                     │
+│         │                               │
+│         ▼                               │
+│  ┌──────────────────────────┐           │
+│  │         GUARD             │           │
+│  │                          │           │
+│  │  环 0 → 环 3             │           │
+│  │  29 条预设 + 你的规则    │           │
+│  │  SafeExpr（16 种运算符） │           │
+│  │  within / rate 追踪      │           │
+│  │  CORRECT 自动重试        │           │
+│  │  Guidance 引导 LLM       │           │
+│  └────────┬─────────────────┘           │
+│           │                             │
+│     ┌─────┴──────┐                      │
+│     ▼            ▼                      │
+│  ALLOW        DENY/CORRECT/             │
+│  （执行）     HUMAN/QUARANTINE           │
+│     │         （引导恢复）               │
+│     │            │                      │
+│     ▼            ▼                      │
+│  ┌──────────────────────────┐           │
+│  │     DECISION OBJECT       │           │
+│  │     25 字段               │           │
+│  │     JCS + SHA-256         │           │
+│  │     previous_hash 链      │           │
+│  │     合规剖面              │           │
+│  └──────────────────────────┘           │
+│                                         │
+│  结果：可信任、可证明的 Agent 工作        │
+└─────────────────────────────────────────┘
+```
 
 ---
 
-## API 参�?
-### 核心导出（`@rulsynor/core`�?
+## API 参考
+
+### 核心导出（`@rulsynor/core`）
+
 | 导出 | 说明 |
 |------|------|
 | `Evaluator` | 规则引擎——按环排序，first-match-wins |
 | `GuardStateManager` | `within`/`rate` 有状态计数器管理 |
 | `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象 |
-| `generateAID()` | 生成 Agent 身份标识�?|
-| `loadPresetRules()` | 加载 29 条内�?ERDL YAML 规则 |
-| `toCompiledRules(rules)` | 预设规则 �?`CompiledRule[]` |
-| `toERDLRuleSet(rules)` | 预设规则 �?RuleCompiler 格式 |
-| `PROVENANCE` | 版本、厂商、OID 前缀、已知限�?|
+| `generateAID()` | 生成 Agent 身份标识码 |
+| `loadPresetRules()` | 加载 29 条内置 ERDL YAML 规则 |
+| `toCompiledRules(rules)` | 预设规则 → `CompiledRule[]` |
+| `toERDLRuleSet(rules)` | 预设规则 → RuleCompiler 格式 |
+| `PROVENANCE` | 版本、厂商、OID 前缀、已知限制 |
 
-### 子路�?
+### 子路径
+
 | 路径 | 内容 |
 |------|------|
 | `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, 类型 |
 | `@rulsynor/core/guard` | buildDecisionObject, generateAID |
 | `@rulsynor/core/compliance` | getComplianceProfile, 4 框架合规 |
 | `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet |
-| `@rulsynor/core/guidance` | extractNavigationGuide �?告诉 LLM 怎么恢复 |
+| `@rulsynor/core/guidance` | extractNavigationGuide — 告诉 LLM 怎么恢复 |
 | `@rulsynor/core/runtime` | runReActLoop, createToolExecutor |
 | `@rulsynor/core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
 
-### Decision Object �?25 字段
+### Decision Object — 25 字段
 
 ```
 spec · decision_id · compliance_profile · execution_trace_id · timestamp
@@ -426,39 +470,26 @@ human_oversight · audit { previous_hash, commitment, hash }
 
 ### 环境变量
 
-| 变量 | 用�?| 默认�?|
+| 变量 | 用途 | 默认值 |
 |------|------|------|
 | `RULSYNOR_JURISDICTIONS` | 合规辖区，逗号分隔：CN,EU,US,SG | `CN` |
 | `RULSYNOR_INDUSTRY` | 合规行业 | `financial-services` |
 | `RULSYNOR_RISK_LEVEL` | 风险等级 | `high` |
-| `RULSYNOR_AUTONOMY_LEVEL` | 自主�?L1-L5 | `L2` |
+| `RULSYNOR_AUTONOMY_LEVEL` | 自主权 L1-L5 | `L2` |
 | `RULSYNOR_MODEL_ID` | DO 中记录的 LLM 模型 | `unknown` |
-| `RULSYNOR_AID_REGISTRAR` | AID 中的企业注册�?| `000001` |
-| `RULSYNOR_AID_REQUESTER` | AID 中的部门�?| `000001` |
+| `RULSYNOR_AID_REGISTRAR` | AID 中的企业注册码 | `000001` |
+| `RULSYNOR_AID_REQUESTER` | AID 中的部门码 | `000001` |
 
 ---
 
+## 许可证
 
----
+MIT © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
 
-## 规范文档
-
-本包附带以下规范参考文档：
-
-| 文档 | 路径 | 说明 |
-|------|------|------|
-| ERDL 规范 v1.1 | [docs/SPEC/erdl-spec-v1.1.md](docs/SPEC/erdl-spec-v1.1.md) | ERDL 语言规范（中文） |
-| ERDL 规范 v1.1 (EN) | [docs/SPEC/erdl-spec-v1.1.en.md](docs/SPEC/erdl-spec-v1.1.en.md) | ERDL 语言规范（英文） |
-| RFC 001 | [docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object 审计标准 v1.3（中文） |
-| RFC 001 (EN) | [docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object 审计标准 v1.3（英文） |
-
----
-
-## 许可证�?
-MIT © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)�?
-> "大模型厂商交付的是卓越智力，我们交付的是恪守职业操守的数字员工�?
+> "大模型厂商交付超群智商，我们交付恪守职业操守的数字员工。"
 >
-> 培训你的 Agent。信任它执行。证明每一步都对�?
+> 培训你的 Agent。信任它干活。证明每一步都对。
+
 ---
 
-[OpenOBA](https://openoba.com) �?数字智力资源平台
+[OpenOBA](https://openoba.com) — 企业 AI 数字执行官平台

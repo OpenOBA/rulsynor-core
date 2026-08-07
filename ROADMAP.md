@@ -11,7 +11,7 @@
 - [x] Guidance: extractNavigationGuide, CORRECT loop, REQUEST_HUMAN signal parser
 - [x] Minimal Chat Runtime (ReAct loop + Guard + Tool)
 - [x] Playground CLI (`npx @rulsynor/core`)
-- [x] 76 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Preflight, Guidance, Runtime)
+- [x] 100 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Preflight, Guidance, Runtime, GuardStateManager, EvaluatorAdapter)
 - [x] MIT licensed. Zero framework dependencies.
 
 ## v1.1 (Planned)

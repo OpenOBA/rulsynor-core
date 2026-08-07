@@ -36,7 +36,11 @@
   "scripts": {
     "build": "tsc && node scripts/copy-rules.mjs",
     "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
+    "lint": "eslint 'src/**/*.ts' --max-warnings 0",
+    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'test/**/*.ts'",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -70,5 +74,9 @@
   "bugs": {
     "url": "https://github.com/OpenOBA/rulsynor-core/issues"
   },
-  "homepage": "https://github.com/OpenOBA/rulsynor-core#readme"
+  "homepage": "https://github.com/OpenOBA/rulsynor-core#readme",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/openoba"
+  }
 }
