@@ -1,7 +1,7 @@
 {
   "name": "@openoba/rulsynor-core",
   "version": "1.0.0",
-  "description": "ERDL deterministic Guard engine \u2014 open-source Agent runtime with cryptographic audit chain",
+  "description": "ERDL deterministic Guard engine — open-source Agent runtime with cryptographic audit chain",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -44,11 +44,12 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "json-canonicalize": "^1.0.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "json-canonicalize": "^1.0.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "jest": "^30.4.2",
     "ts-jest": "^29.4.12",
