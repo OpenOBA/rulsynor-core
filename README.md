@@ -8,6 +8,8 @@
 npm install @rulsynor/core
 ```
 
+[![Try it now](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40rulsynor%2Fcore-black)](#30-seconds-to-see-it-work)  ·  [Examples](examples/)  ·  [API Reference](#api-reference)  ·  [Specs](docs/SPEC/)  ·  [Contributing](CONTRIBUTING.md)
+
 > ⚡ **Try it with a real LLM in 30 seconds:**
 >
 > ```bash
@@ -394,7 +396,7 @@ function verifyChain(records: DecisionObject[]): boolean {
 5. Must match audit.hash exactly
 ```
 
-Or use the standalone verifier:
+Or use the standalone verifier (`@openoba/audit-verify`, open-source, MIT, zero-dependency):
 
 ```bash
 npx @openoba/audit-verify decision-object.json

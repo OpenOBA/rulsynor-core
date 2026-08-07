@@ -8,6 +8,8 @@
 npm install @rulsynor/core
 ```
 
+[![立即体验](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40rulsynor%2Fcore-black)](#30-秒见证)  ·  [示例](examples/)  ·  [API 参考](#api-参考)  ·  [规范文档](docs/SPEC/)  ·  [参与贡献](CONTRIBUTING.md)
+
 > ⚡ **30 秒接入真实 LLM 体验：**
 >
 > ```bash
@@ -397,7 +399,7 @@ function verifyChain(records: DecisionObject[]): boolean {
 5. 必须与 audit.hash 完全一致
 ```
 
-或使用独立验证工具：
+或使用独立验证工具（`@openoba/audit-verify`，开源，MIT，零依赖）：
 
 ```bash
 npx @openoba/audit-verify decision-object.json
