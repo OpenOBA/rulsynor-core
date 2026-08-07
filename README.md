@@ -499,21 +499,33 @@ registry.register({
 |------|------|
 | `Evaluator` | Rule engine — ring-sorted, first-match-wins |
 | `GuardStateManager` | Stateful `within`/`rate` counter manager |
-| `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object |
-| `generateAID()` | Generate Agent Identity Code |
+| `SafeExprEvaluator` | Safe expression evaluator (16 operators) |
+| `safeRegExp()` | ReDoS-protected regex constructor |
+| `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object (return type: `DecisionObject`) |
+| `generateAID()` | Generate Agent Identity Code (OID 1.2.156.3088) |
+| `getComplianceProfile()` | Jurisdiction-aware compliance auto-configuration |
 | `loadPresetRules()` | Load 29 built-in ERDL YAML rules |
 | `toCompiledRules(rules)` | Convert preset rules → `CompiledRule[]` for Evaluator |
 | `toERDLRuleSet(rules)` | Convert preset rules → RuleCompiler format |
+| `extractNavigationGuide(opts)` | Structured LLM guidance from Guard decisions |
+| `advanceCorrectLoop(ctx, decision)` | CORRECT loop state machine (3-round retry) |
+| `runReActLoop(opts)` | Minimal ReAct loop with Guard evaluation |
+| `createToolExecutor(fn)` | Wrap a function as a ToolExecutor |
 | `PROVENANCE` | Version, vendor, OID prefix, known limitations |
+| `EvaluatorAdapter` | Legacy rulsynor GuardService integration bridge |
+| `SystemClock` / `VirtualClock` | Clock abstraction for temporal rule testing |
+| `OpSemRegistry` | Operation semantic classifier |
+| `RuleCompilerImpl` | ERDL YAML → 4-product compiler |
+| `PlanParser` | Parse LLM natural-language execution plans |
 
 ### Sub-paths
 
 | Path | Contents |
 |------|------|
-| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, types |
-| `@rulsynor/core/guard` | buildDecisionObject, generateAID |
-| `@rulsynor/core/compliance` | getComplianceProfile, 4-framework compliance |
-| `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet |
+| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, types |
+| `@rulsynor/core/guard` | buildDecisionObject, generateAID, DecisionObject types |
+| `@rulsynor/core/compliance` | getComplianceProfile, ComplianceProfile type, 4-framework compliance |
+| `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule type |
 | `@rulsynor/core/guidance` | extractNavigationGuide — tell the LLM how to recover |
 | `@rulsynor/core/runtime` | runReActLoop, createToolExecutor |
 | `@rulsynor/core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |

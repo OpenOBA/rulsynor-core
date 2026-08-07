@@ -499,21 +499,33 @@ registry.register({
 |------|------|
 | `Evaluator` | 规则引擎——按环排序，first-match-wins |
 | `GuardStateManager` | `within`/`rate` 有状态计数器管理 |
-| `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象 |
-| `generateAID()` | 生成 Agent 身份标识码 |
+| `SafeExprEvaluator` | 安全表达式评估器（22 种运算符） |
+| `safeRegExp()` | ReDoS 防护的正则构造器 |
+| `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象（返回类型：`DecisionObject`） |
+| `generateAID()` | 生成 Agent 身份标识码（OID 1.2.156.3088） |
+| `getComplianceProfile()` | 辖区感知的合规自动配置 |
 | `loadPresetRules()` | 加载 29 条内置 ERDL YAML 规则 |
 | `toCompiledRules(rules)` | 预设规则 → `CompiledRule[]` |
 | `toERDLRuleSet(rules)` | 预设规则 → RuleCompiler 格式 |
+| `extractNavigationGuide(opts)` | Guard 决策 → 结构化 LLM 引导 |
+| `advanceCorrectLoop(ctx, decision)` | CORRECT 纠偏循环状态机（3 轮重试） |
+| `runReActLoop(opts)` | 最小化 ReAct 循环，内含 Guard 评估 |
+| `createToolExecutor(fn)` | 将函数包装为 ToolExecutor |
 | `PROVENANCE` | 版本、厂商、OID 前缀、已知限制 |
+| `EvaluatorAdapter` | 旧版 rulsynor GuardService 集成桥接器 |
+| `SystemClock` / `VirtualClock` | 时钟抽象，用于时序规则测试 |
+| `OpSemRegistry` | 操作语义分类器 |
+| `RuleCompilerImpl` | ERDL YAML → 四产物编译器 |
+| `PlanParser` | LLM 自然语言执行计划解析器 |
 
 ### 子路径
 
 | 路径 | 内容 |
 |------|------|
-| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, 类型 |
-| `@rulsynor/core/guard` | buildDecisionObject, generateAID |
-| `@rulsynor/core/compliance` | getComplianceProfile, 4 框架合规 |
-| `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet |
+| `@rulsynor/core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, 类型 |
+| `@rulsynor/core/guard` | buildDecisionObject, generateAID, DecisionObject 类型 |
+| `@rulsynor/core/compliance` | getComplianceProfile, ComplianceProfile 类型, 4 框架合规 |
+| `@rulsynor/core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule 类型 |
 | `@rulsynor/core/guidance` | extractNavigationGuide — 告诉 LLM 怎么恢复 |
 | `@rulsynor/core/runtime` | runReActLoop, createToolExecutor |
 | `@rulsynor/core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |

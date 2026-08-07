@@ -70,6 +70,7 @@ src/
 │   ├── fn-registry.ts          # Function registry (fn extension)
 │   ├── evaluator-adapter.ts    # Legacy rulsynor integration bridge
 │   ├── op-sem-registry.ts      # Operation semantic classifier
+│   ├── plan-parser.ts          # Parse LLM natural-language execution plans
 │   ├── types.ts                # ATCF V2.0 interface definitions
 │   ├── rule-definition.ts      # ERDL rule type definitions
 │   └── rule-store.interface.ts # Rule store abstraction
