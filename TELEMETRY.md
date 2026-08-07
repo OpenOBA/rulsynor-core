@@ -2,7 +2,7 @@
 # OpenOBA Telemetry & Privacy Statement
 
 > 版本 Version: 1.0 | 生效 Effective: 2026-06-10 | 维护方 Maintainer: 深圳市秒镜科技有限公司
-> 适用仓库 Applicable Repos: openoba-starter (monorepo)
+> 适用仓库 Applicable Repos: rulsynor-core
 > 单独隐私政策见 / See also PRIVACY-POLICY.md for the complete privacy policy
 
 ---

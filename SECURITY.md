@@ -1,4 +1,4 @@
-# OpenOBA Security Policy
+# Rulsynor Security Policy
 
 > Version: 1.1 | Effective: 2026-06-10 | Updated: 2026-06-25
 > Maintainer: Shenzhen Miaojing Technology Co., Ltd.
@@ -7,7 +7,7 @@
 
 ## 1. Reporting a Vulnerability
 
-**If you discover a security vulnerability in OpenOBA, do NOT report it in public Issues, Discussions, or PRs.**
+**If you discover a security vulnerability in @rulsynor/core, do NOT report it in public Issues, Discussions, or PRs.**
 
 Please report through:
 
@@ -45,8 +45,8 @@ We use **CVSS 3.1** scoring.
 
 | Component | Supported Version |
 |-----------|------------------|
-| OpenOBA Starter (monorepo) | Latest release (V1.4.x) |
-| `packages/core/` | Latest release (BSL 1.1) |
+| @rulsynor/core (npm package) | Latest release (v1.x) |
+| Rulsynor Core | Latest release (MIT) |
 
 Only the latest release receives security patches. Earlier versions receive critical fixes only.
 
@@ -66,7 +66,7 @@ Specifically, security research activities meeting the following conditions are 
 We will **not**:
 - File DMCA takedown notices against good-faith researchers
 - Pressure researchers' employers
-- Deny researchers legitimate use of OpenOBA based on their research activities
+- Deny researchers legitimate use of rulsynor based on their research activities
 
 ---
 
@@ -76,18 +76,15 @@ We use **GitHub Security Advisories (GHSA)** for CVE assignment. Researchers do 
 
 ---
 
-## 7. Production Deployment Best Practices
+## 7. Integration Best Practices
 
-If you deploy OpenOBA in production:
+If you integrate @rulsynor/core into your Agent runtime:
 
-1. **Never expose `.env` files** — excluded via `.gitignore`, CI scans with secrets detection
-2. **Enable JWT token expiration** — default 24h; production: 1-2h with refresh mechanism
-3. **Enforce HTTPS** — disable plaintext HTTP; CORS restricted to specified domains
-4. **Subscribe to security alerts** — GitHub Watch → Custom → Security Alerts
-5. **Audit logs** — cognitive audit trail; integrate with SIEM (Splunk / ELK) if available
-6. **Rotate secrets** — every 90 days in production; purge old keys from Git history
-7. **Encrypt backups** — AES-256 encryption for all database backups; key managed independently
-8. **Network isolation** — expose only required ports; restrict everything else via firewall
+1. **Call `evaluator.evaluate()` before every tool execution** — never skip Guard evaluation
+2. **Call `evaluator.commitTemporal()` after ALLOW decisions** — required for within/rate rules to work
+3. **Subscribe to security alerts** — GitHub Watch → Custom → Security Alerts
+4. **Keep rules updated** — review preset rules against latest security advisories
+5. **Verify Decision Objects** — use `@openoba/audit-verify` or independent JCS+SHA-256 verification
 
 ---
 
@@ -95,15 +92,13 @@ If you deploy OpenOBA in production:
 
 We commit to:
 
-- No plaintext password storage
-- All passwords hashed with **Argon2id** (preferred) or **bcrypt (cost ≥ 12)**
-- All Core engine SQL operations validated through **Action Guard** whitelist
-- ERDL rule changes validated via **SHA256 integrity check**
+- Deterministic Guard evaluation for all tool calls
+- All ERDL rules validated at compile time (operator whitelist, ReDoS check)
+- Decision Objects sealed with JCS (RFC 8785) + SHA-256 audit hash
 
-We recommend deployers:
+We recommend integrators:
 
-- Enable **MFA** for administration panels
-- **Login failure lockout** (5 failures → 30-minute lockout)
+- Enable **rate limiting** at the server layer (NestJS ThrottlerModule or equivalent)
 - **Session timeout** ≤ 24 hours
 - **Audit log retention** ≥ 180 days
 

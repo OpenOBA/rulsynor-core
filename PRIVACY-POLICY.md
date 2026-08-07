@@ -35,11 +35,11 @@
 
 本政策适用于您与我们之间因以下行为产生的个人信息处理：
 
-1. **下载、安装、使用 OpenOBA 软件**（openoba-starter monorepo，含 packages/core/（BSL 1.1）、packages/backend/（MIT）、frontend/（MIT））；
-2. **访问 OpenOBA 官方网站**（openoba.com 及子域）；
-3. **注册账户、申请 License Key、提交 Bug、提交 Pull Request**；
-4. **订阅邮件列表、参加社区活动**；
-5. **联系我们**（含邮件、电话、社交媒体、GitHub Issue）。
+1. **下载、安装、使用 Rulsynor 软件**（@rulsynor/core，MIT 许可）；
+2. **浏览 rulsynor-core GitHub 仓库**；
+3. **订阅项目公告**（如安全公告）；
+4. **提交反馈或咨询**；
+5. **联系我们**（含邮件、GitHub Issue）。
 
 ### 四、我们收集哪些个人信息、为什么收集
 
@@ -221,11 +221,11 @@
 
 This policy applies to the processing of your personal information in the following scenarios:
 
-1. Downloading, installing, using OpenOBA software (openoba-starter monorepo: packages/core/ (BSL 1.1), packages/backend/ (MIT), frontend/ (MIT));
-2. Visiting openoba.com and subdomains;
-3. Registering an account, applying for a License Key, submitting a bug, submitting a Pull Request;
-4. Subscribing to mailing lists, participating in community events;
-5. Contacting us (email, phone, social media, GitHub Issue).
+1. Downloading, installing, using Rulsynor software (@rulsynor/core, MIT license);
+2. Browsing the rulsynor-core GitHub repository;
+3. Subscribing to project announcements (e.g., security advisories);
+4. Submitting feedback or inquiries;
+5. Contacting us (email, GitHub Issue).
 
 ### 4. What We Collect and Why
 
