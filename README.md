@@ -22,9 +22,9 @@ Every human employee goes through: **hire → train → certify → badge → de
 
 | Layer | Name | Role |
 |------|------|------|
-| Platform | **OpenOBA** | 数字智力资源平台 — Enterprise AI governance infrastructure |
-| Product | **rulsynor** | 职业化数字员工 — Professional Digital Employee with full HR lifecycle |
-| Engine | **rulsynor-core** | 职业化数字员工核心框架 — ERDL rule engine + cryptographic audit (this package) |
+| Platform | **OpenOBA** | Digital Intelligence Resource Platform — enterprise AI governance infrastructure |
+| Product | **rulsynor** | Professional Digital Employee — full HR lifecycle for AI Agents |
+| Engine | **rulsynor-core** | Core Framework — ERDL rule engine + cryptographic audit (this package) |
 
 ---
 
@@ -503,4 +503,4 @@ MIT © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://op
 
 ---
 
-[OpenOBA](https://openoba.com) — Enterprise AI Digital Executor Platform
+[OpenOBA](https://openoba.com) — Digital Intelligence Resource Platform

@@ -529,4 +529,4 @@ MIT © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openob
 
 ---
 
-[OpenOBA](https://openoba.com) — 企业 AI 数字执行官平台
+[OpenOBA](https://openoba.com) — 数字智力资源平台
