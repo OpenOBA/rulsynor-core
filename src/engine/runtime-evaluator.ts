@@ -18,14 +18,14 @@ export function evaluateCondition(
   const fieldValue = resolveField(condition.field, context);
   const { operator, value } = condition;
 
-  // SPEC §6.1: 空值传播 — 字段缺失时，除 exists/not_exists 和 ==null/!=null 外，所有比较返回 false
+  // SPEC §6.1: 空值传播 — 字段缺失时，除 exists/not_exists 外，所有比较返回 false
+  // 注意: 字段缺失 ≠ 值为 null。eq null 在字段缺失时不触发，防止意外 DENY。
   const isAbsent = fieldValue === undefined || fieldValue === null;
   if (isAbsent) {
     if (operator === 'exists') return false;
     if (operator === 'not_exists') return true;
-    if ((operator === 'eq' || operator === 'match' || operator === 'matches') && (value === null || value === undefined)) return true;
-    if ((operator === 'ne' || operator === 'neq') && (value === null || value === undefined)) return false;
-    // All other comparisons with absent field → false
+    // All other comparisons with absent field → false (safe default)
+    // This prevents accidental DENY when a field is missing due to a typo or race condition
     return false;
   }
 
@@ -162,15 +162,23 @@ function resolvePath(path: string, obj: Record<string, unknown>): unknown {
 
 function deepEquals(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (a === null || b === null) return a === b;
+  if (a === null || b === null) return a !== b;
   if (typeof a !== typeof b) return false;
-  if (typeof a !== 'object' || typeof b !== 'object') return false;
 
-  try {
-    const jsonA = JSON.stringify(a, Object.keys(a as object).sort());
-    const jsonB = JSON.stringify(b, Object.keys(b as object).sort());
-    return jsonA === jsonB;
-  } catch {
-    return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, i) => deepEquals(item, b[i]));
   }
+
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a as Record<string,unknown>).sort();
+    const keysB = Object.keys(b as Record<string,unknown>).sort();
+    if (keysA.length !== keysB.length) return false;
+    if (!keysA.every((k, i) => k === keysB[i])) return false;
+    const objA = a as Record<string,unknown>;
+    const objB = b as Record<string,unknown>;
+    return keysA.every(k => deepEquals(objA[k], objB[k]));
+  }
+
+  return false;
 }

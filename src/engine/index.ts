@@ -1,4 +1,4 @@
-export { Evaluator, type CompiledRule, type MatchCondition, type EvalContext, type EvalResult } from './evaluator.js';
+export { Evaluator, type CompiledRule, type MatchCondition, type EvalContext, type EvalResult, type MatchedRuleDetail } from './evaluator.js';
 export { SafeExprEvaluator, safeExprFromCondition } from './safe-expr.js';
 // NOTE: RuleCompilerImpl uses import.meta.url for vector loading — not test-safe.
 // Use direct import from './rule-compiler.js' in production code.

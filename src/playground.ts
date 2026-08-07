@@ -57,11 +57,11 @@ const record = buildDecisionObject({
         ? 'paused'
         : 'allowed',
   reason: result.reason,
-  matchedRules: result.matchedRuleId
+  matchedRules: result.matchedRules ?? (result.matchedRuleId
     ? [{ ruleId: result.matchedRuleId, decision: result.decision, reason: result.reason }]
-    : [],
-  totalEvaluated: evalRules.length,
-  totalMatched: result.matchedRuleId ? 1 : 0,
+    : []),
+  totalEvaluated: result.totalEvaluated ?? evalRules.length,
+  totalMatched: result.totalMatched ?? (result.matchedRuleId ? 1 : 0),
   rules: evalRules.map((r) => ({ name: r.name, version: 1 })),
   evaluationDurationMs: duration,
 });
@@ -81,9 +81,9 @@ const guidanceRules = presetRules.map((r) => ({
 }));
 
 const guide = extractNavigationGuide({
-  matchedRules: result.matchedRuleId
+  matchedRules: (result.matchedRules ?? (result.matchedRuleId
     ? [{ ruleId: result.matchedRuleId, decision: result.decision, reason: result.reason }]
-    : [],
+    : [])) as Array<{ ruleId: string; decision: string; reason: string | null }>,
   decision: result.decision,
   reason: result.reason,
   rules: guidanceRules,

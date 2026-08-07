@@ -10,17 +10,16 @@
  * 确定性：纯函数编译器。相同输入 → 相同输出。不调 LLM。
  */
 
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
 import * as yaml from 'js-yaml';
 import { safeRegExp } from './safe-regex.js';
 
-/** Resolve path relative to this file.
- * Uses `import.meta.dirname` (Node 21+) or falls back to `import.meta.url`. */
+/** Resolve path relative to this file (ESM-compatible). */
 function resolveRelative(relativePath: string): string {
-  // @ts-ignore TS1343 — import.meta.url is valid in ESM (module: nodenext)
-  const baseDir = dirname(new URL(import.meta.url).pathname);
+  const baseDir = join(fileURLToPath(import.meta.url), '..');
   return join(baseDir, relativePath);
 }
 import {
@@ -686,7 +685,7 @@ export class RuleCompilerImpl implements RuleCompiler {
   }
 
   private generateId(): string {
-    return `compiled-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    return `compiled-${randomUUID()}`;
   }
 
   private hashRuleSet(ruleSet: ERDLRuleSet): string {

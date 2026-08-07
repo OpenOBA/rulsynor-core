@@ -28,4 +28,9 @@ export interface ToolEnhancement {
 }
 
 export interface ToolEngineResult { toolCalls: Array<{ name: string; arguments: Record<string, unknown> }>; }
+
+/**
+ * @deprecated Stub — always returns empty toolCalls.
+ * Full implementation planned for v1.1 (see ROADMAP.md § parseToolCalls).
+ */
 export function parseToolCalls(_content: string): ToolEngineResult { return { toolCalls: [] }; }

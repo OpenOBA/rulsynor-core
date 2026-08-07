@@ -34,16 +34,31 @@ export function advanceCorrectLoop(ctx: CorrectLoopContext, newDecision: string)
   execute: boolean;        // true = tool may now execute
   escalate: boolean;       // true = trigger REQUEST_HUMAN
 } {
+  // Input validation
+  if (ctx.round < 1 || ctx.round > 3 || !Number.isInteger(ctx.round)) {
+    return { state: 'correct_escalated', execute: false, escalate: true };
+  }
+
   if (newDecision === 'ALLOW') {
     return { state: 'correct_resolved', execute: true, escalate: false };
+  }
+
+  // Hard DENY/EMERGENCY_HALT — do not loop, escalate immediately
+  if (newDecision === 'DENY' || newDecision === 'EMERGENCY_HALT') {
+    return { state: 'correct_escalated', execute: false, escalate: true };
   }
 
   if (ctx.round >= 3) {
     return { state: 'correct_escalated', execute: false, escalate: true };
   }
 
+  const nextRound = ctx.round + 1;
+  const stateMap: Record<number, CorrectLoopState> = {
+    2: 'correct_round_2',
+    3: 'correct_round_3',
+  };
   return {
-    state: `correct_round_${ctx.round + 1}` as CorrectLoopState,
+    state: stateMap[nextRound] || 'correct_escalated',
     execute: false,
     escalate: false,
   };
@@ -67,10 +82,12 @@ export interface RequestHumanSignal {
  *   "REQUEST_HUMAN: GDPR删除请求需身份验证"
  */
 const RH_PATTERNS = [
-  /请求人工审批[：:]\s*(.+)/,
-  /REQUEST_HUMAN[：:]\s*(.+)/i,
-  /需要人工(?:审批|介入|审核)[：:]\s*(.+)/,
-  /请升级(?:至|到)人工[：:]\s*(.+)/,
+  // Anchored patterns: must appear at line-start or after newline to prevent prompt-injection false positives
+  // Max captured reason length: 500 chars (prevents unbounded capture into DO)
+  /(?:^|\n)\s*请求人工审批[：:]\s*(.{1,500})/,
+  /(?:^|\n)\s*REQUEST_HUMAN[：:]\s*(.{1,500})/i,
+  /(?:^|\n)\s*需要人工(?:审批|介入|审核)[：:]\s*(.{1,500})/,
+  /(?:^|\n)\s*请升级(?:至|到)人工[：:]\s*(.{1,500})/,
 ];
 
 export function parseRequestHumanSignal(agentReply: string): RequestHumanSignal {

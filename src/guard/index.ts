@@ -82,9 +82,9 @@ export function buildDecisionObject(opts: DecisionObjectInput): Record<string, u
     ...(r.ring !== undefined ? { ring: r.ring } : {}),
   }));
 
-  // Agent
-  const agentRole = input.agentId.includes('guardian') ? 'guardian'
-    : input.agentId.includes('operator') ? 'operator'
+  // Agent — role inferred from id suffix pattern (best-effort; explicit role should be passed by caller)
+  const agentRole = /[.:_-]guardian$/i.test(input.agentId) ? 'guardian'
+    : /[.:_-]operator$/i.test(input.agentId) ? 'operator'
     : 'observed';
 
   const toolRegistryHash = `sha256:${crypto.createHash('sha256')
@@ -104,19 +104,20 @@ export function buildDecisionObject(opts: DecisionObjectInput): Record<string, u
 
   // Derived fields
   const humanOversight = decision === 'REQUEST_HUMAN' || decision === 'ESCALATE';
-  const decisionType = deriveDecisionType(decision);
+  // decision_type maps SPEC decision to lowercase for tooling compatibility (legacy; prefer `decision`)
+  const decisionType = decision.toLowerCase();
   const confidenceScore = totalEvaluated > 0 ? Math.round((totalMatched / totalEvaluated) * 100) : 0;
   const dataModification = isDataModification(input.toolName, actionTaken);
   const appliedRule = matchedRules.length > 0 ? matchedRules[0].ruleId : null;
   const autonomyLevel = process.env['RULSYNOR_AUTONOMY_LEVEL'] || 'L2';
-  const commitment = `${timestamp}|${input.agentId}|${input.toolName}|${decision}`;
+  const commitment = `${timestamp}|${input.agentId}|${input.toolName}|${decision}|${input.previousAuditHash ?? 'genesis'}`;
 
   // Compliance profile
   const complianceProfile = getComplianceProfile();
 
   // ── Assemble 25-field DO ──
   const recordWithoutHash: Record<string, unknown> = {
-    spec: 'decision-object-v1.0',
+    spec: 'decision-object-v1.3',
     decision_id: decisionId,
     compliance_profile: complianceProfile,
     execution_trace_id: executionTraceId,
@@ -191,23 +192,13 @@ export function generateAID(): string {
   return `${PROVENANCE.aidOidPrefix}.1.${registrarId}.${requesterId}.${instanceId}`;
 }
 
-function deriveDecisionType(decision: string): string {
-  switch (decision) {
-    case 'ALLOW': return 'allow';
-    case 'DENY': return 'block';
-    case 'CORRECT': return 'correct';
-    case 'REQUEST_HUMAN': return 'human';
-    case 'ESCALATE': return 'escalate';
-    case 'ROLLBACK': return 'rollback';
-    case 'QUARANTINE': return 'quarantine';
-    case 'EMERGENCY_HALT': return 'halt';
-    case 'NOTIFY': return 'notify';
-    default: return 'unknown';
-  }
-}
-
-function isDataModification(toolName: string, _actionTaken: string): boolean {
+function isDataModification(toolName: string, actionTaken: string): boolean {
+  // DENIED / blocked / paused actions have no data modification effect
+  if (actionTaken !== 'allowed') return false;
+  // Whitelist known write-verb tools (avoids substring false positives like 'post' matching 'postprocess')
   const writeVerbs = ['write', 'create', 'update', 'delete', 'remove', 'save', 'insert', 'upsert', 'patch', 'put', 'post'];
   const lower = toolName.toLowerCase();
-  return writeVerbs.some(v => lower.includes(v));
+  // Match whole word boundaries: tool name must START with or equal a write verb,
+  // or have it at word boundary (e.g. 'write_file', 'createOrder')
+  return writeVerbs.some(v => lower === v || lower.startsWith(v + '_') || lower.startsWith(v + '-'));
 }

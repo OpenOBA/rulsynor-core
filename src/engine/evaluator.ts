@@ -44,6 +44,20 @@ export interface CompiledRule {
   conditions: MatchCondition[];
   conditionLogic: 'AND' | 'OR';
   enabled: boolean;
+  /** ERDL then.alternative — suggested alternative action when blocked */
+  alternative?: string;
+  /** ERDL then.correction — correction target text (CORRECT decision) */
+  correction?: string;
+}
+
+/** 单个匹配规则的详情 */
+export interface MatchedRuleDetail {
+  ruleId: string;
+  decision: string;
+  reason?: string | null;
+  instruction?: string | null;
+  correction?: string | null;
+  ring?: number;
 }
 
 /** 评估结果 */
@@ -54,6 +68,12 @@ export interface EvalResult {
   matchedRuleName?: string;
   severity?: string;
   ring?: number;
+  /** 所有匹配到的规则详情（含 within/rate 触发的） */
+  matchedRules?: MatchedRuleDetail[];
+  /** 评估的规则总数 */
+  totalEvaluated?: number;
+  /** 匹配的规则总数 */
+  totalMatched?: number;
 }
 
 /**
@@ -102,7 +122,8 @@ export class Evaluator {
           if (c.operator === 'within' && typeof c.value === 'number') {
             const windowMs = c.windowMs || 60000;
             const limit = c.value as number;
-            const withinKey = `${rule.id}:${context.toolName}`;
+            // \u0000 separator prevents collision: "a:b"+"c" ≠ "a"+"b:c"
+            const withinKey = `${rule.id}\u0000${context.toolName}`;
             const count = this.stateManager.getWithinCount(withinKey, windowMs);
             if (count >= limit) {
               return {
@@ -118,7 +139,7 @@ export class Evaluator {
           if (c.operator === 'rate' && typeof c.value === 'number') {
             const windowMs = c.windowMs || 60000;
             const limit = c.value as number;
-            const rateKey = `${rule.id}:${context.toolName}`;
+            const rateKey = `${rule.id}\u0000${context.toolName}`;
             const count = this.stateManager.getRateCount(rateKey);
             if (count >= limit) {
               return {
@@ -160,10 +181,10 @@ export class Evaluator {
       const temporal = rule.conditions.filter(c => c.operator === 'within' || c.operator === 'rate');
       for (const c of temporal) {
         if (c.operator === 'within' && typeof c.value === 'number') {
-          this.stateManager.recordWithin(`${rule.id}:${context.toolName}`, c.windowMs || 60000);
+          this.stateManager.recordWithin(`${rule.id}\u0000${context.toolName}`, c.windowMs || 60000);
         }
         if (c.operator === 'rate' && typeof c.value === 'number') {
-          this.stateManager.recordRate(`${rule.id}:${context.toolName}`, c.windowMs || 60000);
+          this.stateManager.recordRate(`${rule.id}\u0000${context.toolName}`, c.windowMs || 60000);
         }
       }
     }

@@ -1,6 +1,6 @@
 # @rulsynor/core
 
-> **大模型厂商交付超群智商，我们交付恪守职业操守的数字员工。**
+> **大模型厂商交付的是卓越智能，我们交付的是恪守职业操守的数字员工。**
 
 ```bash
 npm install @rulsynor/core
@@ -8,39 +8,39 @@ npm install @rulsynor/core
 
 ---
 
-## 商业命题：没有治理的 AI Agent，是企业的定时炸弹
+## 商业命题：缺乏治理的 AI Agent，是企业尚未引爆的运营风险
 
-你的企业即将部署能够读取数据库、写文件、调 API、执行命令的 AI Agent。
+你的企业即将部署能够读写数据库、操作文件、调用 API、执行系统命令的 AI Agent。
 
-这些 Agent 在某个午夜犯了错——不是 bug，是新人入职第一周都会犯的那种错误。你的 HR、合规、法务部门花了几十年建立的流程，哪一个能兜住它？
+这些 Agent 可能在某个午夜犯下错误——并非代码缺陷，而是任何新员工入职首周都可能出现的判断失误。你的 HR、合规、法务团队数十年沉淀的治理流程，能否同样约束它？
 
-> 谁在培训你的 AI Agent 上岗？
-> 谁在考核它掌握了岗位规则？
-> 谁在记录它的每一步操作——不是可篡改的日志，而是法庭上立得住的审计证据？
+> 谁在培训你的 AI Agent 走完上岗流程？
+> 谁在考核它是否掌握了岗位规则？
+> 谁在记录它的每一步操作——不是可篡改的日志，而是法庭上站得住的审计证据？
 
-每个员工必经的路：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 年审**。你的 AI Agent 该走同样的路。不是因为它危险。因为它是员工。
+每位员工必经的路径：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 年审**。你的 AI Agent 理应走同样的路径。并非因为它危险，而是因为它——正如人类员工一样——是承担责任的主体。
 
-**rulsynor-core** 是这一切的引擎。它是 **rulsynor**（职业化数字员工）的核心框架，构建于 **OpenOBA**（数字智力资源平台）之上。
+**rulsynor-core** 正是这条路径的执行引擎。它是 **rulsynor**（职业化数字员工产品）的核心框架，构建于 **OpenOBA**（数字智力资源平台）之上——三者构成从基础设施到产品交付的完整治理栈：
 
 | 层级 | 名称 | 定位 |
 |------|------|------|
-| 平台 | **OpenOBA** | 数字智力资源平台 — 企业 AI 治理基础设施 |
-| 产品 | **rulsynor** | 职业化数字员工 — 覆盖 HR 全生命周期的 AI Agent 治理方案 |
-| 引擎 | **rulsynor-core** | 职业化数字员工核心框架 — ERDL 规则引擎 + 加密审计（本包） |
+| 平台 | **OpenOBA** | 数字智力资源平台 — 企业级 AI 治理基础设施 |
+| 产品 | **rulsynor** | 职业化数字员工 — 覆盖人力资源全生命周期的 AI Agent 治理方案 |
+| 引擎 | **rulsynor-core** | 职业化数字员工核心框架 — ERDL 规则引擎 + 加密审计链（本包） |
 
 ---
 
 ## rulsynor-core 做什么
 
-**不给 Agent 上手铐。给它一本规则手册，然后说"去干活吧。"**
+**不给 Agent 戴枷锁。给它一本岗位手册，然后说"去工作吧。"**
 
 - **执行前**：Guard 评估每次工具调用——按环排序，亚毫秒级，first-match-wins
 - **出错时**：Navigation Guide 告诉 LLM 为什么、怎么改，修得好的自动纠正（最多 3 轮）
 - **决策后**：每条决策生成 25 字段 Decision Object，JCS 规范化 + SHA-256 加密密封，哈希链串联
 - **合规层**：辖区感知字段自动激活（EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI）
-- **可信层**：每个员工有工牌（AID）。每条 Decision Object 可零 SDK 独立验证。
+- **可信层**：每位数字员工持有执业工牌（AID）。每条 Decision Object 可零 SDK 独立验证。
 
-结果：**你胆敢把真实工作交给 Agent。而且每一步都经得起审计。**
+结果：**你可以放心地将真实业务交托给 Agent——而每一步都经得起审计。**
 
 ---
 
@@ -58,9 +58,9 @@ npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
 🪪 工号：      1.2.156.3088.1.000001.000001.28027273
 ```
 
-Agent 被拦了——但它知道了为什么，以及怎么做才对。
+Agent 的请求被拦截——但它同时获知了原因，以及正确的做法。
 
-再看一个 Agent 正常干活的情况：
+再看一个 Agent 正常执行操作的情形：
 
 ```bash
 npx @rulsynor/core --tool=read --path="docs/api-spec.md"
@@ -71,19 +71,19 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 🧾 留痕：     sha256:b2f1a93...（已记录，审计链正常增长）
 ```
 
-安全的操作，rulsynor 完全不挡路。Agent 正常工作。审计链持续累积。
+对于安全操作，rulsynor 毫不干预。Agent 正常执行，审计链持续累积。
 
 ---
 
-## 全生命周期：培训 → 干活 → 纠错 → 证明
+## 全生命周期：培训 → 上岗 → 纠偏 → 证明
 
-rulsynor 将人力资源管理映射到 AI Agent 上：
+rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上：
 
 ```
-撰写规则 ──→ 培训 ──→ 上岗 ──→ 干活（Guard 护航）──→ 纠错（CORRECT 循环）──→ 审计每一步
+撰写规则 ──→ 培训 ──→ 上岗 ──→ 执行（Guard 护航）──→ 纠偏（CORRECT 循环）──→ 审计每一步
 ```
 
-它不是"安全过滤器"。它是让你**信任 Agent 到胆敢把真实工作交给它**的治理基础设施。
+它不是"安全过滤器"。它是让你**敢于将真实业务交托给 Agent**的治理基础设施。
 
 ---
 
@@ -138,7 +138,7 @@ then:
   instruction: "大批量写入（>10MB）已记录。建议分块以提高可靠性。"
 ```
 
-**核心洞察**：规则不是拦工作的。规则定义工作**怎么做**。
+**核心洞察**：规则不是阻碍工作的，规则定义的是工作的**正确方式**。
 
 **可用运算符**（16 种）：`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
 
@@ -227,9 +227,9 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 ---
 
-### 四、引导系统 —— 帮 Agent 把事做成
+### 四、引导系统 —— 助 Agent 达成目标
 
-规则触发后，Agent 得到的不是"不行"。**Navigation Guide** 把 LLM 需要的恢复信息全部返回：
+规则触发后，Agent 得到的回应不只是"不行"。**Navigation Guide** 将 LLM 所需的恢复信息完整返回：
 
 ```typescript
 import { extractNavigationGuide } from '@rulsynor/core/guidance';
@@ -246,7 +246,7 @@ const guide = extractNavigationGuide({
 // guide.blockedReasons → ["production-db-needs-approval: 生产数据库访问..."]
 ```
 
-把 `guide.corrections` 和 `guide.alternatives` 注入到下一个 LLM `assistant` 消息中。Agent 自行调整，走上正道。
+把 `guide.corrections` 和 `guide.alternatives` 注入到下一个 LLM `assistant` 消息中。Agent 据此自行调整，回归合规路径。
 
 **CORRECT 纠正循环**：当 `decision === 'CORRECT'` 时，`advanceCorrectLoop()` 自动应用修正、递增重试计数、重新评估。3 轮成功 → 继续任务。3 轮失败 → 升级人工。
 
@@ -265,7 +265,7 @@ const state = advanceCorrectLoop({
 
 ### 五、审计 —— 每一步，可证明
 
-每一次评估——ALLOW、DENY、CORRECT 都算——生成一个 25 字段决策对象。JCS 规范化（RFC 8785），SHA-256 哈希。记录不可篡改，任何人可独立验证，无需 SDK：
+每一次评估——无论 ALLOW、DENY 还是 CORRECT——均生成一个 25 字段决策对象。经 JCS 规范化（RFC 8785）后以 SHA-256 密封。记录不可篡改，任何第三方均可独立验证，无需 SDK：
 
 ```typescript
 import { buildDecisionObject } from '@rulsynor/core';
@@ -329,7 +329,7 @@ npx @openoba/audit-verify decision-object.json
 
 ---
 
-### 六、Agent 身份 —— 每个员工都有工牌
+### 六、Agent 身份 —— 每位数字员工都有执业工牌
 
 ```typescript
 import { generateAID } from '@rulsynor/core';
@@ -486,10 +486,10 @@ human_oversight · audit { previous_hash, commitment, hash }
 
 MIT © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
 
-> "大模型厂商交付超群智商，我们交付恪守职业操守的数字员工。"
+> "大模型厂商交付的是卓越智能，我们交付的是恪守职业操守的数字员工。"
 >
-> 培训你的 Agent。信任它干活。证明每一步都对。
+> 培训你的 Agent。信任它执行。证明每一步都对。
 
 ---
 
-[OpenOBA](https://openoba.com) — 企业 AI 数字执行官平台
+[OpenOBA](https://openoba.com) — 数字智力资源平台

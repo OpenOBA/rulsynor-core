@@ -74,7 +74,11 @@ export function toERDLRuleSet(rules: PresetRule[]): { protocol: string; version:
         decision: then.decision as string,
         reason: (then.instruction as string) || '',
         ring: (p.ring as number) || 0,
-        alternative: (then.alternative as string | { en: string }) || undefined,
+        alternative: then.alternative ? (
+          typeof then.alternative === 'string'
+            ? then.alternative
+            : (then.alternative as Record<string,string>).en || JSON.stringify(then.alternative)
+        ) : undefined,
         correction: (then.correction as string) || undefined,
       } : undefined,
     };
@@ -116,5 +120,7 @@ export function toCompiledRules(presetRules: PresetRule[]): CompiledRule[] {
     })),
     conditionLogic: ((r.conditionLogic as 'AND' | 'OR') || 'AND'),
     enabled: true,
+    alternative: (r.action as Record<string,unknown> | undefined)?.alternative as string | undefined,
+    correction: (r.action as Record<string,unknown> | undefined)?.correction as string | undefined,
   }));
 }

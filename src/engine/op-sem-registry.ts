@@ -16,13 +16,12 @@
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 
-/** Resolve path relative to this file.
- * Uses `import.meta.dirname` (Node 21+) or falls back to `import.meta.url`. */
+/** Resolve path relative to this file (ESM-compatible). */
 function resolveRelative(relativePath: string): string {
-  // @ts-ignore TS1343 — import.meta.url is valid in ESM (module: nodenext)
-  const baseDir = path.dirname(new URL(import.meta.url).pathname);
+  const baseDir = path.dirname(fileURLToPath(import.meta.url));
   return path.resolve(baseDir, relativePath);
 }
 

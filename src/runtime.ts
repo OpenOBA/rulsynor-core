@@ -111,9 +111,9 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         decision: evalResult.decision,
         actionTaken: evalResult.decision === 'DENY' ? 'blocked' : evalResult.decision === 'REQUEST_HUMAN' ? 'paused' : 'allowed',
         reason: evalResult.reason ?? null,
-        matchedRules: evalResult.matchedRuleId ? [{ ruleId: evalResult.matchedRuleId, decision: evalResult.decision, ring: 0 }] : [],
-        totalEvaluated: rules.length,
-        totalMatched: evalResult.matchedRuleId ? 1 : 0,
+        matchedRules: evalResult.matchedRules ?? [],
+        totalEvaluated: evalResult.totalEvaluated ?? rules.length,
+        totalMatched: evalResult.totalMatched ?? (evalResult.matchedRuleId ? 1 : 0),
         rules,
         evaluationDurationMs: Math.round(performance.now() - evalStart),
       });
