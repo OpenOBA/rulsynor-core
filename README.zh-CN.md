@@ -26,7 +26,11 @@ npm install @rulsynor/core
 |------|------|------|
 | 平台 | **OpenOBA** | 数字智力资源平台 — 企业 AI 治理基础设施 |
 | 产品 | **rulsynor** | 职业化数字员工 — 覆盖 HR 全生命周期的 AI Agent 治理方案 |
-| 引擎 | **rulsynor-core** | 职业化数字员工核心框架 — ERDL 规则引擎 + 加密审计（本包） |
+| 引擎 | **rulsynor-core** | Harness Engineering — ERDL 规则引擎 + 加密审计（本包） |
+
+> **大模型厂商交付的是卓越智力，我们交付的是恪守职业操守的数字员工。**
+
+**rulsynor-core** 是恪守职业道德的 Harness Engineering——它不是一个"安全手铐"，而是一套可靠的行为约束框架，让 AI Agent 的能力安全释放，让每一次自动操作都问责清晰、有据可查、符合职业标准。
 
 ---
 

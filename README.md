@@ -18,13 +18,17 @@ Who is training your AI Agent before it starts work? Who is certifying that it k
 
 Every human employee goes through: **hire → train → certify → badge → deploy → audit → review**. Your AI Agents should go through exactly the same thing. Not because they're dangerous. Because they're employees.
 
-**rulsynor-core** is the engine that makes this possible. It's the core framework of **rulsynor** — the Professional Digital Employee product, built on **OpenOBA**, the Digital Intelligence Resource Platform.
+**rulsynor-core** is the engine that makes this possible.
+
+> **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
+
+**rulsynor-core** is ethics-first Harness Engineering — a constraint framework that safely channels AI Agent capabilities, ensuring every autonomous action is accountable, auditable, and aligned with professional standards. It is the core engine of **rulsynor** — the Professional Digital Employee, built on **OpenOBA** — the Digital Intelligence Resource Platform.
 
 | Layer | Name | Role |
 |------|------|------|
 | Platform | **OpenOBA** | Digital Intelligence Resource Platform — enterprise AI governance infrastructure |
 | Product | **rulsynor** | Professional Digital Employee — full HR lifecycle for AI Agents |
-| Engine | **rulsynor-core** | Core Framework — ERDL rule engine + cryptographic audit (this package) |
+| Engine | **rulsynor-core** | Harness Engineering — ERDL rule engine + cryptographic audit (this package) |
 
 ---
 
