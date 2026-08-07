@@ -1,36 +1,43 @@
-# Changelog â€?@rulsynor/core
+# Changelog â€” @rulsynor/core
 
-## v1.0.0 (2026-08-06)
+## v1.0.0 (2026-08-07)
 
 ### First public release
 
 **Core Engine**
-- ERDL rule evaluator with 16 SafeExpr operators (eq, ne, gt, gte, lt, lte, in, not_in, contains, match, exists, starts_with, ends_with, and, or, not)
+- ERDL rule evaluator with 22 operators (eq, neq, gt, gte, lt, lte, in, not_in, contains, not_contains, match/matches, starts_with, ends_with, exists, not_exists, length_gt/gte/lt/lte/eq)
 - 25-field Decision Object builder with JCS (RFC 8785) + SHA-256 cryptographic audit hash
-- RuleCompiler: ERDL YAML â†?four parallel products (ComplianceSchema, GuidanceArtifact, GuardDirective, AuditTemplate)
-- GuardStateManager with within/rate temporal tracking
+- RuleCompiler: ERDL YAML -> four parallel products (ComplianceSchema, GuidanceArtifact, GuardDirective, AuditTemplate)
+- GuardStateManager with within/rate temporal tracking + hot-reload freeze migration
 - Clock abstraction (SystemClock + VirtualClock for testing)
-- Shadow Mode (dual-engine evaluation via EvaluatorAdapter)
-- Function registry (ERDL fn-registry with sandbox execution)
+- EvaluatorAdapter for legacy rulsynor integration
+- Function registry (ERDL fn-registry with sandbox execution + timeout protection)
+- SafeRegExp: ReDoS-protected regex construction (nested quantifier detection + length cap)
 
 **Guard & Compliance**
 - ComplianceService: 4 regulations (EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI) across 4 jurisdictions
 - GB/Z 185-compliant Agent Identity Code (AID) generation
-- extractNavigationGuide: DENY/CORRECT decisions â†?structured LLM guidance
+- extractNavigationGuide: DENY/CORRECT decisions -> structured LLM guidance with corrections + alternatives
 
 **Preflight**
 - CORRECT loop state machine (5 states, 3-round retry before escalation)
-- REQUEST_HUMAN signal parser (Chinese + English patterns)
+- REQUEST_HUMAN signal parser (Chinese + English patterns, anchored for injection safety)
 - Deterministic A/B experiment assignment
 - DO Payload builder for RAG traceability
 
 **Developer Experience**
 - Playground CLI: `npx @rulsynor/core --tool=exec --cmd="rm -rf /"` shows Guard interception
 - Minimal Chat Runtime: ReAct loop + Guard + Tool executor in one file
-- 32 preset security rules (exec, write, http, SQL injection, SSRF, path traversal, fork bomb, etc.)
+- 29 preset rules (20 security + 8 compliance + 1 integrity)
+- integrity.erdl.yaml: professional ethics detection (promise vs action, no cover-up, transparency)
+
+**Documentation**
+- Bilingual README (EN + CN) with executable code examples
+- Spec documents bundled: ERDL Spec v1.1 + RFC 001 Decision Object v1.3
+- Full legal suite: LICENSE (MIT), SECURITY, CODE_OF_CONDUCT, GOVERNANCE, PRIVACY-POLICY, TRADEMARK
 
 **Packaging**
 - MIT License
 - Zero framework dependencies (only json-canonicalize + js-yaml)
 - 100 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Guidance, Runtime, Preflight)
-- npm package: 155 kB, 10 sub-path exports
+- npm package: 10 sub-path exports (engine, guard, compliance, rules, guidance, runtime, preflight, playground, provenance)
