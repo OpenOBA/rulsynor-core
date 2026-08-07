@@ -131,7 +131,7 @@ export class RuleCompilerImpl implements RuleCompiler {
 
     // Load vectors from erdl-vectors v1.3 if not provided
     if (!vectors || !vectors.vectors || vectors.vectors.length === 0) {
-      const vectorsPath = resolveRelative('../decision-object-vectors-v1.3.json');
+      const vectorsPath = resolveRelative('../docs/vectors/decision-object-vectors-v1.3.json');
       if (existsSync(vectorsPath)) {
         vectors = JSON.parse(readFileSync(vectorsPath, 'utf-8'));
       }

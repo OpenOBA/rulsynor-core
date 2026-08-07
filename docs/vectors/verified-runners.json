@@ -1,0 +1,24 @@
+{
+  "verified_runners": [
+    {
+      "name": "rulsynor",
+      "language": "TypeScript",
+      "repository": "https://github.com/OpenOBA/rulsynor",
+      "verified_date": "2026-07-30",
+      "verified_by": "OpenOBA",
+      "result": "101/101 (L1 Basic Compatible)",
+      "av_result": "13/13 AV byte-perfect match (including AV-013 canary)",
+      "commit": "a3c907b"
+    },
+    {
+      "name": "concordia",
+      "language": "Python",
+      "maintainer": "Erik Newton",
+      "verified_date": "2026-07-30",
+      "verified_by": "Erik Newton (Concordia)",
+      "result": "13/13 AV byte-perfect match",
+      "av_result": "AV-001~AV-012 MATCH + AV-013 EXPECTED_MISMATCH detected",
+      "commit": "d602844"
+    }
+  ]
+}
