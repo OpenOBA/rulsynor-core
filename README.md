@@ -37,8 +37,6 @@ Following HR best practices: **Hire → Train → Certify → Badge → Deploy �
 
 ---
 
----
-
 ## What rulsynor-core Does
 
 **It doesn't handcuff your Agent. It gives it a rulebook and says "go build."**
