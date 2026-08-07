@@ -1,8 +1,8 @@
 # @rulsynor/core
 
-> **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
+> **LLM vendors deliver exceptional intelligence. We deliver accountability.**
 
-**rulsynor-core** is ethics-first Harness Engineering: professional ethics as the baseline, rules as the reins — safely channeling AI Agent capabilities while ensuring every task execution is traceable, auditable, and aligned with professional standards.
+**rulsynor-core** is ethics-first Harness Engineering: rules as the reins, accountability as the baseline — safely channeling AI Agent capabilities while ensuring every autonomous action is traceable, auditable, and verifiable.
 
 ```bash
 npm install @rulsynor/core
@@ -28,7 +28,7 @@ It's like a new hire fresh into the workplace — eager to perform, but unfamili
 
 > **Hire**: Give it an AID, then teach it the first lesson of professional life: honesty.
 > **Train**: Use when/then rules to define its responsibilities, workflows, what to do, and who to report to.
-> **Record**: Every action automatically generates a 25-field Decision Object — JCS + SHA-256 sealed. Traceable internally, verifiable by third parties, admissible in court.
+> **Record**: Every action automatically generates a 25-field Decision Object — JCS + SHA-256 sealed. Traceable internally, verifiable by third parties.
 > **Evaluate**: Continuously refine rules based on actual performance — grant autonomy to those who earn it, retrain those who stumble. Quarterly reviews, just like managing a human team.
 
 Following HR best practices: **Hire → Train → Certify → Badge → Deploy → Audit → Review**. Professionalize your Agent — make it a responsible employee, not a black-box tool.
@@ -53,7 +53,7 @@ Following HR best practices: **Hire → Train → Certify → Badge → Deploy �
 - **For compliance**: Jurisdiction-aware fields auto-activate (EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI)
 - **For trust**: Every employee has a badge (AID). Every Decision Object is independently verifiable with no SDK.
 
-The result: **you trust your Agent enough to give it real work.** And you can prove every decision was correct.
+The result: **you can verify every decision your Agent makes.** Audit trail to prove it.
 
 ---
 
@@ -107,7 +107,7 @@ rulsynor maps the HR lifecycle professionals already trust onto your AI Agent:
 Write rules ──→ Train ──→ Deploy ──→ Work (with Guard) ──→ Correct mistakes ──→ Audit every decision
 ```
 
-It's not a "safety filter." It's the governance infrastructure that lets you **trust an Agent enough to give it real work.**
+It's not a "safety filter." It's the governance infrastructure that lets you **verify every decision your Agent makes.**
 
 ---
 
@@ -330,7 +330,7 @@ const state = advanceCorrectLoop(
 
 ---
 
-### 5. Audit — Every working decision, provable
+### 5. Audit — Every decision, verifiable
 
 Every evaluation — ALLOW, DENY, CORRECT, anything — produces a 25-field Decision Object. JCS-canonicalized (RFC 8785), SHA-256 hashed. The record is tamper-evident and verifiable by anyone, with no SDK:
 
@@ -501,7 +501,7 @@ registry.register({
 │  │     Compliance profile    │           │
 │  └──────────────────────────┘           │
 │                                         │
-│  Result: trustable, provable Agent work │
+│  Result: traceable, verifiable Agent work │
 └─────────────────────────────────────────┘
 ```
 
@@ -599,9 +599,9 @@ The package also includes a complete cross-implementation test vector set. Any c
 
 MIT © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))
 
-> "LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity."
+> "LLM vendors deliver exceptional intelligence. We deliver accountability."
 >
-> Train your Agent. Trust it to work. Prove every decision.
+> Train your Agent. Verify every decision.
 
 ---
 
