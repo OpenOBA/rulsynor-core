@@ -33,13 +33,7 @@ It's like a new hire fresh into the workplace — eager to perform, but unfamili
 
 Following HR best practices: **Hire → Train → Certify → Badge → Deploy → Audit → Review**. Professionalize your Agent — make it a responsible employee, not a black-box tool.
 
-**rulsynor-core** is the engine that walks this path — the core framework of **rulsynor** (Professional Digital Employee), built on **OpenOBA** (Digital Intelligence Resource Platform):
-
-| Layer | Name | Role |
-|------|------|------|
-| Platform | **OpenOBA** | Digital Intelligence Resource Platform — governance-compliant AI Agent application platform |
-| Product | **rulsynor** | Professional Digital Employee — 1:1 alignment with human employees |
-| Engine | **rulsynor-core** | Harness Engineering — ERDL rule engine + cryptographic audit |
+---
 
 ---
 
