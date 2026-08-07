@@ -138,35 +138,31 @@ export class RuleCompilerImpl implements RuleCompiler {
     }
 
     const vecs = (vectors as any).vectors || [];
+    const tree = compiled.guardDirectives[0]?.toolDecisionTree;
+    if (!tree) {
+      return { passed: 0, failed: vecs.length, total: vecs.length, details: [{ reason: 'No decision tree compiled' }] };
+    }
+
     for (const vec of vecs) {
       try {
-        // For each vector, evaluate the compiled rules against vector context
-        // and compare the decision with the expected decision.
         const expected = (vec as any).expected;
+        const context = (vec as any).context || {};
         if (!expected) continue;
 
-        // Lookup the compiled rule by ID from the vector
-        const vecRules = (vec as any).rules || [];
-        let matched = false;
-        for (const vr of vecRules) {
-          const compiledRule = compiled.guardDirectives?.[0]?.toolDecisionTree;
-          if (!compiledRule) break;
-          // Phase 1: basic decision type match
-          if (expected.decision && vr.then === expected.decision) {
-            matched = true;
-            break;
-          }
-          if (expected.applied_rule && vr.id === expected.applied_rule) {
-            matched = true;
-            break;
-          }
-        }
+        // Actually traverse the decision tree with vector context
+        const actualDecision = tree.traverse(context);
+        const expectedDecision = expected.decision || expected.applied_rule;
 
-        if (matched) {
+        if (actualDecision === expectedDecision) {
           passed++;
         } else {
           failed++;
-          details.push({ id: (vec as any).id, expected: expected.decision || expected.applied_rule, reason: 'Rule not found in compiled set' });
+          details.push({
+            id: (vec as any).id,
+            expected: expectedDecision,
+            actual: actualDecision,
+            reason: 'Decision tree divergence',
+          });
         }
       } catch (e) {
         failed++;
@@ -606,22 +602,37 @@ export class RuleCompilerImpl implements RuleCompiler {
     // Resolve field from context (supports dot notation and tool.* shortcuts)
     const fieldValue = this.resolveContextField(field, ctx);
 
+    // Null/undefined propagation: absent fields → false except for exists/not_exists
+    const isAbsent = fieldValue === undefined || fieldValue === null;
+    if (isAbsent) {
+      if (operator === 'exists') return false;
+      if (operator === 'not_exists') return true;
+      return false;
+    }
+
     switch (operator) {
-      case 'eq': return fieldValue === value;
-      case 'ne': case 'neq': return fieldValue !== value;
+      case 'eq': return deepEqualsLC(fieldValue, value);
+      case 'ne': case 'neq': return !deepEqualsLC(fieldValue, value);
       case 'in': return Array.isArray(value) && value.includes(fieldValue);
       case 'not_in': return Array.isArray(value) && !value.includes(fieldValue);
       case 'contains': return typeof fieldValue === 'string' && typeof value === 'string' && fieldValue.includes(value);
+      case 'not_contains': return typeof fieldValue === 'string' && typeof value === 'string' && !fieldValue.includes(value);
       case 'match': case 'matches':
         if (typeof fieldValue !== 'string' || typeof value !== 'string') return false;
         try { return safeRegExp(value).test(fieldValue); } catch { return false; }
-      case 'exists': return fieldValue !== undefined && fieldValue !== null;
+      case 'exists': return true; // already handled above
+      case 'not_exists': return false; // already handled above
       case 'gt': return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue > value;
       case 'gte': return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue >= value;
       case 'lt': return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue < value;
       case 'lte': return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue <= value;
       case 'starts_with': return typeof fieldValue === 'string' && typeof value === 'string' && fieldValue.startsWith(value);
       case 'ends_with': return typeof fieldValue === 'string' && typeof value === 'string' && fieldValue.endsWith(value);
+      case 'length_gt': return typeof fieldValue === 'string' || Array.isArray(fieldValue) ? fieldValue.length > (value as number) : false;
+      case 'length_gte': return typeof fieldValue === 'string' || Array.isArray(fieldValue) ? fieldValue.length >= (value as number) : false;
+      case 'length_lt': return typeof fieldValue === 'string' || Array.isArray(fieldValue) ? fieldValue.length < (value as number) : false;
+      case 'length_lte': return typeof fieldValue === 'string' || Array.isArray(fieldValue) ? fieldValue.length <= (value as number) : false;
+      case 'length_eq': return typeof fieldValue === 'string' || Array.isArray(fieldValue) ? fieldValue.length === (value as number) : false;
       default: return false;
     }
   }
@@ -671,7 +682,7 @@ export class RuleCompilerImpl implements RuleCompiler {
    */
   private compileSafeExpr(conditions: RuleCondition[], logic: string): { type: string; args: unknown[] } {
     if (conditions.length === 0) return { type: 'true', args: [] };
-    return { type: logic === 'AND' ? 'and' : 'or', args: conditions.map(c => ({ op: c.operator, args: [c.field, c.value] })) };
+    return { type: logic === 'AND' ? 'and' : 'or', args: conditions.map(c => ({ type: c.operator, args: [c.field, c.value] })) };
   }
 
   /**
@@ -992,4 +1003,32 @@ export class RuleCompilerImpl implements RuleCompiler {
     return preValidations;
   }
 
+}
+
+/**
+ * Deep equality for rule-compiler's evaluateLeaf — consistent with
+ * runtime-evaluator.ts deepEquals. Uses structural comparison rather
+ * than === so objects/arrays are correctly compared.
+ */
+function deepEqualsLC(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return a !== b;
+  if (typeof a !== typeof b) return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, i) => deepEqualsLC(item, b[i]));
+  }
+
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a as Record<string,unknown>).sort();
+    const keysB = Object.keys(b as Record<string,unknown>).sort();
+    if (keysA.length !== keysB.length) return false;
+    if (!keysA.every((k, i) => k === keysB[i])) return false;
+    const objA = a as Record<string,unknown>;
+    const objB = b as Record<string,unknown>;
+    return keysA.every(k => deepEqualsLC(objA[k], objB[k]));
+  }
+
+  return false;
 }

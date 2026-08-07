@@ -89,12 +89,12 @@ export class SafeExprEvaluator {
 
   private evalEq(args: unknown[], context: Record<string, unknown>): boolean {
     const [left, right] = this.resolveBinaryArgs(args, context);
-    return left === right;
+    return deepEquals(left, right);
   }
 
   private evalNe(args: unknown[], context: Record<string, unknown>): boolean {
     const [left, right] = this.resolveBinaryArgs(args, context);
-    return left !== right;
+    return !deepEquals(left, right);
   }
 
   private evalGt(args: unknown[], context: Record<string, unknown>): boolean {
@@ -295,15 +295,15 @@ export class SafeExprEvaluator {
 export function safeExprFromCondition(condition: RuleCondition): SafeExpr {
   const { field, operator, value } = condition;
 
-  // exists 操作符只需要 field，不需要 value
-  if (operator === 'exists') {
+  // exists / not_exists only need field, no value
+  if (operator === 'exists' || operator === 'not_exists') {
     return {
-      type: 'exists',
+      type: operator,
       args: [field],
     };
   }
 
-  // 其他操作符需要 field + value
+  // Other operators require field + value
   if (value === undefined) {
     throw new Error(`safeExprFromCondition: operator '${operator}' requires a value, but none provided`);
   }
@@ -312,4 +312,33 @@ export function safeExprFromCondition(condition: RuleCondition): SafeExpr {
     type: operator,
     args: [field, value],
   };
+}
+
+/**
+ * Deep equality comparison — structurally compares objects and arrays,
+ * consistent with runtime-evaluator.ts deepEquals.
+ * Uses recursive structural comparison rather than JSON.stringify to avoid
+ * key-ordering issues and to properly handle nested structures.
+ */
+function deepEquals(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return a !== b;
+  if (typeof a !== typeof b) return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, i) => deepEquals(item, b[i]));
+  }
+
+  if (typeof a === 'object' && typeof b === 'object') {
+    const keysA = Object.keys(a as Record<string,unknown>).sort();
+    const keysB = Object.keys(b as Record<string,unknown>).sort();
+    if (keysA.length !== keysB.length) return false;
+    if (!keysA.every((k, i) => k === keysB[i])) return false;
+    const objA = a as Record<string,unknown>;
+    const objB = b as Record<string,unknown>;
+    return keysA.every(k => deepEquals(objA[k], objB[k]));
+  }
+
+  return false;
 }

@@ -12,7 +12,6 @@
 
 import { GuardStateManager } from './guard-state-manager.js';
 import { sortRulesByRingAndPriority, evaluateConditionGroup } from './static-rule-tree.js';
-import { evaluateCondition } from './runtime-evaluator.js';
 
 /** 评估上下文 */
 export interface EvalContext {
@@ -98,9 +97,18 @@ export class Evaluator {
    */
   evaluate(context: EvalContext, rules: CompiledRule[]): EvalResult {
     const sorted = sortRulesByRingAndPriority(rules);
+    let totalEvaluated = 0;
+    let totalMatched = 0;
 
     for (const rule of sorted) {
       if (!rule.enabled) continue;
+      totalEvaluated++;
+
+      // Rule with zero conditions → match-all (safety: require explicit ALLOW; deny by deafult for catch-all)
+      if (!rule.conditions || rule.conditions.length === 0) {
+        totalMatched++;
+        return this.buildResult(rule, totalEvaluated, totalMatched);
+      }
 
       // Separate temporal (within/rate) from stateless conditions
       const temporalConditions = rule.conditions.filter(
@@ -110,65 +118,144 @@ export class Evaluator {
         c => c.operator !== 'within' && c.operator !== 'rate',
       );
 
-      // 1. Evaluate stateless conditions first (no side effects)
+      // Evaluate with conditionLogic semantics
+      // For AND: stateless AND temporal must ALL pass
+      // For OR:  stateless OR temporal must pass (any match wins)
+      let statelessMatched = true;
+      let temporalMatched = true;
+
       if (statelessConditions.length > 0) {
-        const matched = evaluateConditionGroup(statelessConditions, rule.conditionLogic, context);
-        if (!matched) continue;
+        statelessMatched = evaluateConditionGroup(statelessConditions, rule.conditionLogic, context);
       }
 
-      // 2. Read-only temporal check (query, do NOT write)
       if (temporalConditions.length > 0) {
-        for (const c of temporalConditions) {
-          if (c.operator === 'within' && typeof c.value === 'number') {
-            const windowMs = c.windowMs || 60000;
-            const limit = c.value as number;
-            // \u0000 separator prevents collision: "a:b"+"c" ≠ "a"+"b:c"
-            const withinKey = `${rule.id}\u0000${context.toolName}`;
-            const count = this.stateManager.getWithinCount(withinKey, windowMs);
-            if (count >= limit) {
-              return {
-                decision: rule.decision,
-                reason: `${rule.reason} (within: ${count}/${limit})`,
-                matchedRuleId: rule.id,
-                matchedRuleName: rule.name,
-                severity: rule.severity || 'HIGH',
-                ring: rule.ring,
-              };
-            }
-          }
-          if (c.operator === 'rate' && typeof c.value === 'number') {
-            const windowMs = c.windowMs || 60000;
-            const limit = c.value as number;
-            const rateKey = `${rule.id}\u0000${context.toolName}`;
-            const count = this.stateManager.getRateCount(rateKey);
-            if (count >= limit) {
-              return {
-                decision: rule.decision,
-                reason: `${rule.reason} (rate: ${count}/${limit})`,
-                matchedRuleId: rule.id,
-                matchedRuleName: rule.name,
-                severity: rule.severity || 'HIGH',
-                ring: rule.ring,
-              };
-            }
-          }
-        }
+        temporalMatched = this.evaluateTemporalConditions(temporalConditions, rule, context);
+      }
+
+      // Combine based on rule's condition logic
+      const hasStateless = statelessConditions.length > 0;
+      const hasTemporal = temporalConditions.length > 0;
+
+      let ruleMatched = false;
+      if (!hasStateless && !hasTemporal) {
+        // No conditions → match (shouldn't happen, caught above)
+        ruleMatched = true;
+      } else if (rule.conditionLogic === 'AND') {
+        ruleMatched = (!hasStateless || statelessMatched) && (!hasTemporal || temporalMatched);
+      } else {
+        // OR: any side matching wins
+        ruleMatched = (hasStateless && statelessMatched) || (hasTemporal && temporalMatched);
+      }
+
+      if (!ruleMatched) continue;
+
+      totalMatched++;
+
+      // Check if temporal threshold was exceeded (triggers DENY/HALT even on match)
+      const temporalExceeded = this.checkTemporalExceeded(temporalConditions, rule, context);
+      if (temporalExceeded) {
+        return temporalExceeded;
       }
 
       // Rule matched (all conditions passed)
-      return {
-        decision: rule.decision,
-        reason: rule.reason,
-        matchedRuleId: rule.id,
-        matchedRuleName: rule.name,
-        severity: rule.severity || 'LOW',
-        ring: rule.ring,
-      };
+      return this.buildResult(rule, totalEvaluated, totalMatched);
     }
 
     return {
       decision: 'ALLOW',
       reason: 'No rules matched — default ALLOW',
+      totalEvaluated,
+      totalMatched: 0,
+    };
+  }
+
+  /** Evaluate temporal conditions (return true if they pass, false if not) */
+  private evaluateTemporalConditions(
+    temporalConditions: MatchCondition[],
+    rule: CompiledRule,
+    context: EvalContext,
+  ): boolean {
+    for (const c of temporalConditions) {
+      const numericValue = typeof c.value === 'number' ? c.value
+        : typeof c.value === 'string' ? Number(c.value) : NaN;
+      if (isNaN(numericValue)) continue;
+      const windowMs = c.windowMs || 60000;
+      const limit = numericValue;
+      const tKey = `${rule.id}\u0000${context.toolName}`;
+      if (c.operator === 'within') {
+        const count = this.stateManager.getWithinCount(tKey, windowMs);
+        // within passes if count < limit (not exceeded yet); fails if count >= limit
+        if (count >= limit) return false;
+      }
+      if (c.operator === 'rate') {
+        const count = this.stateManager.getRateCount(tKey);
+        if (count >= limit) return false;
+      }
+    }
+    return true;
+  }
+
+  /** Check if temporal threshold is exceeded (triggers DENY even on rule match) */
+  private checkTemporalExceeded(
+    temporalConditions: MatchCondition[],
+    rule: CompiledRule,
+    context: EvalContext,
+  ): EvalResult | null {
+    for (const c of temporalConditions) {
+      const numericValue = typeof c.value === 'number' ? c.value
+        : typeof c.value === 'string' ? Number(c.value) : NaN;
+      if (isNaN(numericValue)) continue;
+      const windowMs = c.windowMs || 60000;
+      const limit = numericValue;
+      const tKey = `${rule.id}\u0000${context.toolName}`;
+      if (c.operator === 'within') {
+        const count = this.stateManager.getWithinCount(tKey, windowMs);
+        if (count >= limit) {
+          return {
+            decision: rule.decision,
+            reason: `${rule.reason} (within: ${count}/${limit})`,
+            matchedRuleId: rule.id,
+            matchedRuleName: rule.name,
+            severity: rule.severity || 'HIGH',
+            ring: rule.ring,
+          };
+        }
+      }
+      if (c.operator === 'rate') {
+        const count = this.stateManager.getRateCount(tKey);
+        if (count >= limit) {
+          return {
+            decision: rule.decision,
+            reason: `${rule.reason} (rate: ${count}/${limit})`,
+            matchedRuleId: rule.id,
+            matchedRuleName: rule.name,
+            severity: rule.severity || 'HIGH',
+            ring: rule.ring,
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  /** Build a consistent EvalResult for a matched rule */
+  private buildResult(rule: CompiledRule, totalEvaluated: number, totalMatched: number): EvalResult {
+    return {
+      decision: rule.decision,
+      reason: rule.reason,
+      matchedRuleId: rule.id,
+      matchedRuleName: rule.name,
+      severity: rule.severity || 'LOW',
+      ring: rule.ring,
+      matchedRules: [{
+        ruleId: rule.id,
+        decision: rule.decision,
+        reason: rule.reason,
+        ring: rule.ring,
+        correction: rule.correction,
+      }],
+      totalEvaluated,
+      totalMatched,
     };
   }
 
@@ -180,11 +267,16 @@ export class Evaluator {
     for (const rule of sorted) {
       const temporal = rule.conditions.filter(c => c.operator === 'within' || c.operator === 'rate');
       for (const c of temporal) {
-        if (c.operator === 'within' && typeof c.value === 'number') {
-          this.stateManager.recordWithin(`${rule.id}\u0000${context.toolName}`, c.windowMs || 60000);
+        const numericValue = typeof c.value === 'number' ? c.value
+          : typeof c.value === 'string' ? Number(c.value) : NaN;
+        if (isNaN(numericValue)) continue;
+        const tKey = `${rule.id}\u0000${context.toolName}`;
+        const windowMs = c.windowMs || 60000;
+        if (c.operator === 'within') {
+          this.stateManager.recordWithin(tKey, windowMs);
         }
-        if (c.operator === 'rate' && typeof c.value === 'number') {
-          this.stateManager.recordRate(`${rule.id}\u0000${context.toolName}`, c.windowMs || 60000);
+        if (c.operator === 'rate') {
+          this.stateManager.recordRate(tKey, windowMs);
         }
       }
     }
