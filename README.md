@@ -87,7 +87,20 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 
 When the tool call is safe, rulsynor gets out of the way. The Agent works. The audit trail grows.
 
-> 💡 The CLI demo above evaluates a single tool call without an LLM.
+**Quick test** — paste any of these into your terminal:
+
+```bash
+# Try something dangerous — blocked
+npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+
+# Try something safe — allowed  
+npx @rulsynor/core --tool=read --path="README.md"
+
+# Try writing to /etc — blocked
+npx @rulsynor/core --tool=write_file --path="/etc/cron.d/x"
+```
+
+> 💡 These CLI demos evaluate a single tool call without an LLM.
 > For a full ReAct Agent with Guard, audit trail, and API key setup, see
 > [`examples/agent-demo.ts`](examples/agent-demo.ts) — `npx tsx examples/agent-demo.ts "Your task"`
 

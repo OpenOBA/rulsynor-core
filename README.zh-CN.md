@@ -85,6 +85,23 @@ npx @rulsynor/core --tool=read --path="docs/api-spec.md"
 
 安全的操作，rulsynor 毫不干预。Agent 正常执行，审计链持续累积。
 
+**快速测试** — 直接粘贴到终端：
+
+```bash
+# 执行危险命令 — 被拦截
+npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+
+# 读取文件 — 放行
+npx @rulsynor/core --tool=read --path="README.md"
+
+# 写入系统目录 — 被拦截
+npx @rulsynor/core --tool=write_file --path="/etc/cron.d/x"
+```
+
+> 💡 以上演示的是单次工具调用的 CLI 评估（不包含 LLM）。
+> 如需完整的 ReAct Agent + Guard + 审计链体验，请看
+> [`examples/agent-demo.ts`](examples/agent-demo.ts) — `npx tsx examples/agent-demo.ts "你的任务"`
+
 > 💡 以上演示的是单次工具调用的 CLI 评估（不包含 LLM）。
 > 如需完整的 ReAct Agent + Guard + 审计链体验，请看
 > [`examples/agent-demo.ts`](examples/agent-demo.ts) — `npx tsx examples/agent-demo.ts "你的任务"`
