@@ -29,10 +29,10 @@ jobs:
 
       - name: Smoke test — dangerous command must be DENY
         run: |
-          node dist/playground.js --json --tool=exec --cmd="rm -rf /" | jq -r .decision | grep -q "DENY" || { echo "FAIL: rm -rf / was not denied"; exit 1; }
+          node -e "const d=JSON.parse(require('child_process').execSync('node dist/playground.js --json --tool=exec --cmd=\"rm -rf /\"').toString()); if(d.decision!=='DENY'){console.log('FAIL: got '+d.decision);process.exit(1)} console.log('PASS: '+d.decision)"
       - name: Smoke test — safe command must be ALLOW
         run: |
-          node dist/playground.js --json --tool=read --path="README.md" | jq -r .decision | grep -q "ALLOW" || { echo "FAIL: read was not allowed"; exit 1; }
+          node -e "const d=JSON.parse(require('child_process').execSync('node dist/playground.js --json --tool=read --path=\"README.md\"').toString()); if(d.decision!=='ALLOW'){console.log('FAIL: got '+d.decision);process.exit(1)} console.log('PASS: '+d.decision)"
 
       - run: npm publish --access public
         env:
