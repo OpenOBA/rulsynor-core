@@ -9,8 +9,9 @@
  */
 
 const REGEX_MAX_LENGTH = 200;
-// Detect nested quantifiers: (a+)+, (a*)*, (a+)+?, {1,10}{1,10}, etc.
-const NESTED_QUANTIFIER = /([+*?]|\{[^}]+\})\s*([+*?]|\{[^}]+\})/;
+// Detect nested quantifiers: (a+)+, (a+)*, (a+)+?, (a*)*, (a+){1,10}, etc.
+// Matches: ) followed by optional whitespace then another quantifier
+const NESTED_QUANTIFIER = /\)\s*([+*?]|\{[^}]+\})/;
 
 export class SafeRegExpError extends Error {
   constructor(message: string) {
