@@ -2,6 +2,8 @@
 
 > **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
 
+**rulsynor-core** is ethics-first Harness Engineering: professional ethics as the baseline, rules as the reins — safely channeling AI Agent capabilities while ensuring every task execution is traceable, auditable, and aligned with professional standards.
+
 ```bash
 npm install @rulsynor/core
 ```
@@ -18,11 +20,7 @@ Who is training your AI Agent before it starts work? Who is certifying that it k
 
 Every human employee goes through: **hire → train → certify → badge → deploy → audit → review**. Your AI Agents should go through exactly the same thing. Not because they're dangerous. Because they're employees.
 
-**rulsynor-core** is the engine that makes this possible.
-
-> **LLM vendors deliver exceptional intelligence. We deliver employees with professional integrity.**
-
-**rulsynor-core** is ethics-first Harness Engineering — a constraint framework that safely channels AI Agent capabilities, ensuring every autonomous action is accountable, auditable, and aligned with professional standards. It is the core engine of **rulsynor** — the Professional Digital Employee, built on **OpenOBA** — the Digital Intelligence Resource Platform.
+**rulsynor-core** is the engine that makes this possible — the core framework of **rulsynor** (Professional Digital Employee), built on **OpenOBA** (Digital Intelligence Resource Platform):
 
 | Layer | Name | Role |
 |------|------|------|
