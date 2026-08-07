@@ -17,9 +17,11 @@ import { fileURLToPath } from 'url';
 import * as yaml from 'js-yaml';
 import { safeRegExp } from './safe-regex.js';
 
-/** Resolve path relative to this file (ESM-compatible). */
+/** Resolve path relative to this file (ESM-compatible, Jest-friendly). */
 function resolveRelative(relativePath: string): string {
-  const baseDir = join(fileURLToPath(import.meta.url), '..');
+  const baseDir = typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : join(fileURLToPath(import.meta.url), '..');
   return join(baseDir, relativePath);
 }
 import {

@@ -19,9 +19,11 @@ import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 
-/** Resolve path relative to this file (ESM-compatible). */
+/** Resolve path relative to this file (ESM-compatible, Jest-friendly). */
 function resolveRelative(relativePath: string): string {
-  const baseDir = path.dirname(fileURLToPath(import.meta.url));
+  const baseDir = typeof import.meta.dirname === 'string'
+    ? import.meta.dirname
+    : path.dirname(fileURLToPath(import.meta.url));
   return path.resolve(baseDir, relativePath);
 }
 

@@ -1,11 +1,12 @@
 import { readFileSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import * as yaml from 'js-yaml';
 import type { CompiledRule } from '../engine/evaluator.js';
 
-const _filename = fileURLToPath(import.meta.url);
-const _dirname = dirname(_filename);
+const _dirname = typeof import.meta.dirname === 'string'
+  ? join(import.meta.dirname)
+  : join(dirname(fileURLToPath(import.meta.url)));
 
 export interface PresetRule {
   name: string;
