@@ -24,4 +24,4 @@ jobs:
       - run: npm run build
       - run: npm test
       - name: Smoke test — Guard interception
-        run: node scripts/smoke-test.js
+        run: node scripts/smoke-test.mjs

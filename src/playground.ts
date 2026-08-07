@@ -11,8 +11,11 @@ import {
 
 const args = process.argv.slice(2);
 const tool = args.find((a) => a.startsWith('--tool='))?.split('=')[1] || 'exec';
-const cmd = args.find((a) => a.startsWith('--cmd='))?.split('=')[1] || 'rm -rf /';
-const pathArg = args.find((a) => a.startsWith('--path='))?.split('=')[1] || '/etc/shadow';
+// Support --cmd with spaces: --cmd="rm -rf /" or --cmd=rm
+const cmdArg = args.find((a) => a.startsWith('--cmd='));
+const cmd = cmdArg ? cmdArg.substring('--cmd='.length) : 'rm -rf /';
+const pathArgRaw = args.find((a) => a.startsWith('--path='));
+const pathArg = pathArgRaw ? pathArgRaw.substring('--path='.length) : '/etc/shadow';
 const urlArg = args.find((a) => a.startsWith('--url='))?.split('=')[1] || 'http://169.254.169.254/latest/meta-data/';
 
 const toolArgs: Record<string, string> = { command: cmd };
