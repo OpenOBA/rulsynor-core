@@ -4,8 +4,8 @@ import { dirname, join } from 'node:path';
 import * as yaml from 'js-yaml';
 import type { CompiledRule } from '../engine/evaluator.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const _filename = fileURLToPath(import.meta.url);
+const _dirname = dirname(_filename);
 
 export interface PresetRule {
   name: string;
@@ -17,7 +17,7 @@ let rulesCache: PresetRule[] | null = null;
 
 export function loadPresetRules(): PresetRule[] {
   if (rulesCache) return rulesCache;
-  const dir = join(__dirname);
+  const dir = join(_dirname);
   const files = readdirSync(dir).filter(f => f.endsWith('.erdl.yaml') || f.endsWith('.erdl.yml'));
   rulesCache = [];
   for (const f of files) {
