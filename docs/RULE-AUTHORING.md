@@ -52,6 +52,8 @@ The `context.` prefix is optional — the engine strips it and resolves at the t
 
 ## Operator Reference
 
+> **13 SPEC v1.1 operators** (eq—ends_with) are covered by cross-implementation test vectors.  \n> **7 rulsynor extensions** (exists, not_exists, length_*, within, rate) are engine-level only — no vector coverage yet.  \n> Temporal operators (within, rate) require evaluator.commitTemporal() after ALLOW decisions.
+
 ### Equality & Comparison
 
 | Operator | Description | Example `value` | Example Match |
