@@ -74,7 +74,7 @@ export function toERDLRuleSet(rules: PresetRule[]): { protocol: string; version:
         operator: (c.operator as string) || 'eq',
         value: c.value ?? null,
       })) || [],
-      conditionLogic: (when?.logic as 'AND' | 'OR') || 'AND',
+      conditionLogic: ((when?.logic || when?.conditionLogic) as 'AND' | 'OR') || 'AND',
       enabled: true,
       action: then ? {
         decision: then.decision as string,

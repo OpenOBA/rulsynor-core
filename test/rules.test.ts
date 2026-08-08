@@ -4,9 +4,9 @@
 import { loadPresetRules, toCompiledRules, toRuleDefinitions, toERDLRuleSet } from '../src/rules/index.js';
 
 describe('loadPresetRules', () => {
-  it('loads all 29 preset rules', () => {
+  it('loads all 30 preset rules', () => {
     const rules = loadPresetRules();
-    expect(rules).toHaveLength(29);
+    expect(rules).toHaveLength(30);
   });
 
   it('cache returns same instance', () => {
@@ -48,8 +48,8 @@ describe('loadPresetRules', () => {
 describe('toCompiledRules', () => {
   const rules = toCompiledRules(loadPresetRules());
 
-  it('returns 29 compiled rules', () => {
-    expect(rules).toHaveLength(29);
+  it('returns 30 compiled rules', () => {
+    expect(rules).toHaveLength(30);
   });
 
   it('every compiled rule has required CompiledRule fields', () => {
@@ -104,8 +104,8 @@ describe('toCompiledRules', () => {
 });
 
 describe('toRuleDefinitions', () => {
-  it('returns 29 definitions', () => {
-    expect(toRuleDefinitions(loadPresetRules())).toHaveLength(29);
+  it('returns 30 definitions', () => {
+    expect(toRuleDefinitions(loadPresetRules())).toHaveLength(30);
   });
 
   it('each def has name, when, then, version', () => {
@@ -127,8 +127,8 @@ describe('toERDLRuleSet', () => {
     expect(set.metadata.source).toBe('rulsynor-core-preset');
   });
 
-  it('has 29 rules', () => {
-    expect(set.rules).toHaveLength(29);
+  it('has 30 rules', () => {
+    expect(set.rules).toHaveLength(30);
   });
 
   it('every rule has id and then', () => {
