@@ -99,6 +99,27 @@ then:
     Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata
     endpoint.
 ---
+name: block-curl-ssrf
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 855
+description: 'SSRF prevention: block curl/wget to internal/private IPs and metadata endpoints'
+when:
+  conditions:
+    - field: context.tool.name
+      operator: eq
+      value: exec
+    - field: context.tool.args.command
+      operator: matches
+      value: (curl|wget).*(169\.254\.|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata)
+then:
+  decision: DENY
+  instruction: SSRF via curl/wget blocked. Internal IP / metadata endpoint access denied.
+  alternative: >-
+    Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata endpoint.
+---
 name: block-nonstandard-ports
 version: 1
 category: security
@@ -155,7 +176,7 @@ when:
     - field: context.tool.args.content
       operator: contains
       value: <script>
-  conditionLogic: OR
+  logic: OR
 then:
   decision: DENY
   instruction: SQL injection / XSS pattern detected and blocked.
@@ -194,7 +215,7 @@ when:
     - field: context.tool.args.content
       operator: matches
       value: (password|secret|token|api_key|private_key|-----BEGIN)
-  conditionLogic: OR
+  logic: OR
 then:
   decision: DENY
   instruction: Sensitive data in /tmp blocked. Use encrypted storage.
@@ -241,8 +262,8 @@ name: correct-unsafe-path
 version: 1
 category: security
 severity: medium
-ring: 2
-priority: 300
+ring: 0
+priority: 840
 description: When write targets a restricted path, suggest correction to allowed app directory
 when:
   conditions:
@@ -343,7 +364,7 @@ when:
     - field: context.tool.args.content
       operator: contains
       value: DROP DATABASE
-  conditionLogic: OR
+  logic: OR
 then:
   decision: DENY
   instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.

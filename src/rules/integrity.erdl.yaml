@@ -20,7 +20,7 @@ when:
     - field: "context.tool.name"
       operator: in
       value: ["write_file", "exec", "apply_patch", "delete"]
-  conditionLogic: AND
+  logic: AND
 then:
   decision: REQUEST_HUMAN
   instruction: "你之前声明了只读操作，但现在尝试写入。言行一致是专业操守的底线——请解释意图，或由主管批准。"
