@@ -11,7 +11,10 @@
 const REGEX_MAX_LENGTH = 200;
 // Detect nested quantifiers: (a+)+, (a+)*, (a+)+?, (a*)*, (a+){1,10}, etc.
 // Matches: ) followed by optional whitespace then another quantifier
-const NESTED_QUANTIFIER = /\)\s*([+*?]|\{[^}]+\})/;
+// Quantifier after ) means nested: )+, )*, )?, ){n,m}
+// The { must be followed by a digit to be a regex quantifier —
+// plain { } blocks (e.g. fork bomb :(){ :|:& };:) are not quantifiers.
+const NESTED_QUANTIFIER = /\)\s*([+*?]|\{\d)/;
 
 export class SafeRegExpError extends Error {
   constructor(message: string) {
