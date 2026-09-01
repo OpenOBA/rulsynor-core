@@ -8,7 +8,7 @@
 npm install @openoba/rulsynor-core
 ```
 
-[![Try it now](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40rulsynor%2Fcore-black)](#30-seconds-to-see-it-work)  ·  [Examples](examples/)  ·  [API Reference](#api-reference)  ·  [Specs](docs/SPEC/)  ·  [Contributing](CONTRIBUTING.md)
+[![Try it now](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40openoba%2Frulsynor-core-black)](#30-seconds-to-see-it-work)  ·  [Examples](examples/)  ·  [API Reference](#api-reference)  ·  [Specs](docs/SPEC/)  ·  [Contributing](CONTRIBUTING.md)
 
 > ⚡ **Try it with a real LLM in 30 seconds:**
 >
@@ -19,6 +19,33 @@ npm install @openoba/rulsynor-core
 >
 > Works with any OpenAI-compatible provider (DeepSeek, Qwen, local vLLM…)
 > See [`examples/agent-demo.ts`](examples/agent-demo.ts) for setup.
+
+---
+
+## Installation & Quick Start
+
+**① 安装**（Node ≥ 20）：
+
+```bash
+npm install @openoba/rulsynor-core    # 或 pnpm add @openoba/rulsynor-core
+```
+
+**② 零依赖试跑**（无需 API key，Guard 拦截演示）：
+
+```bash
+npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"   # → DENY
+```
+
+**③ 代码接入**（导入 → 构造 → 求值）：
+
+```ts
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
+
+const evaluator = new Evaluator(new GuardStateManager());
+const rules = toCompiledRules(loadPresetRules());   // 30 条内置规则
+```
+
+**④ 完整 ReAct Agent**（需 OpenAI 兼容 API）：[`examples/agent-demo.ts`](examples/agent-demo.ts)
 
 ---
 
@@ -529,7 +556,7 @@ registry.register({
 | `getComplianceProfile()` | Jurisdiction-aware compliance auto-configuration |
 | `loadPresetRules()` | Load 30 built-in ERDL YAML rules |
 | `toCompiledRules(rules)` | Convert preset rules → `CompiledRule[]` for Evaluator |
-| `toERDLRuleSet(rules)` | Convert preset rules → RuleCompiler format |
+| `toERDLRuleSet(rules)` | Convert preset rules → ERDLRuleSet format |
 | `extractNavigationGuide(opts)` | Structured LLM guidance from Guard decisions |
 | `advanceCorrectLoop(ctx, decision)` | CORRECT loop state machine (3-round retry) |
 | `runReActLoop(opts)` | Minimal ReAct loop with Guard evaluation |

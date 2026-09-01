@@ -3,7 +3,7 @@
  * ReAct loop + Guard evaluation + tool execution.
  *
  * Usage:
- *   import { runReActLoop, createToolExecutor } from '@rulsynor/core/runtime';
+ *   import { runReActLoop, createToolExecutor } from '@openoba/rulsynor-core/runtime';
  *
  *   const result = await runReActLoop({
  *     llm: myLLMFunction,

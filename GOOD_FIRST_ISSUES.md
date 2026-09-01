@@ -1,4 +1,4 @@
-# Good First Issues — @rulsynor/core
+# Good First Issues — @openoba/rulsynor-core
 
 New to the project? Start here. These are tasks designed to help you learn the codebase
 while making a real contribution. No prior ERDL knowledge needed.

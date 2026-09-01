@@ -6,7 +6,7 @@ import { buildDecisionObject, generateAID } from '../src/guard/index.js';
 import { getComplianceProfile } from '../src/compliance/index.js';
 import { PROVENANCE } from '../src/provenance.js';
 
-describe('@rulsynor/core', () => {
+describe('@openoba/rulsynor-core', () => {
   describe('Engine', () => {
     it('creates Evaluator', () => {
       const state = new GuardStateManager();

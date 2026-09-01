@@ -175,7 +175,7 @@ then:
 
 **核心洞察**：规则不是阻碍工作的，规则定义的是工作的**正确方式**。
 
-**可用运算符**（20 种——13 种为 SPEC v1.1 标准运算符，有跨实现向量验证；7 种为 rulsynor 扩展运算符，暂无向量覆盖）：`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**可用运算符**（30 种——28 种条件运算符 + 2 种修饰符 `within`/`rate`，Spec v2.0 §11）：`eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
 
 **规则可以做的决策**：
 
@@ -238,14 +238,14 @@ then:
 ```typescript
 import { loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
-// 29 条内置安全规则 + 你的业务规则
+// 30 条内置安全规则 + 你的业务规则
 const presetRules = loadPresetRules();           // PresetRule[]
 const rules = toCompiledRules(presetRules);       // CompiledRule[] — 引擎直接消费
 
 // 自定义规则：加载自己的 .erdl.yaml
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
-// 用 RuleCompilerImpl 编译（从 @openoba/rulsynor-core/engine 导入）
+// 用 toRuleDefinitions() / toERDLRuleSet() / toCompiledRules() 转换
 ```
 
 **培训即编译**：YAML 规则被解析、验证（ReDoS 检测、运算符白名单、必填字段检查），编译为静态决策树。引擎运行时不再解析。
@@ -294,7 +294,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 **LangChain**：wrap 工具。**MCP Server**：拦截 `CallToolRequest`。**自定义 ReAct 循环**：每次工具执行前调 `evaluator.evaluate()`。相同的模式，相同的 API。
 
-> 📦 **开箱即用的完整示例**：[`examples/agent-demo.ts`](examples/agent-demo.ts) — 包含 ReAct Agent + 29 条预设规则 + 审计链的完整实现。`export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "你的任务"`
+> 📦 **开箱即用的完整示例**：[`examples/agent-demo.ts`](examples/agent-demo.ts) — 包含 ReAct Agent + 30 条预设规则 + 审计链的完整实现。`export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "你的任务"`
 
 ---
 
@@ -489,8 +489,8 @@ registry.register({
 │  │         GUARD             │           │
 │  │                          │           │
 │  │  环 0 → 环 3             │           │
-│  │  29 条预设 + 你的规则    │           │
-│  │  SafeExpr（20 种运算符） │           │
+│  │  30 条预设 + 你的规则    │           │
+│  │  30 运算符 / 34 节点     │           │
 │  │  within / rate 追踪      │           │
 │  │  CORRECT 自动重试        │           │
 │  │  Guidance 引导 LLM       │           │
@@ -525,32 +525,30 @@ registry.register({
 |------|------|
 | `Evaluator` | 规则引擎——按环排序，first-match-wins |
 | `GuardStateManager` | `within`/`rate` 有状态计数器管理 |
-| `SafeExprEvaluator` | 安全表达式评估器（20 种运算符） |
+| `ExprTreeEvaluator` | 表达式树求值器（34 节点 / 30 运算符） |
 | `safeRegExp()` | ReDoS 防护的正则构造器 |
 | `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象（返回类型：`DecisionObject`） |
 | `generateAID()` | 生成 Agent 身份标识码（OID 1.2.156.3088） |
 | `getComplianceProfile()` | 辖区感知的合规自动配置 |
-| `loadPresetRules()` | 加载 29 条内置 ERDL YAML 规则 |
+| `loadPresetRules()` | 加载 30 条内置 ERDL YAML 规则 |
 | `toCompiledRules(rules)` | 预设规则 → `CompiledRule[]` |
-| `toERDLRuleSet(rules)` | 预设规则 → RuleCompiler 格式 |
+| `toERDLRuleSet(rules)` | 预设规则 → ERDLRuleSet 格式 |
 | `extractNavigationGuide(opts)` | Guard 决策 → 结构化 LLM 引导 |
 | `advanceCorrectLoop(ctx, decision)` | CORRECT 纠偏循环状态机（3 轮重试） |
 | `runReActLoop(opts)` | 最小化 ReAct 循环，内含 Guard 评估 |
 | `createToolExecutor(fn)` | 将函数包装为 ToolExecutor |
 | `PROVENANCE` | 版本、厂商、OID 前缀、已知限制 |
-| `EvaluatorAdapter` | 旧版 rulsynor GuardService 集成桥接器 |
 | `SystemClock` / `VirtualClock` | 时钟抽象，用于时序规则测试 |
 | `OpSemRegistry` | 操作语义分类器 |
-| `RuleCompilerImpl` | ERDL YAML → 四产物编译器 |
 | `PlanParser` | LLM 自然语言执行计划解析器 |
 
 ### 子路径
 
 | 路径 | 内容 |
 |------|------|
-| `@openoba/rulsynor-core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, 类型 |
+| `@openoba/rulsynor-core/engine` | Evaluator, ExprTreeEvaluator, ERDLFnRegistry, PlanParser, safeRegExp, 类型 |
 | `@openoba/rulsynor-core/guard` | buildDecisionObject, generateAID, DecisionObject 类型 |
-| `@openoba/rulsynor-core/compliance` | getComplianceProfile, ComplianceProfile 类型, 4 框架合规 |
+| `@openoba/rulsynor-core/compliance` | getComplianceProfile, ComplianceProfile 类型, 6 框架合规 |
 | `@openoba/rulsynor-core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule 类型 |
 | `@openoba/rulsynor-core/guidance` | extractNavigationGuide — 告诉 LLM 怎么恢复 |
 | `@openoba/rulsynor-core/runtime` | runReActLoop, createToolExecutor |
@@ -591,10 +589,11 @@ human_oversight · audit { previous_hash, commitment, hash }
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| ERDL 规范 v1.1 | [docs/SPEC/erdl-spec-v1.1.md](docs/SPEC/erdl-spec-v1.1.md) | ERDL 语言规范（中文） |
-| ERDL 规范 v1.1 (EN) | [docs/SPEC/erdl-spec-v1.1.en.md](docs/SPEC/erdl-spec-v1.1.en.md) | ERDL 语言规范（英文） |
-| RFC 001 | [docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object 审计标准 v1.3（中文） |
-| RFC 001 (EN) | [docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object 审计标准 v1.3（英文） |
+| ERDL 规范 v2.0 | [docs/SPEC/erdl-spec.md](docs/SPEC/erdl-spec.md) | ERDL 语言规范（中文） |
+| ERDL 规范 v2.0 (EN) | [docs/SPEC/erdl-spec.en.md](docs/SPEC/erdl-spec.en.md) | ERDL 语言规范（英文） |
+| SPEC v2.0 | [docs/SPEC/spec-2.0.md](docs/SPEC/spec-2.0.md) | OpenOBA 职业化AI员工 开放规范（中文） |
+| SPEC v2.0 (EN) | [docs/SPEC/spec-2.0-en.md](docs/SPEC/spec-2.0-en.md) | OpenOBA 职业化AI员工 开放规范（英文） |
+| RFC 002 | [docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object 审计标准 v1.5（中文） |
 
 跨实现测试向量集已独立维护于权威仓库：[`OpenOBA/erdl-vectors`](https://github.com/OpenOBA/erdl-vectors)。任何兼容的 ERDL 引擎均可基于已发布的向量独立自测。
 

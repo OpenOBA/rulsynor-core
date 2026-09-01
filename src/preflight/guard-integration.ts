@@ -2,7 +2,7 @@
  * Guard Integration + DO Payload Writers — Sprint D21
  *
  * CORRECT blocking (Henry 方案 A) + Agent REQUEST_HUMAN path + DO payload injection.
- * These are interface contracts for backend implementation, defined in @rulsynor/core
+ * These are interface contracts for backend implementation, defined in @openoba/rulsynor-core
  * for type safety and cross-package contract enforcement.
  */
 

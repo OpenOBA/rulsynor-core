@@ -6,8 +6,8 @@ Thanks for your interest in contributing. Rulsynor is an open-source project and
 
 - [Developer Guide](docs/DEVELOPMENT.md) — architecture, extension points, testing strategy
 - [Rule Authoring Guide](docs/RULE-AUTHORING.md) — write and validate ERDL rules
-- [ERDL Spec v1.1](docs/SPEC/erdl-spec-v1.1.md) — formal language specification
-- [RFC 001](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) — Decision Object audit standard
+- [ERDL Spec v2.0](docs/SPEC/erdl-spec.md) — formal language specification
+- [RFC 002](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) — Decision Object audit standard
 
 ## Getting Started
 

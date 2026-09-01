@@ -38,7 +38,7 @@ when:                             # "Under what conditions does this fire?"
   conditionLogic: AND             # AND = all conditions match; OR = any matches
   conditions:
     - field: "toolName"           # Field path in the tool-call context
-      operator: eq                # One of the 20 operators (§2)
+      operator: eq                # One of the 30 operators (§2)
       value: "exec"               # Expected value (type depends on operator)
 
 then:                             # "What happens when conditions match?"
@@ -62,7 +62,7 @@ Note: `context.tool.name` / `context.tool.args.<arg>` are accepted aliases for
 `toolName` / `toolArgs.<arg>`.
 
 ═══════════════════════════════════════════════════════
-2. THE 20 operators
+2. THE 30 operators
 ═══════════════════════════════════════════════════════
 
 Equality & comparison:
@@ -264,14 +264,14 @@ and load it as described in [README → Train](../README.md#2-train--compile-and
 ```typescript
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/my-team.erdl.yaml', 'utf8');
-// Compile with RuleCompilerImpl (from @rulsynor/core/engine) — it validates
+// Compile with RuleCompilerImpl (from @openoba/rulsynor-core/engine) — it validates
 // ReDoS safety, operator whitelist, and required fields before loading.
 ```
 
 Test any rule instantly without code:
 
 ```bash
-npx @rulsynor/core --tool=exec --cmd="rm -rf /"
+npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 ```
 
 **Always review generated rules before deploying.** The LLM writes the draft;

@@ -7,7 +7,7 @@
 
 ## 1. Reporting a Vulnerability
 
-**If you discover a security vulnerability in @rulsynor/core, do NOT report it in public Issues, Discussions, or PRs.**
+**If you discover a security vulnerability in @openoba/rulsynor-core, do NOT report it in public Issues, Discussions, or PRs.**
 
 Please report through:
 
@@ -45,7 +45,7 @@ We use **CVSS 3.1** scoring.
 
 | Component | Supported Version |
 |-----------|------------------|
-| @rulsynor/core (npm package) | Latest release (v1.x) |
+| @openoba/rulsynor-core (npm package) | Latest release (0.1.x) |
 | Rulsynor Core | Latest release (MIT) |
 
 Only the latest release receives security patches. Earlier versions receive critical fixes only.
@@ -78,7 +78,7 @@ We use **GitHub Security Advisories (GHSA)** for CVE assignment. Researchers do 
 
 ## 7. Integration Best Practices
 
-If you integrate @rulsynor/core into your Agent runtime:
+If you integrate @openoba/rulsynor-core into your Agent runtime:
 
 1. **Call `evaluator.evaluate()` before every tool execution** — never skip Guard evaluation
 2. **Call `evaluator.commitTemporal()` after ALLOW decisions** — required for within/rate rules to work

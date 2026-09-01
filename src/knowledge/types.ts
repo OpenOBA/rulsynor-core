@@ -6,7 +6,7 @@
  * KnowledgeEntry / quality_signal entities (snake_case DB columns are mapped
  * to camelCase in these frontend-facing contracts).
  *
- * Frontend path mapping: `@rulsynor/core/knowledge/types` → this file.
+ * Frontend path mapping: `@openoba/rulsynor-core/knowledge/types` → this file.
  *
  * @since 2026-08-10
  */

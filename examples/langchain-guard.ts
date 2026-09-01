@@ -1,7 +1,7 @@
 /**
  * example: Guard a LangChain/LangGraph Agent
  *
- * Demonstrates how to insert @rulsynor/core as a tool-call interception
+ * Demonstrates how to insert @openoba/rulsynor-core as a tool-call interception
  * layer in any LangChain-compatible Agent. The pattern is universal:
  *
  *   LLM generates tool_call → Guard evaluates → DENY/ALLOW/CORRECT → execute or block
@@ -12,7 +12,7 @@
  * Usage: npx tsx examples/langchain-guard.ts
  */
 
-import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@rulsynor/core';
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@openoba/rulsynor-core';
 
 // 1. Train: compile preset rules (29 rules)
 const rules = toCompiledRules(loadPresetRules());

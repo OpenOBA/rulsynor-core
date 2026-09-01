@@ -1,4 +1,4 @@
-// Comprehensive stub types for @rulsynor/core/preflight/tool-engine
+// Comprehensive stub types for @openoba/rulsynor-core/preflight/tool-engine
 // Real implementation: atcf/rulsynor-core/src/preflight/tool-engine.ts
 
 // Enhancement subtypes

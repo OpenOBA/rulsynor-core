@@ -123,7 +123,7 @@ export function toERDLRuleSet(rules: PresetRule[]): {
  * This is the blessed entry point for using the bundled rules:
  *
  * ```ts
- * import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '@rulsynor/core';
+ * import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
  *
  * const evaluator = new Evaluator(new GuardStateManager());
  * const rules = toCompiledRules(loadPresetRules());

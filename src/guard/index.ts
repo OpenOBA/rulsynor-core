@@ -5,7 +5,7 @@
  * All fields enter JCS → SHA-256 → audit.hash.
  *
  * Usage:
- *   import { buildDecisionObject } from '@rulsynor/core/guard';
+ *   import { buildDecisionObject } from '@openoba/rulsynor-core/guard';
  *   const do1 = buildDecisionObject({ rules, context, decision, ... });
  */
 import * as crypto from 'node:crypto';

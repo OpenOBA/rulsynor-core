@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea for @rulsynor/core
+about: Suggest an idea for @openoba/rulsynor-core
 title: '[feature] '
 labels: enhancement
 assignees: ''

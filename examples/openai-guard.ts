@@ -7,7 +7,7 @@
  * Usage: npx tsx examples/openai-guard.ts
  */
 
-import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@rulsynor/core';
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@openoba/rulsynor-core';
 
 // 1. Train: compile preset rules (29 rules)
 const rules = toCompiledRules(loadPresetRules());

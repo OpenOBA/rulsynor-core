@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in @rulsynor/core
+about: Report a bug in @openoba/rulsynor-core
 title: '[bug] '
 labels: bug
 assignees: ''
@@ -19,7 +19,7 @@ Steps to reproduce the behavior:
 A clear description of what you expected to happen.
 
 **Environment**
-- @rulsynor/core version:
+- @openoba/rulsynor-core version:
 - Node.js version:
 - OS:
 

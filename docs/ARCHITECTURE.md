@@ -29,7 +29,7 @@ CORE（完整 runtime，一个包）
 
 | 层 | 内容 | 许可证 |
 |---|---|---|
-| **确定性内核** | 34 节点表达式树 + 30 运算符 + gloss + decision-table + SafeExpr + 定点小数 + 安全正则 + 223 向量 | MIT |
+| **确定性内核** | 34 节点表达式树 + 30 运算符 + gloss + decision-table + ExprTreeEvaluator + 定点小数 + 安全正则 + 223 向量 | MIT |
 | **验证工具** | `audit-verify` CLI + DO 规范 + 78 条冻结向量 | MIT |
 | **运行时框架** | ReAct + 工具引擎 + Guard 集成 + CORRECT 状态机 + 知识/引导 | MIT |
 | **前端（基本能力，全量开源）** | era-chat / 规则 / 工具 / 审计 / MCP / 侧边栏 / 侧边栏底部折叠栏 / chat 文件解析 / 产物交付 | MIT |

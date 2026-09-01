@@ -15,7 +15,7 @@
  *   npx tsx examples/agent-demo.ts "Check disk usage"
  */
 
-import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, runReActLoop, createToolExecutor } from '@rulsynor/core';
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, runReActLoop, createToolExecutor } from '@openoba/rulsynor-core';
 import { execSync } from 'child_process';
 
 // ── API Key configuration ──

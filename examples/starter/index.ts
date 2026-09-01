@@ -9,7 +9,7 @@
  *   2. Create the Guard evaluator
  *   3. Wrap tool execution with evaluate() → execute() → commitTemporal()
  */
-import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@rulsynor/core';
+import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules, buildDecisionObject } from '@openoba/rulsynor-core';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 

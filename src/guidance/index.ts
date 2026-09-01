@@ -10,7 +10,7 @@
  * Zero framework dependency. Pure function.
  * Extracted from rulsynor/packages/backend guard.service.ts (F3).
  *
- * @module @rulsynor/core/guidance
+ * @module @openoba/rulsynor-core/guidance
  */
 
 /** Matched rule entry from Guard evaluation */
