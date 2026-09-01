@@ -38,9 +38,9 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "lint": "eslint 'src/**/*.ts' --max-warnings 0",
-    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
-    "format:check": "prettier --check 'src/**/*.ts' 'test/**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "release:check": "npm run typecheck && npm run lint && npm test && npm run build",
     "prepublishOnly": "npm run release:check"
   },
