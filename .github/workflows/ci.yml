@@ -15,13 +15,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
 
-      - run: npm install
-      - run: npm run typecheck
-      - run: npm run build
-      - run: npm test
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+      - run: pnpm run lint
+      - run: pnpm run format:check
+      - run: pnpm run build
+      - run: pnpm test
       - name: Smoke test — Guard interception
         run: node scripts/smoke-test.mjs
