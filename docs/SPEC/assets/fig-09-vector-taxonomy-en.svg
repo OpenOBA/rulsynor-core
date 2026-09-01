@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" font-family="'Segoe UI',Arial,sans-serif">
+  <text x="380" y="38" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">Cryptographic Audit Vector Taxonomy (V-*)</text>
+
+  <rect x="40" y="70" width="680" height="200" rx="14" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+  <text x="380" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#1e40af">Core baseline (309, only grows)</text>
+
+  <rect x="70" y="120" width="200" height="120" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="170" y="150" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e40af">V-ENGINE</text>
+  <text x="170" y="174" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">201</text>
+  <text x="170" y="196" text-anchor="middle" font-size="12" fill="#64748b">expression layer (34 nodes ×4 =136</text>
+  <text x="170" y="214" text-anchor="middle" font-size="12" fill="#64748b">+ E1–E12 35 + Simple 30)</text>
+
+  <rect x="290" y="120" width="180" height="120" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="380" y="150" text-anchor="middle" font-size="16" font-weight="bold" fill="#166534">V-GLOSS/V-PROJ</text>
+  <text x="380" y="174" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">22</text>
+  <text x="380" y="196" text-anchor="middle" font-size="12" fill="#64748b">gloss 12 + projection 6</text>
+  <text x="380" y="214" text-anchor="middle" font-size="12" fill="#64748b">+ gloss-integrity 4</text>
+
+  <rect x="490" y="120" width="200" height="120" rx="10" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+  <text x="590" y="150" text-anchor="middle" font-size="16" font-weight="bold" fill="#854d0e">V-DO-v15</text>
+  <text x="590" y="174" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">86</text>
+  <text x="590" y="196" text-anchor="middle" font-size="12" fill="#64748b">audit layer (78 hash + 5 signature</text>
+  <text x="590" y="214" text-anchor="middle" font-size="12" fill="#64748b">+ 3 TSA)</text>
+
+  <rect x="40" y="300" width="680" height="90" rx="14" fill="#fafafa" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="380" y="328" text-anchor="middle" font-size="15" font-weight="bold" fill="#64748b">Extension (grows with industry knowledge packs)</text>
+  <text x="380" y="352" text-anchor="middle" font-size="13" fill="#64748b">V-JURIS (jurisdiction) · V-SCENE (scenario) · V-STAKE (stakeholder) · V-NL (NL front door) · V-TEMPORAL (stateful operators)</text>
+</svg>

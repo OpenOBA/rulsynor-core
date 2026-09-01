@@ -1,0 +1,311 @@
+# ── 操作语义清单 v1.0 ──
+# 可更新组件 — 添加新工具/新命令时只需编辑此文件
+#
+# 六大操作语义：
+#   OP_READ    — 读取（风险低，默认 ALLOW）
+#   OP_WRITE   — 写入（风险中，默认 CORRECT）
+#   OP_DELETE  — 删除（风险高，默认 REQUEST_HUMAN）
+#   OP_EXEC    — 执行终端命令（风险高，默认 CORRECT）
+#   OP_NETWORK — 网络操作（风险中，默认 ALLOW）
+#   OP_MEMORY  — 记忆操作（风险低，默认 ALLOW）
+
+version: "1.0.0"
+
+# ── 六大操作语义定义 ──
+categories:
+  OP_READ:
+    risk: low
+    label: 读取
+    description: 读取文件内容、搜索、浏览目录、检索记忆
+    default_decision: ALLOW
+  OP_WRITE:
+    risk: medium
+    label: 写入
+    description: 创建或修改文件、写入记忆
+    default_decision: CORRECT
+  OP_DELETE:
+    risk: high
+    label: 删除
+    description: 删除文件或清除记忆
+    default_decision: REQUEST_HUMAN
+  OP_EXEC:
+    risk: high
+    label: 执行
+    description: 执行终端命令（构建/版本控制/脚本/文件操作）
+    default_decision: CORRECT
+  OP_NETWORK:
+    risk: medium
+    label: 网络
+    description: 网络搜索、网页抓取
+    default_decision: ALLOW
+  OP_MEMORY:
+    risk: low
+    label: 记忆
+    description: 读写记忆系统
+    default_decision: ALLOW
+
+# ── 工具名 → 操作语义（直接映射） ──
+tool_map:
+  read_file: OP_READ
+  glob: OP_READ
+  list_dir: OP_READ
+  grep: OP_READ
+  parse_csv: OP_READ
+  write_file: OP_WRITE
+  edit: OP_WRITE
+  apply_patch: OP_WRITE
+  exec: OP_EXEC
+  web_search: OP_NETWORK
+  web_fetch: OP_NETWORK
+  recall: OP_MEMORY
+  remember: OP_MEMORY
+  forget: OP_MEMORY
+
+# ── exec 命令 → 二级语义子分类 ──
+# 每个命令映射到一个 sub_code + 风险等级
+exec_sub_map:
+
+  # ══ 版本控制 ══
+  git:
+    sub_code: VCS
+    risk: medium
+    default_actions:
+      log: VCS_READ
+      diff: VCS_READ
+      status: VCS_READ
+      blame: VCS_READ
+      show: VCS_READ
+      branch: VCS_READ
+      tag: VCS_READ
+      remote: VCS_READ
+      fetch: VCS_READ
+      pull: VCS_WRITE
+      merge: VCS_WRITE
+      rebase: VCS_WRITE
+      add: VCS_WRITE
+      commit: VCS_WRITE
+      push: VCS_WRITE
+      checkout: VCS_WRITE
+      reset: VCS_DANGEROUS
+      clean: VCS_DANGEROUS
+      stash: VCS_WRITE
+
+  # ══ 包管理 ══
+  npm:
+    sub_code: PKG
+    risk: medium
+    default_actions:
+      install: PKG_WRITE
+      run: PKG_EXEC
+      test: PKG_EXEC
+      build: PKG_EXEC
+      publish: PKG_DANGEROUS
+  pnpm:
+    sub_code: PKG
+    risk: medium
+  yarn:
+    sub_code: PKG
+    risk: medium
+  npx:
+    sub_code: PKG_EXEC
+    risk: medium
+
+  # ══ 构建工具 ══
+  node:
+    sub_code: BUILD
+    risk: medium
+  dotnet:
+    sub_code: BUILD
+    risk: medium
+  cargo:
+    sub_code: BUILD
+    risk: medium
+  go:
+    sub_code: BUILD
+    risk: medium
+  rustc:
+    sub_code: BUILD
+    risk: medium
+  make:
+    sub_code: BUILD
+    risk: medium
+  cmake:
+    sub_code: BUILD
+    risk: medium
+
+  # ══ 文件操作 ══
+  mkdir:
+    sub_code: FS_WRITE
+    risk: low
+  rmdir:
+    sub_code: FS_DELETE
+    risk: high
+  rm:
+    sub_code: FS_DELETE
+    risk: high
+  cp:
+    sub_code: FS_WRITE
+    risk: low
+  mv:
+    sub_code: FS_WRITE
+    risk: medium
+  touch:
+    sub_code: FS_WRITE
+    risk: low
+  ls:
+    sub_code: FS_READ
+    risk: low
+  dir:
+    sub_code: FS_READ
+    risk: low
+  cat:
+    sub_code: FS_READ
+    risk: low
+  type:
+    sub_code: FS_READ
+    risk: low
+  head:
+    sub_code: FS_READ
+    risk: low
+  tail:
+    sub_code: FS_READ
+    risk: low
+
+  # ══ 搜索 ══
+  grep_cmd:
+    sub_code: FS_READ
+    risk: low
+  findstr:
+    sub_code: FS_READ
+    risk: low
+
+  # ══ 数据处理 ══
+  sort:
+    sub_code: DATA
+    risk: low
+  uniq:
+    sub_code: DATA
+    risk: low
+  wc:
+    sub_code: DATA
+    risk: low
+  echo:
+    sub_code: DATA
+    risk: low
+
+  # ══ 脚本 ══
+  python:
+    sub_code: SCRIPT
+    risk: medium
+  python3:
+    sub_code: SCRIPT
+    risk: medium
+
+  # ══ 环境检测 ══
+  env:
+    sub_code: ENV_READ
+    risk: low
+  which:
+    sub_code: ENV_READ
+    risk: low
+  where:
+    sub_code: ENV_READ
+    risk: low
+  pwd:
+    sub_code: ENV_READ
+    risk: low
+  cd:
+    sub_code: ENV_READ
+    risk: low
+  test:
+    sub_code: ENV_READ
+    risk: low
+
+  # ══ PowerShell cmdlets ══
+  "Get-ChildItem":
+    sub_code: FS_READ
+    risk: low
+  "Get-Content":
+    sub_code: FS_READ
+    risk: low
+  "Select-String":
+    sub_code: FS_READ
+    risk: low
+  "Set-Content":
+    sub_code: FS_WRITE
+    risk: medium
+  "Remove-Item":
+    sub_code: FS_DELETE
+    risk: high
+  "Copy-Item":
+    sub_code: FS_WRITE
+    risk: low
+  "Move-Item":
+    sub_code: FS_WRITE
+    risk: medium
+  "New-Item":
+    sub_code: FS_WRITE
+    risk: low
+  "Rename-Item":
+    sub_code: FS_WRITE
+    risk: low
+  "Write-Output":
+    sub_code: DATA
+    risk: low
+  "Write-Host":
+    sub_code: DATA
+    risk: low
+  "ForEach-Object":
+    sub_code: DATA
+    risk: low
+  "Where-Object":
+    sub_code: DATA
+    risk: low
+  "Select-Object":
+    sub_code: DATA
+    risk: low
+  "Sort-Object":
+    sub_code: DATA
+    risk: low
+  "Measure-Object":
+    sub_code: DATA
+    risk: low
+  "Test-Path":
+    sub_code: ENV_READ
+    risk: low
+  "Get-Process":
+    sub_code: ENV_READ
+    risk: low
+  "Set-Location":
+    sub_code: ENV_READ
+    risk: low
+  "Get-Location":
+    sub_code: ENV_READ
+    risk: low
+
+# ── 参数风险标记 ──
+# 即使命令本身风险不高，特定参数/子命令会提升风险等级
+parameter_risk_triggers:
+  git:
+    - "--force"         # git push --force
+    - "-f"              # shorthand for --force
+    - "reset --hard"    # git reset --hard
+  rm:
+    - "-rf"
+    - "-r"
+    - "-f"
+    - "--recursive"
+    - "/*"
+    - "~/*"             # home directory
+  npm:
+    - "publish"
+    - "--force"
+    - "unpublish"
+  npx:
+    - "create"          # npx create-* (环境变更)
+  pip:
+    - "uninstall"
+    - "--force-reinstall"
+  "Remove-Item":
+    - "-Recurse"
+    - "-Force"

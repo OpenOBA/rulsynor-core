@@ -1,0 +1,125 @@
+# Rulsynor Security Policy
+
+> Version: 1.1 | Effective: 2026-06-10 | Updated: 2026-06-25
+> Maintainer: Shenzhen Miaojing Technology Co., Ltd.
+
+---
+
+## 1. Reporting a Vulnerability
+
+**If you discover a security vulnerability in @rulsynor/core, do NOT report it in public Issues, Discussions, or PRs.**
+
+Please report through:
+
+📧 **postmaster@openoba.com** (PGP encryption strongly recommended)
+🔑 **PGP Public Key URL**: `https://openoba.com/.well-known/security-pgp-key.asc`
+🔒 **security.txt**: `https://openoba.com/.well-known/security.txt` (RFC 9116 compliant)
+
+---
+
+## 2. SLA Commitments
+
+| Phase | SLA | Action |
+|-------|-----|--------|
+| Report received | Within 24 hours | Email confirmation, incident ID assignment |
+| Initial assessment | Within 7 business days | Severity evaluation, impact scope, reproduction |
+| Patch release | 30 days (High) / 90 days (Medium) | Patch version + security advisory |
+| Public acknowledgement | With patch release | Release Note credit (unless anonymity requested) |
+
+---
+
+## 3. Severity Classification
+
+We use **CVSS 3.1** scoring.
+
+| Severity | CVSS Range | Patch SLA |
+|----------|-----------|-----------|
+| **Critical** | 9.0 - 10.0 | Patch within 24h, public advisory within 48h |
+| **High** | 7.0 - 8.9 | Within 30 days |
+| **Medium** | 4.0 - 6.9 | Within 90 days |
+| **Low** | 0.1 - 3.9 | Next regular release |
+
+---
+
+## 4. Supported Versions
+
+| Component | Supported Version |
+|-----------|------------------|
+| @rulsynor/core (npm package) | Latest release (v1.x) |
+| Rulsynor Core | Latest release (MIT) |
+
+Only the latest release receives security patches. Earlier versions receive critical fixes only.
+
+---
+
+## 5. Safe Harbor
+
+We will not pursue legal action against security researchers who act in good faith and comply with this disclosure policy.
+
+Specifically, security research activities meeting the following conditions are not considered violations:
+- Conducted for research purposes only, without actively exploiting vulnerabilities to cause harm
+- Did not access, modify, retain, transmit, or resell user data
+- Did not cause damage to service availability, performance, or integrity
+- Strictly complied with the reporting process and timelines specified in this policy
+- Provided at least 90 days for remediation before public disclosure
+
+We will **not**:
+- File DMCA takedown notices against good-faith researchers
+- Pressure researchers' employers
+- Deny researchers legitimate use of rulsynor based on their research activities
+
+---
+
+## 6. CVE Numbering
+
+We use **GitHub Security Advisories (GHSA)** for CVE assignment. Researchers do not need to apply for CVE numbers themselves — GHSA advisories automatically receive CVE numbers upon creation.
+
+---
+
+## 7. Integration Best Practices
+
+If you integrate @rulsynor/core into your Agent runtime:
+
+1. **Call `evaluator.evaluate()` before every tool execution** — never skip Guard evaluation
+2. **Call `evaluator.commitTemporal()` after ALLOW decisions** — required for within/rate rules to work
+3. **Subscribe to security alerts** — GitHub Watch → Custom → Security Alerts
+4. **Keep rules updated** — review preset rules against latest security advisories
+5. **Verify Decision Objects** — use `@openoba/audit-verify` or independent JCS+SHA-256 verification
+
+---
+
+## 8. Authentication & Data Protection
+
+We commit to:
+
+- Deterministic Guard evaluation for all tool calls
+- All ERDL rules validated at compile time (operator whitelist, ReDoS check)
+- Decision Objects sealed with JCS (RFC 8785) + SHA-256 audit hash
+
+We recommend integrators:
+
+- Enable **rate limiting** at the server layer (NestJS ThrottlerModule or equivalent)
+- **Session timeout** ≤ 24 hours
+- **Audit log retention** ≥ 180 days
+
+---
+
+## 9. Hall of Fame
+
+We publicly acknowledge all reporters (with their consent). Acknowledgements appear at:
+- GitHub Security Advisories
+- The version's Release Notes
+
+We do not currently offer a bug bounty program, but are evaluating future options.
+
+---
+
+## 10. Amendments
+
+Amendments to this security policy take effect 30 days after public release.
+
+---
+
+## 11. Governing Law
+
+This security policy is governed by the laws of the People's Republic of China.

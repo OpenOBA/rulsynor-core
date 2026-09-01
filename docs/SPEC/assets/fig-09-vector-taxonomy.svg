@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <text x="380" y="38" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">密码学审计向量分类（V-*）</text>
+
+  <!-- Core 容器 -->
+  <rect x="40" y="70" width="680" height="200" rx="14" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+  <text x="380" y="100" text-anchor="middle" font-size="17" font-weight="bold" fill="#1e40af">Core 基线（309 条，只增不减）</text>
+
+  <!-- V-ENGINE -->
+  <rect x="70" y="120" width="200" height="120" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="170" y="150" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e40af">V-ENGINE</text>
+  <text x="170" y="174" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">201</text>
+  <text x="170" y="196" text-anchor="middle" font-size="12" fill="#64748b">表达层（34 节点×4 场景 136</text>
+  <text x="170" y="214" text-anchor="middle" font-size="12" fill="#64748b">+ E1–E12 约束 35 + Simple 30）</text>
+
+  <!-- V-GLOSS/V-PROJ -->
+  <rect x="290" y="120" width="180" height="120" rx="10" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="380" y="150" text-anchor="middle" font-size="16" font-weight="bold" fill="#166534">V-GLOSS/V-PROJ</text>
+  <text x="380" y="174" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">22</text>
+  <text x="380" y="196" text-anchor="middle" font-size="12" fill="#64748b">gloss 渲染 12 + 投影 6</text>
+  <text x="380" y="214" text-anchor="middle" font-size="12" fill="#64748b">+ gloss-integrity 4</text>
+
+  <!-- V-DO-v15 -->
+  <rect x="490" y="120" width="200" height="120" rx="10" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+  <text x="590" y="150" text-anchor="middle" font-size="16" font-weight="bold" fill="#854d0e">V-DO-v15</text>
+  <text x="590" y="174" text-anchor="middle" font-size="20" font-weight="bold" fill="#0f172a">86</text>
+  <text x="590" y="196" text-anchor="middle" font-size="12" fill="#64748b">审计层（78 哈希 + 5 签名</text>
+  <text x="590" y="214" text-anchor="middle" font-size="12" fill="#64748b">+ 3 TSA）</text>
+
+  <!-- Extension 容器 -->
+  <rect x="40" y="300" width="680" height="90" rx="14" fill="#fafafa" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="380" y="328" text-anchor="middle" font-size="15" font-weight="bold" fill="#64748b">Extension（随行业知识包增长）</text>
+  <text x="380" y="352" text-anchor="middle" font-size="13" fill="#64748b">V-JURIS（法域合规）· V-SCENE（场景）· V-STAKE（多方视角）· V-NL（NL 前门）· V-TEMPORAL（有状态算子）</text>
+</svg>

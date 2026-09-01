@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <text x="440" y="38" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">多 Agent 协作：团队版 / 集群版</text>
+  <text x="440" y="62" text-anchor="middle" font-size="14" fill="#64748b">规模演进：单 Agent → 团队 → 集群（≤50 团队版 / ＞50 集群版）</text>
+
+  <!-- 单 Agent -->
+  <rect x="40" y="100" width="210" height="150" rx="14" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="145" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e40af">单 Agent</text>
+  <text x="145" y="166" text-anchor="middle" font-size="14" fill="#334155">一个守规矩的员工</text>
+  <text x="145" y="190" text-anchor="middle" font-size="13" fill="#64748b">确定性护栏 + 审计链</text>
+  <text x="145" y="214" text-anchor="middle" font-size="13" fill="#64748b">M1–M3（已实现）</text>
+
+  <!-- 团队版 -->
+  <rect x="335" y="100" width="210" height="150" rx="14" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="440" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#166534">团队版（Team）</text>
+  <text x="440" y="166" text-anchor="middle" font-size="14" fill="#334155">2 ~ 50 个 Agent</text>
+  <text x="440" y="190" text-anchor="middle" font-size="13" fill="#64748b">直接协作 · 人人相识</text>
+  <text x="440" y="214" text-anchor="middle" font-size="13" fill="#64748b">heterarchy（层级+网络共生）</text>
+
+  <!-- 集群版 -->
+  <rect x="630" y="100" width="210" height="150" rx="14" fill="#fefce8" stroke="#eab308" stroke-width="2"/>
+  <text x="735" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#854d0e">集群版（Cluster）</text>
+  <text x="735" y="166" text-anchor="middle" font-size="14" fill="#334155">50 以上（数百上千）</text>
+  <text x="735" y="190" text-anchor="middle" font-size="13" fill="#64748b">需 Agent Registry</text>
+  <text x="735" y="214" text-anchor="middle" font-size="13" fill="#64748b">层级治理 · 结构产生智能</text>
+
+  <!-- arrows -->
+  <line x1="250" y1="175" x2="330" y2="175" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="545" y1="175" x2="625" y2="175" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- 数量判据 -->
+  <text x="292" y="268" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">≤ 50</text>
+  <text x="587" y="268" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">＞ 50</text>
+
+  <!-- 协作三维度 -->
+  <rect x="40" y="310" width="800" height="170" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="440" y="342" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">协作的三个维度</text>
+
+  <!-- 垂直维度 -->
+  <rect x="70" y="360" width="230" height="100" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="185" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#1e40af">垂直维度（权力轴）</text>
+  <text x="185" y="414" text-anchor="middle" font-size="12" fill="#64748b">向上：汇报 / 申诉 / 建议</text>
+  <text x="185" y="434" text-anchor="middle" font-size="12" fill="#64748b">向下：管理 / 下达 / 评估 / 纠正</text>
+
+  <!-- 水平维度 -->
+  <rect x="325" y="360" width="230" height="100" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="440" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#166534">水平维度（协作轴）</text>
+  <text x="440" y="414" text-anchor="middle" font-size="12" fill="#64748b">委托 / 接力 / 加入 / 退出</text>
+  <text x="440" y="434" text-anchor="middle" font-size="12" fill="#64748b">协商 / 竞争 / 求助 / 致谢</text>
+
+  <!-- 能力边界轴 -->
+  <rect x="580" y="360" width="230" height="100" rx="10" fill="#fff" stroke="#eab308" stroke-width="1.5"/>
+  <text x="695" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#854d0e">能力边界轴</text>
+  <text x="695" y="414" text-anchor="middle" font-size="12" fill="#64748b">agent → skill → tool</text>
+  <text x="695" y="434" text-anchor="middle" font-size="12" fill="#64748b">→ 受保护资源（越界即拦）</text>
+</svg>

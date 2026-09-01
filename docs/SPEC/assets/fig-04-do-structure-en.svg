@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif">
+  <rect x="0" y="0" width="760" height="400" fill="#ffffff"/>
+
+  <text x="380" y="32" font-size="19" font-weight="bold" fill="#172033" text-anchor="middle">Decision Object (DO) field structure</text>
+
+  <!-- CORE -->
+  <rect x="30" y="52" width="360" height="250" rx="10" fill="#f0fdf9" stroke="#0e7c66" stroke-width="2.5"/>
+  <text x="50" y="82" font-size="17" font-weight="bold" fill="#0e7c66">CORE 14 fields</text>
+  <text x="50" y="103" font-size="11" fill="#5b6475">[FREEZE-1] permanently frozen · required for every DO</text>
+  <text x="50" y="130" font-size="12" fill="#334155">spec · decision_id · compliance_profile</text>
+  <text x="50" y="151" font-size="12" fill="#334155">execution_trace_id · timestamp</text>
+  <text x="50" y="172" font-size="12" fill="#334155">evaluation_duration_ms · agent · context</text>
+  <text x="50" y="193" font-size="12" fill="#334155">rule_set_version · policies · evaluation</text>
+  <text x="50" y="214" font-size="12" fill="#334155">result (decision / outcome)</text>
+  <text x="50" y="235" font-size="12" fill="#334155">human_oversight · audit</text>
+  <text x="50" y="266" font-size="11" fill="#8a94a6">never modified, deleted, or reordered — barring a cryptographic flaw</text>
+
+  <!-- JURISDICTION -->
+  <rect x="410" y="52" width="320" height="250" rx="10" fill="#eff6ff" stroke="#1e56a0" stroke-width="2.5"/>
+  <text x="430" y="82" font-size="17" font-weight="bold" fill="#1e56a0">JURISDICTION 15 fields</text>
+  <text x="430" y="103" font-size="11" fill="#5b6475">activated by compliance profile activated_fields</text>
+  <text x="430" y="130" font-size="12" fill="#334155">model_id · known_limitations</text>
+  <text x="430" y="151" font-size="12" fill="#334155">fairness_assessment · impact_assessment_id</text>
+  <text x="430" y="172" font-size="12" fill="#334155">autonomy_level · data_modification_expected</text>
+  <text x="430" y="193" font-size="12" fill="#334155">context_snapshot_hash · sanitized_context</text>
+  <text x="430" y="214" font-size="12" fill="#334155">confidence_score · signature · signing_key_id</text>
+  <text x="430" y="235" font-size="12" fill="#334155">agent.aid · tool_registry_hash</text>
+  <text x="430" y="256" font-size="12" fill="#334155">algorithm_filing_no · model_registration_id</text>
+  <text x="430" y="283" font-size="11" fill="#8a94a6">inactive fields physically removed, not chained, not in JCS</text>
+
+  <!-- extensions -->
+  <rect x="30" y="318" width="700" height="62" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+  <text x="50" y="344" font-size="15" font-weight="bold" fill="#172033">extensions</text>
+  <text x="50" y="365" font-size="11" fill="#5b6475">self-describing structure · schema_ref content-addressed reference · participates in main JCS — carries future regulatory fields</text>
+</svg>

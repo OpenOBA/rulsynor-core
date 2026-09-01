@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="760" height="400" fill="#ffffff"/>
+
+  <!-- 总标题 -->
+  <text x="380" y="32" font-size="20" font-weight="bold" fill="#172033" text-anchor="middle">决策对象（Decision Object）字段结构</text>
+
+  <!-- CORE -->
+  <rect x="30" y="52" width="360" height="250" rx="10" fill="#f0fdf9" stroke="#0e7c66" stroke-width="2.5"/>
+  <text x="50" y="82" font-size="18" font-weight="bold" fill="#0e7c66">CORE 14 字段</text>
+  <text x="50" y="104" font-size="12" fill="#5b6475">[FREEZE-1] 永久冻结 · 所有 DO 必须具备</text>
+  <text x="50" y="132" font-size="13" fill="#334155">spec · decision_id · compliance_profile</text>
+  <text x="50" y="154" font-size="13" fill="#334155">execution_trace_id · timestamp</text>
+  <text x="50" y="176" font-size="13" fill="#334155">evaluation_duration_ms · agent · context</text>
+  <text x="50" y="198" font-size="13" fill="#334155">rule_set_version · policies · evaluation</text>
+  <text x="50" y="220" font-size="13" fill="#334155">result（decision / outcome）</text>
+  <text x="50" y="242" font-size="13" fill="#334155">human_oversight · audit</text>
+  <text x="50" y="272" font-size="12" fill="#8a94a6">除非密码学安全漏洞，永不修改、删除或重排</text>
+
+  <!-- JURISDICTION -->
+  <rect x="410" y="52" width="320" height="250" rx="10" fill="#eff6ff" stroke="#1e56a0" stroke-width="2.5"/>
+  <text x="430" y="82" font-size="18" font-weight="bold" fill="#1e56a0">JURISDICTION 15 字段</text>
+  <text x="430" y="104" font-size="12" fill="#5b6475">按合规画像 activated_fields 激活</text>
+  <text x="430" y="132" font-size="13" fill="#334155">model_id · known_limitations</text>
+  <text x="430" y="154" font-size="13" fill="#334155">fairness_assessment · impact_assessment_id</text>
+  <text x="430" y="176" font-size="13" fill="#334155">autonomy_level · data_modification_expected</text>
+  <text x="430" y="198" font-size="13" fill="#334155">context_snapshot_hash · sanitized_context</text>
+  <text x="430" y="220" font-size="13" fill="#334155">confidence_score · signature · signing_key_id</text>
+  <text x="430" y="242" font-size="13" fill="#334155">agent.aid · tool_registry_hash</text>
+  <text x="430" y="264" font-size="13" fill="#334155">algorithm_filing_no · model_registration_id</text>
+  <text x="430" y="288" font-size="12" fill="#8a94a6">未激活字段物理移除，不落链、不参与 JCS</text>
+
+  <!-- extensions -->
+  <rect x="30" y="318" width="700" height="62" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+  <text x="50" y="344" font-size="16" font-weight="bold" fill="#172033">extensions 扩展区</text>
+  <text x="50" y="366" font-size="12" fill="#5b6475">自描述结构 · schema_ref 内容寻址引用 · 直接参与主 JCS——承载未来法规新增字段</text>
+</svg>

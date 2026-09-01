@@ -1,0 +1,87 @@
+{
+  "name": "@openoba/rulsynor-core",
+  "version": "0.1.0-alpha",
+  "description": "ERDL deterministic Guard engine — open-source Agent runtime with cryptographic audit chain",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OpenOBA/rulsynor-core.git"
+  },
+  "type": "module",
+  "files": [
+    "dist/",
+    "src/",
+    "docs/",
+    "LICENSE",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./engine": "./dist/engine/index.js",
+    "./rules": "./dist/rules/index.js",
+    "./provenance": "./dist/provenance.js",
+    "./compliance": "./dist/compliance/index.js",
+    "./guard": "./dist/guard/index.js",
+    "./preflight": "./dist/preflight/index.js",
+    "./guidance": "./dist/guidance/index.js",
+    "./runtime": "./dist/runtime.js",
+    "./playground": "./dist/playground.js"
+  },
+  "bin": {
+    "rulsynor": "./dist/playground.js"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/copy-rules.mjs",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --passWithNoTests",
+    "lint": "eslint 'src/**/*.ts' --max-warnings 0",
+    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'test/**/*.ts'",
+    "release:check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "prepublishOnly": "npm run release:check"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "json-canonicalize": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^26.2.0",
+    "eslint": "^9.39.5",
+    "jest": "^30.4.2",
+    "prettier": "^3.9.6",
+    "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.67.0"
+  },
+  "keywords": [
+    "erdl",
+    "agent",
+    "guard",
+    "audit",
+    "decision-object",
+    "rulsynor",
+    "openoba",
+    "gbz-185",
+    "eu-ai-act",
+    "compliance"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "author": "OpenOBA <support@openoba.com> (https://openoba.com)",
+  "bugs": {
+    "url": "https://github.com/OpenOBA/rulsynor-core/issues"
+  },
+  "homepage": "https://github.com/OpenOBA/rulsynor-core#readme",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/openoba"
+  }
+}

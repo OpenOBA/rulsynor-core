@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" font-family="'PingFang SC','Microsoft YaHei',sans-serif">
+  <rect x="0" y="0" width="720" height="440" fill="#ffffff"/>
+
+  <!-- 中心：语义内核 -->
+  <rect x="260" y="170" width="200" height="90" rx="12" fill="#f0fdf9" stroke="#0e7c66" stroke-width="3"/>
+  <text x="360" y="205" font-size="20" font-weight="bold" fill="#172033" text-anchor="middle">语义内核</text>
+  <text x="360" y="232" font-size="15" fill="#334155" text-anchor="middle">类型化表达式树</text>
+  <text x="360" y="250" font-size="13" fill="#0e7c66" text-anchor="middle">34 节点 · 唯一事实源</text>
+
+  <!-- 投影面（环绕） -->
+  <!-- 上：Simple -->
+  <rect x="250" y="30" width="220" height="56" rx="8" fill="#eff6ff" stroke="#1e56a0" stroke-width="2"/>
+  <text x="360" y="55" font-size="16" font-weight="bold" fill="#172033" text-anchor="middle">投影面 A · Simple</text>
+  <text x="360" y="75" font-size="12" fill="#5b6475" text-anchor="middle">30 运算符 · 安全底线</text>
+  <line x1="360" y1="86" x2="360" y2="170" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="372" y="130" font-size="11" fill="#8a94a6">编译 ↓ / 渲染 ↑</text>
+
+  <!-- 左：Expression -->
+  <rect x="30" y="170" width="200" height="56" rx="8" fill="#eff6ff" stroke="#1e56a0" stroke-width="2"/>
+  <text x="130" y="195" font-size="16" font-weight="bold" fill="#172033" text-anchor="middle">投影面 B · Expression</text>
+  <text x="130" y="215" font-size="12" fill="#5b6475" text-anchor="middle">完整表达式树 · tier≥3</text>
+  <line x1="230" y1="198" x2="260" y2="210" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- 右：决策表 -->
+  <rect x="500" y="170" width="200" height="56" rx="8" fill="#eff6ff" stroke="#1e56a0" stroke-width="2"/>
+  <text x="600" y="195" font-size="16" font-weight="bold" fill="#172033" text-anchor="middle">投影面 C · 决策表</text>
+  <text x="600" y="215" font-size="12" fill="#5b6475" text-anchor="middle">矩阵形态 · 首个命中生效</text>
+  <line x1="500" y1="210" x2="460" y2="198" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- 下左：gloss -->
+  <rect x="90" y="330" width="200" height="56" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="190" y="355" font-size="16" font-weight="bold" fill="#172033" text-anchor="middle">投影面 D · gloss</text>
+  <text x="190" y="375" font-size="12" fill="#5b6475" text-anchor="middle">自然语言可读投影</text>
+  <line x1="240" y1="330" x2="300" y2="260" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- 下右：NL 前门 -->
+  <rect x="430" y="330" width="200" height="56" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="530" y="355" font-size="16" font-weight="bold" fill="#172033" text-anchor="middle">投影面 E · NL 前门</text>
+  <text x="530" y="375" font-size="12" fill="#5b6475" text-anchor="middle">自然语言创作入口</text>
+  <line x1="470" y1="330" x2="420" y2="260" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <text x="360" y="420" font-size="13" fill="#5b6475" text-anchor="middle">语义载体是内核，不是语法——任一投影面经编译归一化为同一内核</text>
+</svg>

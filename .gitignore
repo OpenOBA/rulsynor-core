@@ -1,0 +1,11 @@
+dist/
+node_modules/
+coverage/
+.temp-removed*/
+*.tsbuildinfo
+test/*.bak
+
+# tsc 编译产物（src 下与 .ts 同名的 .js 不纳入版本控制）
+src/**/*.js
+
+.workbuddy/

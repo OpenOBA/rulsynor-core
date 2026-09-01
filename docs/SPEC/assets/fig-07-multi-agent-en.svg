@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 520" font-family="'Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <text x="440" y="38" text-anchor="middle" font-size="24" font-weight="bold" fill="#0f172a">Multi-Agent Collaboration: Team / Cluster</text>
+  <text x="440" y="62" text-anchor="middle" font-size="14" fill="#64748b">Scale evolution: single Agent → team → cluster (≤50 Team / &gt;50 Cluster)</text>
+
+  <!-- Single Agent -->
+  <rect x="40" y="100" width="210" height="150" rx="14" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="145" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e40af">Single Agent</text>
+  <text x="145" y="166" text-anchor="middle" font-size="14" fill="#334155">one rule-abiding employee</text>
+  <text x="145" y="190" text-anchor="middle" font-size="13" fill="#64748b">deterministic guard + audit chain</text>
+  <text x="145" y="214" text-anchor="middle" font-size="13" fill="#64748b">M1–M3 (implemented)</text>
+
+  <!-- Team -->
+  <rect x="335" y="100" width="210" height="150" rx="14" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="440" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#166534">Team Edition</text>
+  <text x="440" y="166" text-anchor="middle" font-size="14" fill="#334155">2 ~ 50 Agents</text>
+  <text x="440" y="190" text-anchor="middle" font-size="13" fill="#64748b">direct collaboration, all known</text>
+  <text x="440" y="214" text-anchor="middle" font-size="13" fill="#64748b">heterarchy (hierarchy + network)</text>
+
+  <!-- Cluster -->
+  <rect x="630" y="100" width="210" height="150" rx="14" fill="#fefce8" stroke="#eab308" stroke-width="2"/>
+  <text x="735" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#854d0e">Cluster Edition</text>
+  <text x="735" y="166" text-anchor="middle" font-size="14" fill="#334155">50+ (hundreds/thousands)</text>
+  <text x="735" y="190" text-anchor="middle" font-size="13" fill="#64748b">requires Agent Registry</text>
+  <text x="735" y="214" text-anchor="middle" font-size="13" fill="#64748b">hierarchical governance, structure</text>
+
+  <!-- arrows -->
+  <line x1="250" y1="175" x2="330" y2="175" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="545" y1="175" x2="625" y2="175" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="292" y="268" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">≤ 50</text>
+  <text x="587" y="268" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="bold">&gt; 50</text>
+
+  <!-- three dimensions -->
+  <rect x="40" y="310" width="800" height="170" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="440" y="342" text-anchor="middle" font-size="16" font-weight="bold" fill="#0f172a">Three Collaboration Dimensions</text>
+
+  <rect x="70" y="360" width="230" height="100" rx="10" fill="#fff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="185" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#1e40af">Vertical (power axis)</text>
+  <text x="185" y="414" text-anchor="middle" font-size="12" fill="#64748b">up: report / appeal / advise</text>
+  <text x="185" y="434" text-anchor="middle" font-size="12" fill="#64748b">down: manage / assign / assess</text>
+
+  <rect x="325" y="360" width="230" height="100" rx="10" fill="#fff" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="440" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#166534">Horizontal (collab axis)</text>
+  <text x="440" y="414" text-anchor="middle" font-size="12" fill="#64748b">delegate / relay / join / leave</text>
+  <text x="440" y="434" text-anchor="middle" font-size="12" fill="#64748b">negotiate / compete / help / thank</text>
+
+  <rect x="580" y="360" width="230" height="100" rx="10" fill="#fff" stroke="#eab308" stroke-width="1.5"/>
+  <text x="695" y="390" text-anchor="middle" font-size="15" font-weight="bold" fill="#854d0e">Capability boundary</text>
+  <text x="695" y="414" text-anchor="middle" font-size="12" fill="#64748b">agent → skill → tool</text>
+  <text x="695" y="434" text-anchor="middle" font-size="12" fill="#64748b">→ protected resource (block on overreach)</text>
+</svg>

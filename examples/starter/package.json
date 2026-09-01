@@ -1,0 +1,16 @@
+{
+  "name": "my-agent-with-guard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "@openoba/rulsynor-core": "^0.1.0-alpha"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  }
+}
