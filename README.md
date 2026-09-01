@@ -594,6 +594,17 @@ The cross-implementation test vector set lives in its own authoritative reposito
 
 ---
 
+## Versioning & Releases
+
+- [`VERSIONING.md`](VERSIONING.md) — version policy & lifecycle (SemVer + stages + compatibility + deprecation)
+- [`RELEASING.md`](RELEASING.md) — release process & quality gates
+- [`CHANGELOG.md`](CHANGELOG.md) — change log (Keep a Changelog)
+- [`ROADMAP.md`](ROADMAP.md) — version roadmap
+
+> **Current status**: `0.1.0-alpha` — engine aligned to Spec v2.0; Decision Object migrating from v1.3 to v1.5 (RFC-002). The bundled specs above (ERDL v1.1 / RFC-001 DO v1.3) will be refreshed to v2.0 / RFC-002 as part of the `0.1.0-beta` milestone.
+
+---
+
 ## License
 
 MIT © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))

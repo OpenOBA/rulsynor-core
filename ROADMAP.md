@@ -1,40 +1,61 @@
-# Roadmap — @rulsynor/core
+# Roadmap — @openoba/rulsynor-core
 
-## v1.0 (Current)
+> 版本路线遵循 [`VERSIONING.md`](./VERSIONING.md) 的生命周期阶段。
+> 当前主线：**0.1.x**（引擎已对齐 Spec v2.0，DO v1.5 迁移中）。
 
-- [x] ERDL rule engine with 16 SafeExpr operators
-- [x] 25-field Decision Object (JCS+SHA-256 cryptographic audit)
-- [x] RuleCompiler: ERDL YAML → 4-product compilation
-- [x] 28 preset security rules (validated via 3-round experiment)
-- [x] ComplianceService: 4 regulations × 4 jurisdictions
-- [x] GB/Z 185-compatible AID generation
-- [x] Guidance: extractNavigationGuide, CORRECT loop, REQUEST_HUMAN signal parser
-- [x] Minimal Chat Runtime (ReAct loop + Guard + Tool)
-- [x] Playground CLI (`npx @rulsynor/core`)
-- [x] 100 tests (SafeExpr, Evaluator, DecisionObject, Compliance, Preflight, Guidance, Runtime, GuardStateManager, EvaluatorAdapter)
-- [x] MIT licensed. Zero framework dependencies.
+---
 
-## v1.1 (Planned)
+## 0.1.0-alpha（当前 · alpha 阶段）
 
-- [ ] `trustLabel()` full implementation (currently stub)
-- [ ] `parseToolCalls()` full implementation (currently stub)
-- [ ] `task_domain` context awareness — different behavior for dev/ops/fintech contexts
-- [ ] LangGraph integration example (callback/tool wrapper pattern)
-- [ ] MCP server integration guide
-- [ ] Custom business rule hot-reload
-- [ ] OpenTelemetry / Prometheus metrics export
+**已达成**（引擎确定性内核）：
 
-## v1.2 (Planned)
+- [x] ERDL 表达式树内核：34 节点全量编码（10 组）
+- [x] Simple 30 运算符（28 条件 + 2 修饰符 within/rate）
+- [x] 25 字段 Decision Object（JCS + SHA-256 密码学审计）
+- [x] 确定性内核单一事实源 `erdl-schema`（枚举 + `SCHEMA_COUNTS` 自证）
+- [x] 定点小数（scale=14 half-even）+ 时间统一 UTC
+- [x] Guard fail-close + 审计链锚定
+- [x] 合规画像：14 框架 × 三层激活（法域/行业/风险）
+- [x] GB/Z 185 AID 生成 + 导航引导 + 纠偏环 + REQUEST_HUMAN 解析
+- [x] Minimal Chat Runtime（ReAct 环 + Guard + 工具执行）
+- [x] Playground CLI
+- [x] 555 测试 · 覆盖率 76%（语句）
+- [x] MIT · 零框架依赖（仅 json-canonicalize + js-yaml）
 
-- [ ] Sequence-aware detection — multi-step attack patterns
-- [ ] Audit chain Merkle tree (previous_hash chain verification)
-- [ ] Certificate Manager integration (GB/Z 185 certificate issuance)
-- [ ] Training Ground: sandbox evaluation for custom rules
-- [ ] Rule marketplace: community-contributed rule packs
+## 0.1.0-beta（下一步 · beta 阶段）
 
-## v2.0 (Future)
+- [ ] **Decision Object v1.5 对齐**（当前 v1.3 口径 → v1.5 扁平哈希链，对齐 RFC-002）
+- [ ] 软件版本全生命周期管理落地（VERSIONING/RELEASING 已就位，补齐 CI 自动化发布）
+- [ ] CI：GitHub Actions（lint/test/build 门禁 + npm 自动发布）
+- [ ] 覆盖率提升至 80%+（补边界/异常分支）
+- [ ] 公开测试 + 收口第三方反馈
 
-- [ ] Multi-Agent coordination (IAGP protocol)
-- [ ] Cross-session correlation (cross-task risk detection)
-- [ ] Distillation engine: auto-optimize rules from audit history
-- [ ] WASM runtime: embed Guard in browser/edge environments
+## 0.1.0（stable）
+
+- [ ] DO v1.5 完成冻结（`preimage_version` 定版）
+- [ ] 无 P0/P1 缺陷 · 稳定期无回归
+- [ ] 正式发布（`latest` tag）
+
+## 0.2.x（minor · 功能扩展）
+
+- [ ] `trustLabel()` / `parseToolCalls()` 完整实现（当前 stub）
+- [ ] LangGraph 集成示例 + MCP server 集成指南
+- [ ] 自定义业务规则热重载
+- [ ] OpenTelemetry / Prometheus 指标导出
+- [ ] 序列感知检测（多步攻击模式）
+
+## 1.0.0（major · 完整稳定）
+
+- [ ] 多 Agent 协作（对齐 SPEC 第十部分）
+- [ ] 跨会话关联（跨任务风险检测）
+- [ ] 蒸馏引擎（从审计历史自动优化规则）
+- [ ] WASM 运行时（浏览器/边缘嵌入）
+
+---
+
+## 生命周期时间线
+
+```
+0.1.0-alpha ──▶ 0.1.0-beta ──▶ 0.1.0(stable) ──▶ 0.2.x ──▶ 1.0.0
+   (当前)       (DO v1.5)      (正式发布)       (功能)    (完整稳定)
+```
