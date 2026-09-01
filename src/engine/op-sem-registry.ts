@@ -11,7 +11,7 @@
  *
  * This is a PURE DATA component — no rules, no evaluation, no decisions.
  *
- * @author 唐浩然 · 2026-07-21
+ * @author Tang Haoran · 2026-07-21
  */
 
 import * as fs from 'node:fs';
@@ -29,7 +29,7 @@ export interface OpSemResult {
   subCode?: string;
   risk: RiskLevel;
   label: string;
-  /** ERDL evaluator 使用的值（字符串形式） */
+  /** Value used by the ERDL evaluator (string form) */
   codeStr: string;
   subCodeStr: string;
   riskStr: string;
@@ -163,7 +163,7 @@ export class OpSemRegistry {
     return {
       code: 'OP_EXEC',
       risk: 'high',
-      label: '未知操作',
+      label: 'unknown operation',
       codeStr: 'OP_EXEC',
       subCodeStr: 'UNKNOWN',
       riskStr: 'high',

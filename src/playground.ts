@@ -72,8 +72,8 @@ const record = buildDecisionObject({
 }) as DecisionObject;
 
 const aid = record.agent.aid;
-// 法域可能未声明（未配置 RULSYNOR_JURISDICTIONS 即「未选择」，按 Omit over Null 省略键），
-// 故不得直接 as string[] 后调用数组方法——会在未声明时抛 TypeError。
+// The jurisdiction may be undeclared (RULSYNOR_JURISDICTIONS unset = "not selected", key omitted per Omit over Null),
+// so must not cast directly to string[] and call array methods — that throws TypeError when undeclared.
 const jurisdictions = (record.compliance_profile.jurisdictions as string[] | undefined) ?? [];
 
 // Turn a DENY/CORRECT into guidance the agent can act on.
@@ -126,7 +126,7 @@ if (jsonMode) {
       ' ' +
       (jurisdictions.length
         ? jurisdictions.join(',')
-        : '(未选择：由部署方通过 RULSYNOR_JURISDICTIONS 声明)'),
+        : '(not selected: declared by the deployer via RULSYNOR_JURISDICTIONS)'),
   );
   console.log('🧭 Alternative:' + ' ' + alt);
 }

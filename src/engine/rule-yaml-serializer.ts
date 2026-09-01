@@ -4,20 +4,20 @@
  * Converts RuleConfig DB entities to ERDL SPEC v2.0 §11 YAML files.
  *
  * SPEC v2.0 §11 format ironclad rules (F1-F8):
- *   F1 顶层顺序: protocol → version → metadata → rules
+ *   F1 top-level order: protocol → version → metadata → rules
  *   F2 metadata: name → description → category → decision → tags
  *   F3 rules[]: name → description → priority → override → ring → when → then → message → instruction → unless
  *   F4 when.conditions[]: field → operator → value
- *   F6 自然语言字符串双引号 / 枚举裸词 / tags 裸词
- *   F7 2 空格缩进
- *   F8 protocol 必须开头
+ *   F6 natural-language strings double-quoted / enums bare / tags bare
+ *   F7 2-space indentation
+ *   F8 protocol must come first
  *
- * 实现策略：不依赖 yaml.dump()（JS 对象 key order 不可控、quoting 不可控），
- * 改用自定义模板逐字段拼接，确保字段顺序与引号风格铁律满足 SPEC v2.0 §11。
+ * Implementation strategy: not relying on yaml.dump() (uncontrollable JS object key order and quoting),
+ * instead using a custom template to concatenate field by field, ensuring field order and quoting style satisfy SPEC v2.0 §11.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-20 · P2 DB → FS sync
- * @rework 2026-07-26 · 模板拼接法对齐 SPEC v2.0 §11 F1-F8
+ * @rework 2026-07-26 · template-splicing aligned with SPEC v2.0 §11 F1-F8
  */
 
 import * as fs from 'node:fs';
@@ -37,7 +37,7 @@ interface Spec5Metadata {
   description: string;
   category: string;
   decision: string;
-  /** SPEC v2.0 §11 F2: tags 为裸词列表，可选 */
+  /** SPEC v2.0 §11 F2: tags is a bare-word list, optional */
   tags?: unknown[];
 }
 
@@ -54,9 +54,9 @@ interface Spec5Rule {
   unless?: Record<string, unknown> | string;
   explanation?: string | { zh: string; en: string };
   alternative?: string | { zh: string; en: string };
-  /** 规则依据的法律法规出处（如《XX 管理办法》第 X 条） */
+  /** Source of the law/regulation the rule is based on (e.g. Article X of the "XX Administrative Measures") */
   legal_basis?: string;
-  /** 规则依据的法规原文全文 */
+  /** Full text of the original regulation the rule is based on */
   source_text?: string;
 }
 
@@ -67,7 +67,7 @@ interface Spec5Document {
   rules: Spec5Rule[];
 }
 
-/** 从 rule.content 提取出的 SPEC v2.0 §11 结构化数据 */
+/** SPEC v2.0 §11 structured data extracted from rule.content */
 export interface ExtractedSpec5 {
   protocol: string;
   version: string;
@@ -89,9 +89,9 @@ export class RuleYamlSerializer {
   /**
    * Convert a RuleConfig DB entity to SPEC v2.0 §11 YAML string.
    *
-   * 模板拼接法：按 F1-F8 逐字段拼接，不依赖 yaml.dump()。
-   * 优先从 rule.content 读取完整 SPEC 结构；若 content 不是 SPEC5 嵌套格式，
-   * 用 DB 字段构造最小结构。
+   * Template-splicing: concatenate field by field per F1-F8, not relying on yaml.dump().
+   * Prioritizes reading the full SPEC structure from rule.content; if content is not the SPEC5 nested format,
+   * constructs a minimal structure from DB fields.
    */
   toSpec5Yaml(rule: RuleConfig): string {
     return this.serializeSpec5(this.extractSpec5(rule));
@@ -195,10 +195,10 @@ export class RuleYamlSerializer {
   }
 
   // ============================================
-  // Private: 结构化文档（供程序化消费，结构对齐 SPEC v2.0 §11 F2）
+  // Private: structured document (for programmatic consumption, structure aligned with SPEC v2.0 §11 F2)
   // ============================================
 
-  /** 返回 SPEC v2.0 §11 结构化文档对象（metadata 不再含 priority/ring/enabled/source）。 */
+  /** Return the SPEC v2.0 §11 structured document object (metadata no longer includes priority/ring/enabled/source). */
   toSpec5Document(rule: RuleConfig): Spec5Document {
     const data = this.extractSpec5(rule);
     const m = data.metadata;
@@ -239,13 +239,13 @@ export class RuleYamlSerializer {
   }
 
   // ============================================
-  // Private: 提取 + 模板序列化
+  // Private: extraction + template serialization
   // ============================================
 
   /**
-   * 从 RuleConfig 提取 SPEC v2.0 §11 结构。
-   * 优先用 content 中已有的完整 { protocol, version, metadata, rules }；
-   * 否则用 DB 字段构造最小结构（兼容 flat/legacy content）。
+   * Extract the SPEC v2.0 §11 structure from a RuleConfig.
+   * Prioritizes the full { protocol, version, metadata, rules } already in content;
+   * otherwise constructs a minimal structure from DB fields (compatible with flat/legacy content).
    */
   private extractSpec5(rule: RuleConfig): ExtractedSpec5 {
     const content = (rule.content as Record<string, unknown>) ?? {};
@@ -263,7 +263,7 @@ export class RuleYamlSerializer {
       };
     }
 
-    // Fallback: flat / legacy content → 构造最小 SPEC v2.0 §11
+    // Fallback: flat / legacy content → construct minimal SPEC v2.0 §11
     const raw = content;
     const name = (raw.name as string) ?? rule.name;
     const decision = (raw.then as string) ?? rule.decision ?? 'ALLOW';
@@ -290,13 +290,13 @@ export class RuleYamlSerializer {
   }
 
   /**
-   * 模板拼接：按 F1-F8 逐行生成 YAML 字符串。
+   * Template-splicing: generate the YAML string line by line per F1-F8.
    * Public so template-engine can produce SPEC v2.0 §11 YAML without a RuleConfig entity.
    */
   serializeSpec5(data: ExtractedSpec5): string {
     const lines: string[] = [];
 
-    // F1 / F8: protocol 开头，紧跟 version
+    // F1 / F8: protocol at the start, followed by version
     lines.push(`protocol: ${this.q(data.protocol)}`);
     lines.push(`version: ${this.q(data.version)}`);
     lines.push('');
@@ -322,8 +322,8 @@ export class RuleYamlSerializer {
   }
 
   /**
-   * 序列化单条规则（F3 字段顺序）。
-   * 缩进：rules 顶层 0，规则项 `- ` 在 2，规则字段在 4。
+   * Serialize a single rule (F3 field order).
+   * Indentation: rules top level 0, rule item `- ` at 2, rule fields at 4.
    */
   private serializeRule(rule: Record<string, unknown>): string[] {
     const lines: string[] = [];
@@ -345,25 +345,25 @@ export class RuleYamlSerializer {
     // unless
     if (rule.unless !== undefined)
       lines.push(...this.serializeWhenOrUnless('unless', rule.unless, 4));
-    // explanation / alternative（可选，置于末尾）
+    // explanation / alternative (optional, placed at the end)
     if (rule.explanation !== undefined) {
       lines.push(...this.serializeBilingual('explanation', rule.explanation, 4));
     }
     if (rule.alternative !== undefined) {
       lines.push(...this.serializeBilingual('alternative', rule.alternative, 4));
     }
-    // legal_basis / source_text（法规依据 + 原文，置于末尾）
+    // legal_basis / source_text (legal basis + original text, placed at the end)
     if (rule.legal_basis !== undefined) lines.push(`    legal_basis: ${this.q(rule.legal_basis)}`);
     if (rule.source_text !== undefined) lines.push(`    source_text: ${this.q(rule.source_text)}`);
     return lines;
   }
 
   /**
-   * 序列化 when / unless 块（结构相同）。
-   * 支持三种形态（按优先级）：
-   *  - S-expression 表达式树（when 顶层即树）
-   *  - 平铺 { logic, conditions: [...] }（Simple 投影面）
-   *  - 字符串 'true' / 其他字符串
+   * Serialize a when / unless block (same structure).
+   * Supports three forms (by priority):
+   *  - S-expression expression tree (when is a tree at the top level)
+   *  - flat { logic, conditions: [...] } (Simple projection)
+   *  - string 'true' / other string
    * F4: conditions[]: field → operator → value
    */
   private serializeWhenOrUnless(key: 'when' | 'unless', block: unknown, indent: number): string[] {
@@ -371,7 +371,7 @@ export class RuleYamlSerializer {
     const lines: string[] = [];
 
     if (block === undefined || block === null || block === 'true') {
-      // 字符串 'true' 用单引号保留语义，避免 YAML 解析为布尔
+      // the string 'true' uses single quotes to preserve semantics, avoiding YAML parsing it as boolean
       lines.push(`${pad}${key}: 'true'`);
       return lines;
     }
@@ -384,7 +384,7 @@ export class RuleYamlSerializer {
     if (typeof block === 'object' && !Array.isArray(block)) {
       const w = block as Record<string, unknown>;
 
-      // SPEC v2.0 §12 权威：when.expr 包裹形态（{ expr: {树} }）
+      // SPEC v2.0 §12 authoritative: when.expr wrapped form ({ expr: {tree} })
       if ('expr' in w) {
         try {
           const inner = w.expr;
@@ -394,12 +394,12 @@ export class RuleYamlSerializer {
           lines.push(...this.serializeSExprTree(inner, indent + 4));
           return lines;
         } catch {
-          // 不是合法表达式树，走平铺路径
+          // not a valid expression tree, fall through to the flat path
         }
       }
 
-      // §12 Expression 投影面 + 兼容形态：when 顶层即 S-expression 表达式树
-      // （不含 conditions / logic / expr 键，尝试按树序列化；失败回退平铺）
+      // §12 Expression projection + compatible form: when is an S-expression expression tree at the top level
+      // (no conditions / logic / expr keys, try serializing as a tree; fall back to flat on failure)
       if (!('conditions' in w) && !('logic' in w) && !('expr' in w)) {
         try {
           fromSExpr(w);
@@ -407,7 +407,7 @@ export class RuleYamlSerializer {
           lines.push(...this.serializeSExprTree(w, indent + 2));
           return lines;
         } catch {
-          // 不是合法 S-expression，走平铺路径
+          // not a valid S-expression, fall through to the flat path
         }
       }
 
@@ -425,32 +425,32 @@ export class RuleYamlSerializer {
       return lines;
     }
 
-    // 兜底
+    // fallback
     lines.push(`${pad}${key}: 'true'`);
     return lines;
   }
 
   /**
-   * 递归序列化 S-expression 表达式树为 YAML（键名即节点，子节点内嵌）。
-   * 与 toSExpr 的规格一致：
-   * - 裸值（number/string/boolean/null）= 叶子，直接用 serializeValue
-   * - { field: "path" } / { var: "path" } = field/var 节点
-   * - { <op>: [ ...children ] } = 操作节点，子节点数组内联
-   * - { <op>: { unit, base, amount } } = 参数化节点（date_add/date_part）
+   * Recursively serialize an S-expression expression tree into YAML (key name is the node, children nested).
+   * Consistent with the toSExpr spec:
+   * - bare value (number/string/boolean/null) = leaf, use serializeValue directly
+   * - { field: "path" } / { var: "path" } = field/var node
+   * - { <op>: [ ...children ] } = operator node, child node array inlined
+   * - { <op>: { unit, base, amount } } = parameterized node (date_add/date_part)
    *
-   * 缩进由调用方控制层级；这里逐行返回。
+   * Indentation level is controlled by the caller; returned line by line here.
    */
   private serializeSExprTree(node: unknown, indent: number): string[] {
     const pad = ' '.repeat(indent);
     const lines: string[] = [];
 
-    // 叶子：裸值
+    // leaf: bare value
     if (node === null || typeof node !== 'object') {
       lines.push(`${pad}${this.serializeValue(node)}`);
       return lines;
     }
     if (Array.isArray(node)) {
-      // 子节点数组：每个元素各占一行（列表项）
+      // child node array: each element on its own line (list item)
       for (const child of node) {
         lines.push(...this.serializeSExprTreeListItem(child, indent));
       }
@@ -460,7 +460,7 @@ export class RuleYamlSerializer {
     const obj = node as Record<string, unknown>;
     const keys = Object.keys(obj);
 
-    // 单字段节点：field / var / 参数化对象
+    // single-field node: field / var / parameterized object
     if (keys.length === 1) {
       const k = keys[0];
       const v = obj[k];
@@ -470,8 +470,8 @@ export class RuleYamlSerializer {
         return lines;
       }
 
-      // 参数化节点（date_add / date_part：{ unit, base, amount }/{ unit, arg }）
-      // 子节点数组（compare/string/arith/in/between/days_between/quantifier/aggregate 等）
+      // parameterized node (date_add / date_part: { unit, base, amount }/{ unit, arg })
+      // child node array (compare/string/arith/in/between/days_between/quantifier/aggregate etc.)
       if (Array.isArray(v)) {
         lines.push(`${pad}${k}:`);
         for (const child of v) {
@@ -481,18 +481,18 @@ export class RuleYamlSerializer {
       }
 
       if (typeof v === 'object' && v !== null) {
-        // 参数化对象（date_add/date_part/quantifier）
+        // parameterized object (date_add/date_part/quantifier)
         lines.push(`${pad}${k}:`);
         lines.push(...this.serializeParamObject(v as Record<string, unknown>, indent + 2));
         return lines;
       }
 
-      // 单键但值为裸值（理论不会到 fromSExpr 合法树，但兜底）
+      // single key but bare value (theoretically never a valid fromSExpr tree, but fallback)
       lines.push(`${pad}${k}: ${this.serializeValue(v)}`);
       return lines;
     }
 
-    // 兜底：多键对象（不应出现，按 map 序列化）
+    // fallback: multi-key object (should not appear, serialized as map)
     for (const [k, v] of Object.entries(obj)) {
       lines.push(`${pad}${k}: ${this.serializeValue(v)}`);
     }
@@ -500,8 +500,8 @@ export class RuleYamlSerializer {
   }
 
   /**
-   * 序列化参数化对象（date_add/date_part/quantifier 的值，如 { unit, base, amount }）。
-   * unit/binding 为裸词，其余字段（base/amount/arg）递归序列化，避免 [object Object]。
+   * Serialize a parameterized object (value of date_add/date_part/quantifier, e.g. { unit, base, amount }).
+   * unit/binding are bare words, other fields (base/amount/arg) serialized recursively, avoiding [object Object].
    */
   private serializeParamObject(inner: Record<string, unknown>, indent: number): string[] {
     const pad = ' '.repeat(indent);
@@ -524,13 +524,13 @@ export class RuleYamlSerializer {
     return lines;
   }
 
-  /** 列表项序列化：子节点数组里的每个元素（非叶子用 `- <内容>` 形式） */
+  /** List item serialization: each element in the child node array (non-leaf uses `- <content>` form) */
   private serializeSExprTreeListItem(child: unknown, indent: number): string[] {
     const pad = ' '.repeat(indent);
     const lines: string[] = [];
 
     if (child === null || typeof child !== 'object') {
-      // 叶子裸值：`- "value"` / `- 123`
+      // leaf bare value: `- "value"` / `- 123`
       lines.push(`${pad}- ${this.serializeValue(child)}`);
       return lines;
     }
@@ -552,8 +552,8 @@ export class RuleYamlSerializer {
         return lines;
       }
       if (typeof v === 'object' && v !== null) {
-        // 单键 + 值为对象（参数化节点如 date_add/date_part/quantifier）：
-        // 直接序列化参数化对象字段，避免 [object Object] 或重复键名
+        // single key + object value (parameterized node like date_add/date_part/quantifier):
+        // directly serialize the parameterized object fields, avoiding [object Object] or duplicate key names
         lines.push(`${pad}- ${k}:`);
         lines.push(...this.serializeParamObject(v as Record<string, unknown>, indent + 2));
         return lines;
@@ -562,12 +562,12 @@ export class RuleYamlSerializer {
       return lines;
     }
 
-    // 兜底
+    // fallback
     lines.push(`${pad}- ${this.serializeValue(child)}`);
     return lines;
   }
 
-  /** 序列化 conditions[].value：字符串双引号、数组内字符串双引号、数字/布尔裸词。 */
+  /** Serialize conditions[].value: strings double-quoted, array strings double-quoted, numbers/booleans bare. */
   private serializeValue(val: unknown): string {
     if (val === undefined || val === null) return '""';
     if (Array.isArray(val)) {
@@ -577,7 +577,7 @@ export class RuleYamlSerializer {
     return this.bare(val);
   }
 
-  /** 序列化 explanation/alternative：字符串双引号；{ zh, en } 对象输出为 block map。 */
+  /** Serialize explanation/alternative: strings double-quoted; { zh, en } object output as a block map. */
   private serializeBilingual(key: string, val: unknown, indent: number): string[] {
     const pad = ' '.repeat(indent);
     if (typeof val === 'string') {
@@ -595,28 +595,28 @@ export class RuleYamlSerializer {
   }
 
   // ============================================
-  // Private: 标量格式化助手
+  // Private: scalar formatting helpers
   // ============================================
 
-  /** 双引号包裹自然语言/标识符字符串，转义 YAML 特殊字符。 */
+  /** Wrap natural-language/identifier strings in double quotes, escaping YAML special characters. */
   private q(val: unknown): string {
     if (val === undefined || val === null) return '""';
     const s = String(val);
     const escaped = s
-      .replace(/\\/g, '\\\\') // 反斜杠先转义
-      .replace(/"/g, '\\"') // 双引号
+      .replace(/\\/g, '\\\\') // escape backslash first
+      .replace(/"/g, '\\"') // double quote
       .replace(/\n/g, '\\n')
       .replace(/\r/g, '\\r')
       .replace(/\t/g, '\\t');
     return `"${escaped}"`;
   }
 
-  /** 裸词（枚举/数字/标识符），不加引号。 */
+  /** Bare word (enum/number/identifier), unquoted. */
   private bare(val: unknown): string {
     return String(val);
   }
 
-  /** tags 裸词列表：[tag1, tag2, ...]；空或缺失返回 null（省略该行）。 */
+  /** tags bare-word list: [tag1, tag2, ...]; empty or missing returns null (omit the line). */
   private serializeTags(val: unknown): string | null {
     if (val === undefined || val === null) return null;
     if (Array.isArray(val)) {
@@ -627,7 +627,7 @@ export class RuleYamlSerializer {
   }
 
   /**
-   * 规范化 override：boolean → string，legacy 值 → canonical。
+   * Normalize override: boolean → string, legacy value → canonical.
    */
   private normalizeOverride(val: unknown): string | undefined {
     if (val === true) return 'high';

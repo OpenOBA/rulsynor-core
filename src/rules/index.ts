@@ -158,7 +158,7 @@ export function toCompiledRules(presetRules: PresetRule[]): RuleDefinition[] {
     },
   }));
 
-  // SPEC v2.0 §16 加载期质量门禁：error 级违规 fail-close 拒绝加载
+  // SPEC v2.0 §16 load-time quality gate: error-level violations fail-close and reject load
   const report = ruleQualityGate.check(compiled);
   if (report.errors > 0) {
     const errLines = report.details
@@ -171,7 +171,7 @@ export function toCompiledRules(presetRules: PresetRule[]): RuleDefinition[] {
             .join(', ')}`,
       )
       .join('\n');
-    throw new Error(`规则质量门禁拒绝加载（${report.errors} 条 error 级违规）：\n${errLines}`);
+    throw new Error(`Rule quality gate rejected load (${report.errors} error-level violation(s)):\n${errLines}`);
   }
 
   return compiled;

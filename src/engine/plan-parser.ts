@@ -4,7 +4,7 @@
  * Extracts structured plan steps from LLM PLAN text for ERDL evaluation.
  * Handles variable formatting (LLMs are not strict syntax generators).
  *
- * @author 唐浩然 · 2026-07-21
+ * @author Tang Haoran · 2026-07-21
  */
 
 export interface ParsedPlanStep {
@@ -37,8 +37,8 @@ export class PlanParser {
    * Expected format (flexible — handles common LLM variations):
    *
    * PLAN:
-   * 步骤1: 描述 | 工具: tool1, tool2 | 操作: READ | 目的: xxx
-   * 步骤2: 描述 | 工具: tool3 | 操作: EXEC | 目的: xxx
+   * Step 1: description | tools: tool1, tool2 | op: READ | purpose: xxx
+   * Step 2: description | tools: tool3 | op: EXEC | purpose: xxx
    *
    * Supports both English and Chinese markers.
    */
@@ -52,22 +52,22 @@ export class PlanParser {
       planText,
       hasPlan,
       steps,
-      goal: this.extractField(text, /(?:目标|Goal|任务目标)[：:]\s*(.+)/i) ?? '未说明',
+      goal: this.extractField(text, /(?:目标|Goal|任务目标)[：:]\s*(.+)/i) ?? 'not specified',
       successCriteria:
-        this.extractField(text, /(?:成功标准|Success|预期结果)[：:]\s*(.+)/i) ?? '未说明',
+        this.extractField(text, /(?:成功标准|Success|预期结果)[：:]\s*(.+)/i) ?? 'not specified',
       estimatedRounds: this.extractNumber(text, /(?:预计轮次|Rounds|预估)[：:]\s*(\d+)/i) ?? 4,
       riskLevel: this.extractRiskLevel(text),
-      alternatives: this.extractField(text, /(?:替代方案|Alternatives?)[：:]\s*(.+)/i) ?? '未说明',
+      alternatives: this.extractField(text, /(?:替代方案|Alternatives?)[：:]\s*(.+)/i) ?? 'not specified',
     };
   }
 
   /** Quick check: does this text contain a recognizable plan? */
   hasRecognizablePlan(text: string): boolean {
-    // 加宽识别：不只认 PLAN/计划 关键字，也认 LLM 常见的结构化列表形态。
-    // 根因回顾：原正则仅匹配「PLAN|计划|执行计划|执行方案」+ 冒号/换行，
-    // 而 LLM 常直接吐「Step 1: ...」「1. ...」「- ...」，导致计划时有时无。
+    // Widen recognition: not only PLAN/计划 keywords, but also common structured-list forms LLMs emit.
+    // Root-cause review: the original regex only matched "PLAN|计划|执行计划|执行方案" + colon/newline,
+    // but LLMs often directly emit "Step 1: ..." "1. ..." "- ...", making plan detection intermittent.
     if (/(?:PLAN|计划|执行计划|执行方案)[：:\n]/.test(text)) return true;
-    // 结构化步骤列表：Step N / 步骤 N / 数字编号（≥2 步）
+    // Structured step list: Step N / 步骤 N / numeric numbering (≥2 steps)
     const stepPattern = /(?:Step|步骤)\s*\d|^\s*\d+[.)、]\s+/gm;
     const numericSteps = text.match(stepPattern) ?? [];
     return numericSteps.length >= 2;
@@ -126,7 +126,7 @@ export class PlanParser {
         description: desc?.trim() ?? trimmed.slice(0, 80),
         tools: this.parseToolsList(tools?.trim() ?? ''),
         opSem: this.normalizeOpSem(opSem?.trim() ?? ''),
-        purpose: purpose?.trim() ?? '未说明',
+        purpose: purpose?.trim() ?? 'not specified',
       });
     }
 

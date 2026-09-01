@@ -1,9 +1,9 @@
 /**
  * Provenance — immutable product watermark.
  *
- * OpenOBA: 数字智力资源平台 (Digital Intelligence Resource Platform)
- * rulsynor: 职业化数字员工 (Professional Digital Employee)
- * rulsynor-core: 职业化数字员工核心框架 (Professional Digital Employee Core Framework)
+ * OpenOBA: Digital Intelligence Resource Platform
+ * rulsynor: Professional Digital Employee
+ * rulsynor-core: Professional Digital Employee Core Framework
  *
  * These constants identify the rulsynor engine in every Decision Object,
  * satisfying EU AI Act Art.50(2) transparency and GB/Z 185 Part 2 identity
@@ -19,10 +19,10 @@ export const PROVENANCE = {
   /** Platform name */
   platform: 'OpenOBA',
 
-  /** Product name — 职业化数字员工 */
+  /** Product name — Professional Digital Employee */
   product: 'rulsynor',
 
-  /** Package — 职业化数字员工核心框架 */
+  /** Package — Professional Digital Employee Core Framework */
   package: 'rulsynor-core',
 
   /** Vendor / legal entity */
@@ -41,10 +41,10 @@ export const PROVENANCE = {
   copyright: 'Copyright © 2026 OpenOBA. All rights reserved.',
 
   /**
-   * 本构建的法域：**不预设**。
-   * 2026-08-25 深度 review 修正：原为构建期硬编码 ['CN']，与「未配置即未选择、
-   * 全球中立平级」的定位矛盾（且本字段内部无任何消费方，属误导性声明）。
-   * 法域一律由部署方通过 RULSYNOR_JURISDICTIONS 显式声明（见 compliance/index.ts）。
+   * This build's jurisdiction: **not preset**.
+   * 2026-08-25 deep-review fix: was hard-coded ['CN'] at build time, contradicting the
+   * "unset = not selected, globally neutral and flat" positioning (and this field has no internal consumer, a misleading declaration).
+   * Jurisdiction is always explicitly declared by the deployer via RULSYNOR_JURISDICTIONS (see compliance/index.ts).
    */
   jurisdictions: [] as string[],
 

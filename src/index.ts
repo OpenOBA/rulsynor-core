@@ -10,9 +10,9 @@ export type {
   RuleAction,
 } from './engine/index.js';
 export { safeRegExp, SafeRegExpError } from './engine/safe-regex.js';
-// 2026-08-28：确定性内核单一事实源对外导出。此前 erdl-schema 未经 index re-export，
-// 外部消费方（含第三方集成、LLM schema 注入方）拿不到运算符/决策/节点/分类枚举，
-// 「单一事实源」只在仓库内成立、对外不可用 —— 属实质性缺口，故补齐。
+// 2026-08-28: the deterministic-kernel single source of truth is exported outward. Previously erdl-schema was not re-exported via index,
+// so external consumers (incl. third-party integrations, LLM schema injectors) could not access the operator/decision/node/category enums,
+// the "single source of truth" only held within the repo and was unavailable externally — a substantive gap, now filled.
 export {
   OP_COMPARE,
   OP_LIST,

@@ -14,7 +14,7 @@ export type {
   TemporalStateEntry,
 } from './rule-definition.js';
 
-// ── 表达式树内核（E7 单一求值核心）对外导出 ──
+// ── expression-tree kernel (E7 single evaluation core) exported outward ──
 export { ExprTreeEvaluator, objectContext } from './expr-tree/evaluator.js';
 export type { EvalTrace } from './expr-tree/eval-trace.js';
 export { renderGloss, renderDecisionTableGloss } from './expr-tree/gloss.js';

@@ -1,16 +1,16 @@
 /**
- * GuardStateManager — 状态管理 + 热更新策略
+ * GuardStateManager — state management + hot-reload strategy
  *
- * 管理有状态 operator（within/rate）的运行时计数器。
- * 对齐 Evaluator 内嵌的「滑动时间戳数组」语义（2026-08-15 外置重构，保语义不变）。
+ * Manages the runtime counters for stateful operators (within/rate).
+ * Aligned with the "sliding timestamp array" semantics embedded in the Evaluator (externalized refactor 2026-08-15, semantics unchanged).
  *
- * 语义要点（与旧 evaluator 内嵌实现逐字节一致）：
- * - rate：时间戳数组，窗口内 `recent.length >= maxCount` 即超限；
- * - within：时间戳数组，窗口内 `recent.length >= 1` 即通过（要求窗口内已有历史）；
- * - 清理：cleanup(maxAgeMs) 逐 key 裁剪过期时间戳。
+ * Semantic points (byte-identical to the old evaluator-embedded implementation):
+ * - rate: timestamp array, within the window `recent.length >= maxCount` means exceeded;
+ * - within: timestamp array, within the window `recent.length >= 1` means passed (requires prior history in the window);
+ * - cleanup: cleanup(maxAgeMs) trims expired timestamps per key.
  *
- * 另提供热更新「保守冻结」能力（snapshotBeforeMigration / isFrozen / conservativeCount），
- * 防止热重载时清空计数器导致安全规则窗口期漏洞。
+ * Also provides hot-reload "conservative freeze" capability (snapshotBeforeMigration / isFrozen / conservativeCount),
+ * preventing a window-period hole in security rules from clearing counters on hot reload.
  */
 
 import { Clock, SystemClock } from './clock.js';
@@ -30,12 +30,12 @@ export class GuardStateManager {
   }
 
   // ═══════════════════════════════════════════
-  // rate — 滑动时间戳数组语义（读/写分离）
+  // rate — sliding timestamp array semantics (read/write separated)
   // ═══════════════════════════════════════════
 
   /**
-   * 检查 rate 是否超限（只读，不写回）。
-   * @returns true 表示未超限（可继续），false 表示已超限。
+   * Check whether rate is exceeded (read-only, no write-back).
+   * @returns true means not exceeded (can continue), false means exceeded.
    */
   checkRate(key: string, maxCount: number, windowMs: number): boolean {
     const now = this.clock.now();
@@ -45,8 +45,8 @@ export class GuardStateManager {
   }
 
   /**
-   * 记录一次 rate 事件（未超限时记录，即放行的操作）。
-   * 业界限流语义：计数统计「放行的操作次数」，超限的操作不再累加，窗口自然恢复。
+   * Record a rate event (recorded when not exceeded, i.e. an allowed operation).
+   * Business rate-limit semantics: the count tracks "allowed operation count", exceeded operations no longer accumulate, and the window recovers naturally.
    */
   recordRate(key: string, windowMs: number): void {
     const now = this.clock.now();
@@ -57,10 +57,10 @@ export class GuardStateManager {
   }
 
   /**
-   * 获取指定 key 在当前窗口内的计数（只读，用于 temporal_state 快照，RFC-002 §2.4）。
-   * @param key  tracker key（rate:field:rate 或 within:field）
-   * @param windowMs 窗口毫秒数
-   * @param isRate  true 表示 rate tracker，false 表示 within tracker
+   * Get the count for a key within the current window (read-only, for temporal_state snapshot, RFC-002 §2.4).
+   * @param key  tracker key (rate:field:rate or within:field)
+   * @param windowMs  window in milliseconds
+   * @param isRate  true for rate tracker, false for within tracker
    */
   getCount(key: string, windowMs: number, isRate: boolean): number {
     const now = this.clock.now();
@@ -71,12 +71,12 @@ export class GuardStateManager {
   }
 
   // ═══════════════════════════════════════════
-  // within — 滑动时间戳数组语义
+  // within — sliding timestamp array semantics
   // ═══════════════════════════════════════════
 
   /**
-   * 检查 within 窗口内是否已有历史事件（只读）。
-   * 语义对齐旧实现：要求窗口内至少已有 1 个时间戳。
+   * Check whether there is already a historical event within the within window (read-only).
+   * Semantics aligned with the old implementation: requires at least 1 timestamp within the window.
    */
   checkWithin(key: string, windowMs: number): boolean {
     const now = this.clock.now();
@@ -86,8 +86,8 @@ export class GuardStateManager {
   }
 
   /**
-   * 记录一次 within 事件（首次触发时记录，即放行的操作）。
-   * 去重语义：窗口内首次触发记录，第二次起命中（拦截）。
+   * Record a within event (recorded on first trigger, i.e. an allowed operation).
+   * Dedup semantics: first trigger within the window records, from the second onward it hits (block).
    */
   recordWithin(key: string): void {
     const now = this.clock.now();
@@ -97,11 +97,11 @@ export class GuardStateManager {
   }
 
   // ═══════════════════════════════════════════
-  // 清理
+  // cleanup
   // ═══════════════════════════════════════════
 
   /**
-   * 裁剪过期时间戳（按 maxAgeMs 保守清理）。
+   * Trim expired timestamps (conservative cleanup by maxAgeMs).
    */
   cleanup(maxAgeMs: number): void {
     const now = this.clock.now();
@@ -118,11 +118,11 @@ export class GuardStateManager {
   }
 
   // ═══════════════════════════════════════════
-  // 热更新保守冻结
+  // hot-reload conservative freeze
   // ═══════════════════════════════════════════
 
   /**
-   * 热更新前快照：返回当前活跃 key 与时间戳，用于冻结期内保守计数。
+   * Pre-hot-reload snapshot: returns the current active keys and timestamps, used for conservative counting during the freeze window.
    */
   snapshotBeforeMigration(): { withinKeys: string[]; rateKeys: string[]; snapshotTime: number } {
     return {
@@ -132,26 +132,26 @@ export class GuardStateManager {
     };
   }
 
-  /** 是否处于冻结窗口内 */
+  /** Whether within the freeze window */
   isFrozen(snapshotTime: number): boolean {
     return this.clock.now() - snapshotTime < this.freezeWindowMs;
   }
 
   /**
-   * 保守计数：冻结期内 count 取 max(actual, floor(limit * 0.8))，
-   * 防止热更新后窗口期内低估已有调用次数。
+   * Conservative count: within the freeze window, count takes max(actual, floor(limit * 0.8)),
+   * preventing underestimation of prior call counts after hot reload.
    */
   conservativeCount(actualCount: number, limit: number): number {
     return Math.max(actualCount, Math.floor(limit * 0.8));
   }
 
-  /** 清空所有状态（仅测试用） */
+  /** Clear all state (test only) */
   reset(): void {
     this.withinTracker.clear();
     this.rateTracker.clear();
   }
 
-  /** 获取窗口内活跃的 within key 数（诊断用） */
+  /** Get the count of active within keys within the window (diagnostic) */
   getActiveWithinKeys(windowMs: number): string[] {
     const now = this.clock.now();
     const active: string[] = [];

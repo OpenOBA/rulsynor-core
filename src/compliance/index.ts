@@ -1,19 +1,19 @@
 /**
  * Compliance Profile — standalone (zero framework dependency).
  *
- * 设计原则（全球中立平级，RFC-002 §5.2）：**框架不替用户猜合规辖境**。
- * 三层激活维度（法域 / 行业 / 风险）全部「不预设」——未配置即「未选择」，
- * 不设默认法域、不设默认行业、不设默认风险等级，也不发告警：
- * 选择哪个法域履职、是否落在某行业条件层、按什么风险等级承担义务，
- * 由部署方显式声明（Human Sovereignty），框架只负责按声明激活字段。
+ * Design principle (globally neutral and flat, RFC-002 §5.2): **the framework does not guess the compliance jurisdiction for the user**.
+ * The three activation dimensions (jurisdiction / industry / risk) are all "not preset" — unset means "not selected",
+ * no default jurisdiction, no default industry, no default risk level, and no warning:
+ * which jurisdiction to operate in, whether to fall under a certain industry condition layer, what risk level to assume obligations at,
+ * are all explicitly declared by the deployer (Human Sovereignty); the framework only activates fields per the declaration.
  *
- * 未选择时，对应键按「Omit over Null」（RFC-002 §1.3#6）**物理省略**，
- * 不写空数组/占位值——省略与置空在 JCS 下产生不同字节。
+ * When not selected, the corresponding key is **physically omitted** per "Omit over Null" (RFC-002 §1.3#6),
+ * no empty array / placeholder written — omission and empty produce different bytes under JCS.
  *
- * 环境变量：
- *   RULSYNOR_JURISDICTIONS  逗号分隔法域码（CN/EU/US/SG/BR/IN），未配置 = 未选择
- *   RULSYNOR_INDUSTRIES     逗号分隔行业码（兼容旧的单值 RULSYNOR_INDUSTRY），未配置 = 未选择
- *   RULSYNOR_RISK_LEVEL     风险等级（low/limited/high/critical），未配置 = 未选择
+ * Environment variables:
+ *   RULSYNOR_JURISDICTIONS  comma-separated jurisdiction codes (CN/EU/US/SG/BR/IN), unset = not selected
+ *   RULSYNOR_INDUSTRIES     comma-separated industry codes (compatible with the old single-value RULSYNOR_INDUSTRY), unset = not selected
+ *   RULSYNOR_RISK_LEVEL     risk level (low/limited/high/critical), unset = not selected
  */
 import { createHash } from 'crypto';
 import { canonicalize } from 'json-canonicalize';
@@ -21,15 +21,15 @@ import { canonicalize } from 'json-canonicalize';
 export interface ComplianceProfile {
   profile_id: string;
   profile_hash: string;
-  /** 未选择时省略（不写空数组） */
+  /** Omitted when not selected (no empty array written) */
   jurisdictions?: string[];
-  /** 未选择时省略（行业条件层默认不激活） */
+  /** Omitted when not selected (industry condition layer inactive by default) */
   industries?: string[];
-  /** 未选择时省略 */
+  /** Omitted when not selected */
   risk_level?: string;
-  /** 无激活法域时省略 */
+  /** Omitted when no jurisdiction is activated */
   activated_fields?: string[];
-  /** 无激活法域时省略 */
+  /** Omitted when no jurisdiction is activated */
   regulatory_references?: RegulatoryReference[];
 }
 
@@ -42,9 +42,9 @@ export interface RegulatoryReference {
   requires_fields?: string[];
 }
 
-// 注：完整 14 框架目录（RFC-002 §5.2）尚未在运行时内置，当前 6 条；
-// 三层激活（行业条件层 / 风险条件层）未实装、validateActivatedFields 未接入，
-// 属已登记的 P1 工程缺口（rfc-002-收口审计计划 §12.3），随后续重构补齐。
+// Note: the full 14-framework catalog (RFC-002 §5.2) is not yet built into the runtime, currently 6;
+// the three-layer activation (industry condition layer / risk condition layer) is not implemented, validateActivatedFields not wired in,
+// a registered P1 engineering gap (rfc-002-audit plan §12.3), to be filled in a later refactor.
 const REGULATORY_REFERENCES: RegulatoryReference[] = [
   {
     framework: 'EU-AI-Act',
@@ -65,13 +65,13 @@ const REGULATORY_REFERENCES: RegulatoryReference[] = [
   { framework: 'DPDP', version: '2023-Act-22', jurisdiction: 'IN' },
 ];
 
-// 法域 → 激活字段映射（与向量集 V-COMP 组 1 同源：RFC-002 §9.1）
+// Jurisdiction → activated-field map (same source as vector set V-COMP group 1: RFC-002 §9.1)
 //
-// 【signature 为何不在各法域集中】2026-08-25 深度 review 修正：
-// 历史实现在 CN/EU/US 集中声明了 signature，但签名层尚未实现（V-SIGN 拟定）——
-// “声明激活但填不出”会造成两种坏结果：① 若真实缺字段，每条 DO 均判
-// compliance_field_missing；② 若用占位值补上，则反而造成合规假阳（fail-open）。
-// 故与向量集取齐：哈希层不声明 signature，签名层落地后再补入。
+// [Why signature is not in each jurisdiction set] 2026-08-25 deep-review fix:
+// The historical implementation declared signature in the CN/EU/US sets, but the signing layer is not yet implemented (V-SIGN planned) —
+// "declared activated but cannot fill" causes two bad outcomes: ① if the field is really missing, every DO is judged
+// compliance_field_missing; ② if filled with a placeholder, it instead causes a compliance false-positive (fail-open).
+// Hence aligned with the vector set: the hash layer does not declare signature, to be added after the signing layer lands.
 const JURISDICTION_FIELD_MAP: Record<string, string[]> = {
   EU: [
     'model_id',
@@ -105,8 +105,8 @@ const JURISDICTION_FIELD_MAP: Record<string, string[]> = {
     'sanitized_context',
   ],
   SG: ['autonomy_level', 'confidence_score', 'data_modification_expected'],
-  // BR · LGPD：Art.20 自动化决策复核权 → autonomy_level；Art.20 §1 标准与程序可告知 → model_id；
-  // Art.18 删除权 + PII 分离 → sanitized_context。LGPD 不要求不可否认签名，不含 signature。
+  // BR · LGPD: Art.20 automated decision review right → autonomy_level; Art.20 §1 standards and procedures disclosable → model_id;
+  // Art.18 erasure right + PII separation → sanitized_context. LGPD does not require non-repudiation signature, so no signature.
   BR: [
     'model_id',
     'data_modification_expected',
@@ -114,14 +114,14 @@ const JURISDICTION_FIELD_MAP: Record<string, string[]> = {
     'context_snapshot_hash',
     'sanitized_context',
   ],
-  // IN · DPDP：§12(1)(d) 擦除权 → sanitized_context；§12(1)(a-c) 更正/补全/更新 → data_modification_expected；
-  // §12(2) 下游级联通知需数据流可溯 → context_snapshot_hash。DPDP 无自动化决策专条，不激活 autonomy_level/model_id。
+  // IN · DPDP: §12(1)(d) erasure right → sanitized_context; §12(1)(a-c) correction/completion/update → data_modification_expected;
+  // §12(2) downstream cascade notification needs traceable data flow → context_snapshot_hash. DPDP has no dedicated automated-decision clause, so no autonomy_level/model_id.
   IN: ['data_modification_expected', 'context_snapshot_hash', 'sanitized_context'],
 };
 
 let cachedProfile: ComplianceProfile | null = null;
 
-/** 解析逗号分隔列表；未配置或全空 → 空数组（= 未选择） */
+/** Parse a comma-separated list; unset or all-empty → empty array (= not selected) */
 function parseList(raw: string | undefined): string[] {
   if (!raw) return [];
   return raw
@@ -133,7 +133,7 @@ function parseList(raw: string | undefined): string[] {
 export function getComplianceProfile(): ComplianceProfile {
   if (cachedProfile) return cachedProfile;
 
-  // 未配置 = 未选择：不猜默认值，不告警
+  // unset = not selected: no default guessing, no warning
   const jurisdictions = parseList(process.env['RULSYNOR_JURISDICTIONS']);
   const industries = parseList(
     process.env['RULSYNOR_INDUSTRIES'] ?? process.env['RULSYNOR_INDUSTRY'],
@@ -145,26 +145,26 @@ export function getComplianceProfile(): ComplianceProfile {
     const fields = JURISDICTION_FIELD_MAP[j.toUpperCase()];
     if (fields) for (const f of fields) fieldSet.add(f);
   }
-  // 风险条件层（RFC-002 §5.2）：risk_level=critical → signature 强制。
-  // 与法域无关：即使法域本身不要求签名（如 SG/BR/IN），critical 仍须签名背书。
-  // 未纳入即风险条件层未生效，向量层对应 V-COMP-F08（判 compliance_field_missing）。
+  // Risk condition layer (RFC-002 §5.2): risk_level=critical → signature mandatory.
+  // Jurisdiction-independent: even if the jurisdiction itself does not require a signature (e.g. SG/BR/IN), critical still needs signature endorsement.
+  // Not included means the risk condition layer is not in effect, vector layer corresponds to V-COMP-F08 (judged compliance_field_missing).
   //
-  // 【诚实披露】签名层（ECDSA P-256）尚未实现，因此在 critical 声明下，本运行时产出的 DO
-  // 必定缺 signature 字段 → 任何 conforming 验证器均会判 compliance_field_missing。
-  // 这是 fail-closed 的**正确**行为（critical 在签名层落地前确实不满足），
-  // 而非用占位签名假装合规；本运行时尚不应用于 critical 场景。
+  // [Honest disclosure] the signing layer (ECDSA P-256) is not yet implemented, so under a critical declaration, the DO produced by this runtime
+  // is guaranteed to miss the signature field → any conforming verifier will judge compliance_field_missing.
+  // This is the **correct** fail-closed behavior (critical genuinely is not satisfied before the signing layer lands),
+  // rather than faking compliance with a placeholder signature; this runtime should not yet be used in critical scenarios.
   if (riskLevel.toLowerCase() === 'critical') fieldSet.add('signature');
   const activatedFields = Array.from(fieldSet).sort();
 
-  // 未选择法域 → 不挂任何法规引用（含 jurisdiction='ALL' 的标准组织框架）：
-  // 「全域适用」不等于「用户已选择接受其约束」。
+  // no jurisdiction selected → attach no regulatory references (including jurisdiction='ALL' standards-body frameworks):
+  // "universally applicable" does not equal "user has chosen to accept its constraints".
   const refs = jurisdictions.length
     ? REGULATORY_REFERENCES.filter(
         r => jurisdictions.includes(r.jurisdiction) || r.jurisdiction === 'ALL',
       )
     : [];
 
-  // Omit over Null：空即省略
+  // Omit over Null: empty means omitted
   const profileWithoutHash: Omit<ComplianceProfile, 'profile_hash'> = {
     profile_id: 'erdl-compliance-v1.5',
     ...(jurisdictions.length ? { jurisdictions } : {}),
@@ -179,7 +179,7 @@ export function getComplianceProfile(): ComplianceProfile {
   return cachedProfile;
 }
 
-/** 测试/重配置用：清除缓存，使下次读取重新解析环境变量 */
+/** For test/reconfiguration: clear the cache so the next read re-parses environment variables */
 export function resetComplianceProfileCache(): void {
   cachedProfile = null;
 }

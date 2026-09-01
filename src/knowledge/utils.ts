@@ -16,7 +16,7 @@ import type { AtcfDomain, KnowledgeFragment, ScoredFragment } from './types.js';
 // ═══════════════════════════════════════════════════════════════
 
 export const RING_K_DISCLAIMER =
-  '以下知识片段由 RING_K 知识库注入，仅供参考；执行决策以 ERDL Guard 确定性规则为准。';
+  'The following knowledge fragments are injected from the RING_K knowledge base, for reference only; execution decisions follow the deterministic ERDL Guard rules.';
 
 // ═══════════════════════════════════════════════════════════════
 // Intent → domain resolution
@@ -140,7 +140,7 @@ export function formatRagContext(fragments: ScoredFragment[]): string {
   return fragments
     .map((f, i) => {
       const source = f.knowledgeName ?? f.knowledgeId;
-      return `【知识 ${i + 1}】${source}（相关度 ${f.score.toFixed(2)}）\n${f.text}`;
+      return `[Knowledge ${i + 1}] ${source} (relevance ${f.score.toFixed(2)})\n${f.text}`;
     })
     .join('\n\n');
 }
@@ -232,7 +232,7 @@ export function collectToolAnchors(tools: ToolAnchorInput[], certLevel = 'L1'): 
   return tools.map(t => {
     const need = t.requiredCertLevel ?? 'L0';
     const available = CERT_ORDER.indexOf(certLevel) >= CERT_ORDER.indexOf(need);
-    return { name: t.name, available, reason: available ? undefined : `需 ${need} 证书` };
+    return { name: t.name, available, reason: available ? undefined : `requires ${need} certificate` };
   });
 }
 

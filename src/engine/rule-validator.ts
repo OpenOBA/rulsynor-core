@@ -4,7 +4,7 @@
  * Catches invalid data at the API boundary, before it enters the template engine.
  * Each template has specific parameter constraints enforced here.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-17
  */
 
@@ -33,31 +33,31 @@ import {
   GUARD_ALLOWED_DECISIONS,
 } from './erdl-schema.js';
 
-// 2026-08-28 收口：以下四个枚举原为本地硬编码（分类 11 / 决策 21 / 运算符 13 / 拦截性 4），
-// 其中 VALID_ALL_OPS 只有 13 个，导致 UI 与校验器拒绍内核支持的 length_*/count_*/between 等
-// 15 个运算符。现全部派生自单一事实源 erdl-schema，禁止在本文件再列举。
+// 2026-08-28 review: the four enums below were originally local hard-coded (11 categories / 21 decisions / 13 operators / 4 blocking),
+// where VALID_ALL_OPS had only 13, causing the UI and validator to reject the 15 kernel-supported operators
+// like length_*/count_*/between. Now all derived from the single source of truth erdl-schema; listing them again in this file is forbidden.
 const BLOCKING_DECISIONS: readonly string[] = SCHEMA_BLOCKING_DECISIONS;
 const FORBIDDEN_NAME_PREFIXES = ['test-', 'old-', 'temp-', 'debug-', 'wip-', 'tmp-'];
 
 const VALID_CATEGORIES: readonly string[] = RULE_CATEGORIES;
 
 /**
- * 规则名三段式 `[CAT]-[NNN]-[描述]` 的合法 CAT 缩写集合（SPEC v2.0 §16）。
+ * The set of legal CAT abbreviations for the three-part rule name `[CAT]-[NNN]-[desc]` (SPEC v2.0 §16).
  *
- * 这是命名门禁的单一事实来源：规则 name 的前缀 MUST 在此集合内，
- * 否则拒绝加载（error）。新增分类必须先在此声明 + 在 spec §16 登记。
+ * This is the single source of truth for the naming gate: a rule name's prefix MUST be in this set,
+ * otherwise load is rejected (error). New categories must first be declared here + registered in spec §16.
  */
-// ADR-003（2026-08-28）：前缀表收归单一事实源 erdl-schema.RULE_NAME_PREFIXES，
-// 此处仅做别名，禁止在本文件再写第二份前缀定义。新增前缀 → 改 erdl-schema 并同步 SPEC。
+// ADR-003 (2026-08-28): the prefix table is consolidated into the single source of truth erdl-schema.RULE_NAME_PREFIXES,
+// here only an alias is kept; writing a second prefix definition in this file is forbidden. New prefix → edit erdl-schema and sync SPEC.
 const CATEGORY_PREFIX_MAP: Record<string, string> = RULE_NAME_PREFIXES;
 
-/** 规则名合法格式：CAT-NNN-描述（描述段英文小写 kebab，编号 3-4 位） */
+/** Legal rule name format: CAT-NNN-desc (desc segment lowercase English kebab, number 3-4 digits) */
 const RULE_NAME_PATTERN = /^[A-Z]{2,4}-(\d{3,4})-[a-z0-9][a-z0-9-]*$/;
 
-// 2026-08-28 收口：原为 21 项本地清单（Ring 注释口径还停在 ERDL v1.0 §3.4）。
-// 现派生自单一事实源 ALL_DECISIONS = DO 可见 13 + 非 DO 8（2 子态 + 4 内部推理 + PASS + CENSOR）。
-// 注意：本清单是「引擎内部可流转标识」的输入校验域，不等于 DO 取值域——
-// 写入 DO 的 result.decision MUST ∈ 13，判定用 erdl-schema.isDODecision()。
+// 2026-08-28 review: was a 21-item local list (the Ring annotation was still at ERDL v1.0 §3.4).
+// Now derived from the single source of truth ALL_DECISIONS = DO-visible 13 + non-DO 8 (2 sub-states + 4 internal reasoning + PASS + CENSOR).
+// Note: this list is the input-validation domain of "engine-internal flowable identifiers", not the DO value domain —
+// result.decision written to DO MUST ∈ 13, judged via erdl-schema.isDODecision().
 const VALID_DECISIONS: readonly string[] = ALL_DECISIONS;
 
 const VALID_COMPARISON_OPS: readonly string[] = OP_COMPARE;
@@ -94,7 +94,7 @@ export class RuleValidator {
       errors.push({
         field: 'when',
         code: 'WILD_WHEN_WITH_BLOCKING_THEN',
-        message: `when:'true' 不能与 then:${decision} 搭配。无条件拦截所有操作会导致系统不可用。请添加至少一个精确的 when 条件。`,
+        message: `when:'true' cannot be combined with then:${decision}. Blocking all operations unconditionally makes the system unusable. Add at least one precise when condition.`,
         level: 'error',
       });
     }
@@ -112,7 +112,7 @@ export class RuleValidator {
       return {
         field: 'decision',
         code: 'DECISION_MISMATCH',
-        message: `metadata.decision (${metadataDecision}) 与 content.then (${contentThen}) 不一致`,
+        message: `metadata.decision (${metadataDecision}) does not match content.then (${contentThen})`,
         level: 'warning',
       };
     }
@@ -125,27 +125,27 @@ export class RuleValidator {
 
   private checkRuleName(name: string, errors: ValidationError[]): void {
     if (!name || typeof name !== 'string') {
-      errors.push({ field: 'ruleName', code: 'REQUIRED', message: '规则名称不能为空' });
+      errors.push({ field: 'ruleName', code: 'REQUIRED', message: 'Rule name cannot be empty' });
       return;
     }
     if (name.length > 255) {
-      errors.push({ field: 'ruleName', code: 'TOO_LONG', message: '规则名称不能超过 255 字符' });
+      errors.push({ field: 'ruleName', code: 'TOO_LONG', message: 'Rule name cannot exceed 255 characters' });
     }
     if (/[<>:"/\\|?*]/.test(name)) {
       errors.push({
         field: 'ruleName',
         code: 'INVALID_CHARS',
-        message: '规则名称包含非法字符: < > : " / \\ | ? *',
+        message: 'Rule name contains illegal characters: < > : " / \\ | ? *',
       });
     }
     if (/^\d+$/.test(name)) {
-      errors.push({ field: 'ruleName', code: 'NUMERIC_ONLY', message: '规则名称不能全为数字' });
+      errors.push({ field: 'ruleName', code: 'NUMERIC_ONLY', message: 'Rule name cannot be all digits' });
     }
   }
 
   private checkCategory(cat: string, errors: ValidationError[]): void {
     if (!VALID_CATEGORIES.includes(cat)) {
-      errors.push({ field: 'category', code: 'INVALID_CATEGORY', message: `无效分类: ${cat}` });
+      errors.push({ field: 'category', code: 'INVALID_CATEGORY', message: `Invalid category: ${cat}` });
     }
   }
 
@@ -154,18 +154,18 @@ export class RuleValidator {
       errors.push({
         field: 'decision',
         code: 'INVALID_DECISION',
-        message: `无效决策: ${decision}`,
+        message: `Invalid decision: ${decision}`,
       });
     }
   }
 
   private checkMessage(msg: string, errors: ValidationError[]): void {
     if (!msg || typeof msg !== 'string' || !msg.trim()) {
-      errors.push({ field: 'message', code: 'REQUIRED', message: '提示消息不能为空' });
+      errors.push({ field: 'message', code: 'REQUIRED', message: 'Message cannot be empty' });
       return;
     }
     if (msg.length > 2000) {
-      errors.push({ field: 'message', code: 'TOO_LONG', message: '提示消息不能超过 2000 字符' });
+      errors.push({ field: 'message', code: 'TOO_LONG', message: 'Message cannot exceed 2000 characters' });
     }
   }
 
@@ -178,7 +178,7 @@ export class RuleValidator {
       return {
         field: 'message',
         code: 'EMPTY_MESSAGE_ON_BLOCKING_RULE',
-        message: `${decision} 决策的 message 为空。拦截规则建议说明原因以便运维排查。`,
+        message: `The message for the ${decision} decision is empty. Blocking rules should state the reason for ops troubleshooting.`,
         level: 'warning',
       };
     }
@@ -190,7 +190,7 @@ export class RuleValidator {
       errors.push({
         field: 'priority',
         code: 'INVALID_PRIORITY',
-        message: '优先级必须是 1-1000 的整数',
+        message: 'Priority must be an integer between 1-1000',
       });
     }
   }
@@ -209,19 +209,19 @@ export class RuleValidator {
       errors.push({
         field: 'when',
         code: 'WILD_WHEN_WITH_BLOCKING_THEN',
-        message: `when:'true' 不能与 ${decision} 决策搭配。无条件拦截所有操作会导致系统不可用。请添加至少一个精确条件。`,
+        message: `when:'true' cannot be combined with the ${decision} decision. Blocking all operations unconditionally makes the system unusable. Add at least one precise condition.`,
         level: 'error',
       });
     }
   }
 
   /**
-   * SPEC v2.0 §16 命名规范门禁——二元判定：合法则通过，非法则 error 拒绝，无中间地带。
+   * SPEC v2.0 §16 naming-convention gate — binary judgment: legal passes, illegal is rejected with error, no middle ground.
    *
-   *   非法 = 以禁止前缀开头，或格式不是 `CAT-NNN-描述`，或前缀不在合法 CAT 集合。
-   *   以上任一不满足 → error（阻止加载/写入）。不存在 warning/info 建议级。
+   *   Illegal = starts with a forbidden prefix, or format is not `CAT-NNN-desc`, or prefix not in the legal CAT set.
+   *   Any of the above unmet → error (block load/write). No warning/info advisory level.
    *
-   * 这是防止命名污染再生的机制性门禁。
+   * This is the mechanical gate preventing naming pollution from regenerating.
    */
   checkNamingConvention(name: string): ValidationError | null {
     const lower = name.toLowerCase();
@@ -230,13 +230,13 @@ export class RuleValidator {
         return {
           field: 'name',
           code: 'NON_STANDARD_NAME',
-          message: `规则名禁止以 "${prefix}" 开头。必须使用 CAT-NNN-描述 格式（如 SEC-001-code-safety）。`,
+          message: `Rule names must not start with "${prefix}". Must use CAT-NNN-desc format (e.g. SEC-001-code-safety).`,
           level: 'error',
         };
       }
     }
 
-    // 严格三段式格式校验（非空/非纯数字已由 checkRuleName 处理，这里验格式）
+    // Strict three-part format validation (non-empty/non-numeric already handled by checkRuleName, here only the format)
     if (!RULE_NAME_PATTERN.test(name)) {
       const prefix = name.split('-')[0] ?? '';
       const cat = CATEGORY_PREFIX_MAP[prefix];
@@ -244,14 +244,14 @@ export class RuleValidator {
         return {
           field: 'name',
           code: 'NON_STANDARD_NAME_FULL',
-          message: `规则名前缀 "${prefix}" 非法。合法前缀仅限 ${Object.keys(CATEGORY_PREFIX_MAP).join('/')}。必须遵循 CAT-NNN-描述 格式。`,
+          message: `Rule name prefix "${prefix}" is illegal. Legal prefixes are limited to ${Object.keys(CATEGORY_PREFIX_MAP).join('/')}. Must follow CAT-NNN-desc format.`,
           level: 'error',
         };
       }
       return {
         field: 'name',
         code: 'NON_STANDARD_NAME_FULL',
-        message: `规则名 "${name}" 不符合 CAT-NNN-描述 格式（描述段英文小写 kebab，编号 3-4 位）。`,
+        message: `Rule name "${name}" does not match the CAT-NNN-desc format (desc segment lowercase English kebab, number 3-4 digits).`,
         level: 'error',
       };
     }
@@ -269,7 +269,7 @@ export class RuleValidator {
     if (expl === undefined || expl === null || expl === '') return;
     const s = String(expl);
     if (s.length > 5000) {
-      errors.push({ field: 'explanation', code: 'TOO_LONG', message: '解释不能超过 5000 字符' });
+      errors.push({ field: 'explanation', code: 'TOO_LONG', message: 'Explanation cannot exceed 5000 characters' });
     }
   }
 
@@ -280,7 +280,7 @@ export class RuleValidator {
       errors.push({
         field: 'alternative',
         code: 'TOO_LONG',
-        message: '替代方案不能超过 5000 字符',
+        message: 'Alternative cannot exceed 5000 characters',
       });
     }
   }
@@ -337,7 +337,7 @@ export class RuleValidator {
       case 'fieldExists':
         this.checkField(params.field, 'field', errors);
         if (typeof params.exists !== 'boolean') {
-          errors.push({ field: 'exists', code: 'INVALID', message: '请选择存在或不存在' });
+          errors.push({ field: 'exists', code: 'INVALID', message: 'Please choose exists or not exists' });
         }
         break;
       case 'fieldMatch':
@@ -357,27 +357,27 @@ export class RuleValidator {
 
   private checkToolNames(val: unknown, errors: ValidationError[]): void {
     if (!Array.isArray(val) || val.length === 0) {
-      errors.push({ field: 'toolNames', code: 'REQUIRED', message: '请至少选择一个工具' });
+      errors.push({ field: 'toolNames', code: 'REQUIRED', message: 'Please select at least one tool' });
     }
   }
 
   private checkField(val: unknown, fieldKey: string, errors: ValidationError[]): void {
     if (!val || typeof val !== 'string' || !val.trim()) {
-      errors.push({ field: fieldKey, code: 'REQUIRED', message: '字段名不能为空' });
+      errors.push({ field: fieldKey, code: 'REQUIRED', message: 'Field name cannot be empty' });
       return;
     }
     if (!/^[a-zA-Z_][a-zA-Z0-9_.]*$/.test(val as string)) {
       errors.push({
         field: fieldKey,
         code: 'INVALID_CHARS',
-        message: '字段名只能包含字母、数字、下划线、点',
+        message: 'Field name can only contain letters, digits, underscores, dots',
       });
     }
   }
 
   private checkPattern(val: unknown, errors: ValidationError[]): void {
     if (!val || typeof val !== 'string' || !(val as string).trim()) {
-      errors.push({ field: 'pattern', code: 'REQUIRED', message: '匹配正则不能为空' });
+      errors.push({ field: 'pattern', code: 'REQUIRED', message: 'Match regex cannot be empty' });
       return;
     }
     // ReDoS prevention: reject catastrophic backtracking patterns
@@ -385,32 +385,32 @@ export class RuleValidator {
       errors.push({
         field: 'pattern',
         code: 'REDOS_RISK',
-        message: '正则表达式存在 ReDoS 风险，请简化',
+        message: 'Regex has ReDoS risk, please simplify',
       });
     }
   }
 
   private checkValue(val: unknown, fieldKey: string, errors: ValidationError[]): void {
     if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) {
-      errors.push({ field: fieldKey, code: 'REQUIRED', message: '值不能为空' });
+      errors.push({ field: fieldKey, code: 'REQUIRED', message: 'Value cannot be empty' });
     }
   }
 
   private checkList(val: unknown, fieldKey: string, errors: ValidationError[]): void {
     if (!Array.isArray(val) || val.length === 0) {
-      errors.push({ field: fieldKey, code: 'REQUIRED', message: '值列表不能为空' });
+      errors.push({ field: fieldKey, code: 'REQUIRED', message: 'Value list cannot be empty' });
     }
   }
 
   private checkComparisonOp(val: unknown, fieldKey: string, errors: ValidationError[]): void {
     if (!VALID_COMPARISON_OPS.includes(val as string)) {
-      errors.push({ field: fieldKey, code: 'INVALID_OP', message: '无效的比较操作符' });
+      errors.push({ field: fieldKey, code: 'INVALID_OP', message: 'Invalid comparison operator' });
     }
   }
 
   private checkAllOp(val: unknown, fieldKey: string, errors: ValidationError[]): void {
     if (!VALID_ALL_OPS.includes(val as string)) {
-      errors.push({ field: fieldKey, code: 'INVALID_OP', message: '无效的操作符' });
+      errors.push({ field: fieldKey, code: 'INVALID_OP', message: 'Invalid operator' });
     }
   }
 
@@ -428,9 +428,9 @@ export class RuleValidator {
     return false;
   }
 
-  // === §16 新增门禁 ===
+  // === §16 new gates ===
 
-  /** Guard 规则（guard: true）MUST NOT 包含 unless */
+  /** Guard rules (guard: true) MUST NOT contain unless */
   checkGuardWithUnless(rule: RuleDefinition): ValidationError | null {
     const guard = (rule as unknown as Record<string, unknown>).guard as boolean | undefined;
     if (guard === true && rule.unless) {
@@ -444,7 +444,7 @@ export class RuleValidator {
     return null;
   }
 
-  /** unless 条件 MUST NOT 包含 within 或 rate */
+  /** unless conditions MUST NOT contain within or rate */
   checkUnlessWithTemporal(rule: RuleDefinition): ValidationError | null {
     if (!rule.unless?.conditions) return null;
     for (const cond of rule.unless.conditions) {
@@ -463,7 +463,7 @@ export class RuleValidator {
     return null;
   }
 
-  /** 安全规则（category=security）MUST 至少 1 个 condition */
+  /** Security rules (category=security) MUST have at least 1 condition */
   checkSecurityRuleHasCondition(rule: RuleDefinition): ValidationError | null {
     if (rule.category === 'security' && (!rule.conditions || rule.conditions.length === 0)) {
       return {
@@ -476,7 +476,7 @@ export class RuleValidator {
     return null;
   }
 
-  /** 危险正则模式检测 */
+  /** Dangerous regex pattern detection */
   checkRegexRedosRisk(rule: RuleDefinition): ValidationError | null {
     const allConditions = [...(rule.conditions || []), ...(rule.unless?.conditions || [])];
     for (const cond of allConditions) {
@@ -494,7 +494,7 @@ export class RuleValidator {
     return null;
   }
 
-  /** §10.2 E5：RuleCondition 的 expr（Expression 投影面）与 field/operator/value（Simple 投影面）互斥（加载时校验） */
+  /** §10.2 E5: RuleCondition's expr (Expression projection) and field/operator/value (Simple projection) are mutually exclusive (validated at load) */
   checkExprExclusive(cond: RuleCondition): ValidationError | null {
     const hasExpr = cond.expr !== undefined && cond.expr !== null;
     const hasSimple =
@@ -503,14 +503,14 @@ export class RuleValidator {
       return {
         field: 'conditions',
         code: 'WHEN_EXPR_EXCLUSIVE',
-        message: 'expr 与 field/operator/value 互斥，不得共存（§10.2 E5）',
+        message: 'expr and field/operator/value are mutually exclusive, must not coexist (§10.2 E5)',
         level: 'error',
       };
     }
     return null;
   }
 
-  /** AST 复杂度超限检测（深度>64 或 节点>256 或 输入>4096）*/
+  /** AST complexity over-limit detection (depth>64 or nodes>256 or input>4096) */
   checkASTComplexity(rule: RuleDefinition): ValidationError | null {
     // Check condition expressions for complexity
     const allConditions = [...(rule.conditions || []), ...(rule.unless?.conditions || [])];
@@ -535,19 +535,19 @@ export class RuleValidator {
     return null;
   }
 
-  /** 完整命名格式检测 [CAT]-[NNN]-描述 */
+  /** Full naming format detection [CAT]-[NNN]-desc */
   checkNamingConventionFull(rule: RuleDefinition): ValidationError | null {
-    // SPEC v2.0 §16 命名门禁（与 checkNamingConvention 同一二元标准）：
-    //   合法 = CAT-NNN-描述（描述段英文小写 kebab），前缀 MUST 在 CATEGORY_PREFIX_MAP 中。
-    //   非法 → error（阻止加载），无 warning/info 中间态。
-    // ADR-003：前缀白名单无条件校验。历史实现只在正则失配时才查前缀表，
-    // 导致白名单形同虚设（XYZ-999-foo 也能通过），与本文件注释的 MUST 承诺不符。
+    // SPEC v2.0 §16 naming gate (same binary standard as checkNamingConvention):
+    //   Legal = CAT-NNN-desc (desc segment lowercase English kebab), prefix MUST be in CATEGORY_PREFIX_MAP.
+    //   Illegal → error (block load), no warning/info middle state.
+    // ADR-003: prefix whitelist validated unconditionally. The historical implementation only looked up the prefix table when the regex failed,
+    // making the whitelist ineffective (XYZ-999-foo also passed), inconsistent with the MUST promise in this file's comments.
     const unregistered = rule.name.split('-')[0] ?? '';
     if (!CATEGORY_PREFIX_MAP[unregistered]) {
       return {
         field: 'name',
         code: 'NON_STANDARD_NAME_FULL',
-        message: `规则名前缀 "${unregistered}" 未登记。合法前缀仅限 ${Object.keys(CATEGORY_PREFIX_MAP).join('/')}（注册制：新增前缀须先登记于 erdl-schema.RULE_NAME_PREFIXES）。`,
+        message: `Rule name prefix "${unregistered}" is unregistered. Legal prefixes are limited to ${Object.keys(CATEGORY_PREFIX_MAP).join('/')} (registration-based: new prefixes must first be registered in erdl-schema.RULE_NAME_PREFIXES).`,
         level: 'error',
       };
     }
@@ -557,25 +557,25 @@ export class RuleValidator {
         return {
           field: 'name',
           code: 'NON_STANDARD_NAME_FULL',
-          message: `规则名前缀 "${prefix}" 非法。合法前缀仅限 ${Object.keys(CATEGORY_PREFIX_MAP).join('/')}。必须遵循 CAT-NNN-描述 格式。`,
+          message: `Rule name prefix "${prefix}" is illegal. Legal prefixes are limited to ${Object.keys(CATEGORY_PREFIX_MAP).join('/')}. Must follow CAT-NNN-desc format.`,
           level: 'error',
         };
       }
       return {
         field: 'name',
         code: 'NON_STANDARD_NAME_FULL',
-        message: `规则名 "${rule.name}" 不符合 CAT-NNN-描述 格式（描述段英文小写 kebab，编号 3-4 位）。`,
+        message: `Rule name "${rule.name}" does not match the CAT-NNN-desc format (desc segment lowercase English kebab, number 3-4 digits).`,
         level: 'error',
       };
     }
     return null;
   }
 
-  // === §16 新增门禁（补全 3 个未实现项）===
+  // === §16 new gates (completing 3 unimplemented items) ===
 
   /**
    * §16 no-tool-constraint (warning):
-   * coding/security 规则 SHOULD 指定 tool.name 条件，避免无差别匹配。
+   * coding/security rules SHOULD specify a tool.name condition to avoid indiscriminate matching.
    */
   checkToolConstraint(rule: RuleDefinition): ValidationError | null {
     if (rule.category !== 'coding' && rule.category !== 'security') return null;
@@ -596,15 +596,15 @@ export class RuleValidator {
   }
 
   /**
-   * §3.6 Guard then 限制：Guard 规则（guard: true）的 then 仅支持 Ring 0-2 动作 + CORRECT。
-   * Ring 3 内部动作（STRATEGIZE/AUDIT/CALCULATE/VALIDATE）不允许出现在 Guard 规则中。
+   * §3.6 Guard then restriction: Guard rules (guard: true) support only Ring 0-2 actions + CORRECT.
+   * Ring 3 internal actions (STRATEGIZE/AUDIT/CALCULATE/VALIDATE) are not allowed in Guard rules.
    */
   checkGuardThenRestriction(rule: RuleDefinition): ValidationError | null {
     const guard = (rule as unknown as Record<string, unknown>).guard as boolean | undefined;
     if (!guard) return null;
     const decision = rule.action?.decision ?? 'ALLOW';
     // Allowed for Guard: Ring 0-2 actions + CORRECT (Ring 3 exception per §3.6)
-    // 2026-08-28 review 收口：改用单一事实源 GUARD_ALLOWED_DECISIONS
+    // 2026-08-28 review: switch to the single source of truth GUARD_ALLOWED_DECISIONS
     const ALLOWED_GUARD_DECISIONS: readonly string[] = GUARD_ALLOWED_DECISIONS;
     if (!ALLOWED_GUARD_DECISIONS.includes(decision)) {
       return {

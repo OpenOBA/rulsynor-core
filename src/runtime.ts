@@ -87,7 +87,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
   ];
 
   const auditHashes: string[] = [];
-  // R3 修复：previous_hash 链锚定（SPEC v2.0 MUST）——每步 DO 锚定上一步哈希
+  // R3 fix: previous_hash chain anchoring (SPEC v2.0 MUST) — each step's DO anchors the previous step's hash
   let prevHash: string | null = null;
   let finalResponse = '';
   let step = 0;
@@ -116,7 +116,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       const evalResult = evaluator.evaluate(opts.compiledRules, ctx);
       const reason = evalResult.primaryReason || 'guard rule matched';
 
-      // R3 修复：CORRECT 决策先应用纠偏再决定是否放行（无纠偏内容则 fail-close 不执行）
+      // R3 fix: CORRECT decision first applies the correction before deciding whether to allow (no correction content → fail-close, not executed)
       let effectiveArgs = tc.arguments;
       const canApplyCorrection =
         evalResult.decision === 'CORRECT' &&
@@ -126,7 +126,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         effectiveArgs = { ...tc.arguments, __correction: evalResult.primaryCorrection };
       }
 
-      // 是否放行执行：仅 ALLOW/NOTIFY/GUIDE（建议性）与带纠偏的 CORRECT 放行；其余一律不执行
+      // Whether to execute: only ALLOW/NOTIFY/GUIDE (advisory) and CORRECT with correction are allowed; all others not executed
       const shouldExecute =
         evalResult.decision === 'ALLOW' ||
         evalResult.decision === 'NOTIFY' ||
@@ -164,7 +164,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       prevHash = auditHash;
       onGuardEval?.(evalResult.decision, auditHash, step);
 
-      // R3 修复：穷尽式决策分发——任何非放行决策都不执行工具（含 ESCALATE/DEFER/DELEGATE/WORKFLOW 与未知决策）
+      // R3 fix: exhaustive decision dispatch — any non-allow decision does not execute the tool (incl. ESCALATE/DEFER/DELEGATE/WORKFLOW and unknown decisions)
       if (!shouldExecute) {
         switch (evalResult.decision) {
           case 'DENY':
@@ -184,7 +184,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
             finalResponse = `Rollback triggered: ${reason}`;
             break;
           case 'CORRECT':
-            // 无纠偏内容的 CORRECT：fail-close，转人工
+            // CORRECT with no correction content: fail-close, escalate to human
             finalResponse = `Correction required but no correction provided: ${reason}`;
             break;
           case 'DEFER':
@@ -197,7 +197,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
             finalResponse = `Workflow handoff required (not supported by this runtime): ${reason}`;
             break;
           default:
-            // 未知决策一律 fail-close
+            // unknown decision always fail-close
             finalResponse = `Action blocked (unknown decision "${evalResult.decision}", fail-close): ${reason}`;
             break;
         }

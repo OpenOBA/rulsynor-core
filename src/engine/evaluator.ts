@@ -11,7 +11,7 @@
  *      (only DENY→ALLOW direction; never to a less-safe state)
  *   5. override within same Ring: override rule runs first regardless of priority
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-07 · updated 2026-07-09 (override + rings)
  * @license MIT
  */
@@ -48,21 +48,21 @@ function overrideEnables(rule: RuleDefinition): boolean {
 }
 
 export class Evaluator {
-  // SPEC v2.0 §11: within/rate 有状态算子 —— 状态外置到 GuardStateManager（2026-08-15）
-  // 表达式树/求值保持纯函数（E1）；滑动窗口计数由 stateManager 在树外维护。
+  // SPEC v2.0 §11: within/rate stateful operators — state externalized to GuardStateManager (2026-08-15)
+  // Expression tree/evaluation stays pure (E1); sliding-window counting maintained by stateManager outside the tree.
   private readonly stateManager: GuardStateManager;
 
-  // 归一（2026-08-15）：条件求值层用表达式树内核（E7 单一求值核心）
+  // Normalization (2026-08-15): condition evaluation layer uses the expression-tree kernel (E7 single evaluation core)
   private readonly treeEvaluator = new ExprTreeEvaluator();
 
   // E-10 fix: evaluation counter for periodic tracker cleanup
   private evalCount = 0;
 
-  /** E9：时间源注入（默认 SystemClock）。测试用 VirtualClock 冻结 as_of，保证可复现。 */
+  /** E9: time source injection (default SystemClock). Tests use VirtualClock to freeze as_of for reproducibility. */
   private readonly clock: Clock;
 
-  /** E9：本次求值的时间基准（asOf）。evaluate() 入口注入一次，禁表达式树内核自读墙钟。
-   *  同步求值期间不变，保证同一次决策内所有规则共享同一 asOf。 */
+  /** E9: time base for this evaluation (asOf). Injected once at evaluate() entry; the expression-tree kernel must not read the wall clock itself.
+   *  Fixed during synchronous evaluation, so all rules in a single decision share the same asOf. */
   private asOf: Date | null = null;
 
   constructor(stateManager?: GuardStateManager, clock?: Clock) {
@@ -71,7 +71,7 @@ export class Evaluator {
   }
 
   evaluate(rules: RuleDefinition[], context: Record<string, unknown>): EvaluationResult {
-    // E9：注入本次求值的时间基准（asOf）。引擎在此经注入 Clock 读一次时间，表达式树内核保持纯函数。
+    // E9: inject the time base (asOf) for this evaluation. The engine reads time once via the injected Clock; the expression-tree kernel stays pure.
     this.asOf = new Date(this.clock.now());
 
     // E-10 fix: periodically clean up expired tracker entries to prevent memory leak
@@ -83,7 +83,7 @@ export class Evaluator {
     // E-04 fix: deep clone context to prevent mutation of caller's object
     // evaluate() may set context['workflow.active'] (lines 104, 477) — without cloning,
     // repeated evaluations with the same context object would be polluted by prior workflow state
-    // S3 修复：structuredClone 替代 JSON 往返——保留 Date/BigInt、循环引用安全、不剥离 undefined
+    // S3 fix: structuredClone replaces the JSON round-trip — preserves Date/BigInt, cycle-safe, does not strip undefined
     context = structuredClone(context);
 
     // P4.3: if workflow is active, evaluate current step
@@ -124,7 +124,7 @@ export class Evaluator {
     const ringKeys = [...byRing.keys()].sort((a, b) => a - b);
 
     const allMatched: RuleMatch[] = [];
-    // RFC-002 §2.4: 有状态算子（within/rate）窗口计数快照（进 DO temporal_state）
+    // RFC-002 §2.4: stateful operator (within/rate) window count snapshot (into DO temporal_state)
     const temporalState: TemporalStateEntry[] = [];
     // SPEC v2.0 §11: unless exemptions recorded separately — NOT in matchedRules
     // (v1.1 vectors DO-024/DO-026 expect matched_rules=[] when only unless fires)
@@ -188,7 +188,7 @@ export class Evaluator {
 
         const match = this.makeMatch(rule, ring as RingLevel);
         allMatched.push(match);
-        // RFC-002 §2.4: 收集有状态算子（within/rate）窗口计数快照进 DO temporal_state
+        // RFC-002 §2.4: collect stateful operator (within/rate) window count snapshots into DO temporal_state
         this.collectTemporalState(rule, temporalState);
 
         // P4.3: WORKFLOW — if rule has workflow, start workflow mode
@@ -415,8 +415,8 @@ export class Evaluator {
   // ============================================
 
   /**
-   * RFC-002 §2.4: 收集命中规则的有状态算子（within/rate）窗口计数快照。
-   * 在命中后调用（计数已含本次命中前的放行次数），使重放验证时按序列累计可对齐。
+   * RFC-002 §2.4: collect window count snapshots for the stateful operators (within/rate) of a matched rule.
+   * Called after a match (the count already includes prior allows before this match), so replay verification accumulates in sequence.
    */
   private collectTemporalState(rule: RuleDefinition, out: TemporalStateEntry[]): void {
     for (const cond of rule.conditions) {
@@ -448,21 +448,21 @@ export class Evaluator {
   }
 
   /**
-   * rate 计数 key：含 field + operator + value + rate，确保不同操作（不同 value）独立限流。
-   * 修复（2026-08-27）：原 key `rate:field:rate` 不含 value，导致 exec/write_file 共享计数。
+   * rate counter key: includes field + operator + value + rate, so different operations (different values) rate-limit independently.
+   * Fix (2026-08-27): the old key `rate:field:rate` omitted value, causing exec/write_file to share a counter.
    */
   private rateKey(field: string, operator: string, value: unknown, rate: string): string {
     return `rate:${field}:${operator}:${this.serializeValue(value)}:${rate}`;
   }
 
   /**
-   * within 计数 key：含 field + operator + value，确保不同操作独立去重。
+   * within counter key: includes field + operator + value, so different operations deduplicate independently.
    */
   private withinKey(field: string, operator: string, value: unknown): string {
     return `within:${field}:${operator}:${this.serializeValue(value)}`;
   }
 
-  /** value 稳定序列化（用于计数 key，不进 DO 哈希） */
+  /** Stable serialization of a value (used for counter keys, not part of the DO hash) */
   private serializeValue(value: unknown): string {
     if (value === null) return 'null';
     if (value === undefined) return 'undefined';
@@ -471,7 +471,7 @@ export class Evaluator {
     return JSON.stringify(value);
   }
 
-  /** 构造树求值的 EvalContext（复用旧 resolveField 语义 + 注入 asOf） */
+  /** Build the tree-evaluation EvalContext (reuse the old resolveField semantics + inject asOf) */
   private buildTreeContext(context: Record<string, unknown>): {
     resolveField: (f: string) => unknown;
     resolveVar: (v: string) => unknown;
@@ -489,19 +489,19 @@ export class Evaluator {
   }
 
   private evaluateLeaf(cond: RuleCondition, context: Record<string, unknown>): boolean {
-    // E7 + §12 Expression 投影面：结构化表达式树（S-expression）优先，直接走树内核求值
+    // E7 + §12 Expression projection: structured expression tree (S-expression) takes priority, evaluate directly via the tree kernel
     if (cond.expr !== undefined && cond.expr !== null) {
       try {
         const tree = fromSExpr(cond.expr);
         const evalCtx = this.buildTreeContext(context);
         return this.treeEvaluator.evaluate(tree, evalCtx).value === true;
       } catch (e) {
-        // S8 修复：按异常类型分流——资源超限（ExprLimitError）属攻击信号，必须可观测；
-        // 解析失败等结构性错误静默 fail-close（E12）
+        // S8 fix: route by exception type — resource limit (ExprLimitError) is an attack signal and must be observable;
+        // structural errors like parse failure silently fail-close (E12)
         if (e instanceof ExprLimitError) {
-          console.warn(`[Evaluator] 表达式资源超限（fail-close）: ${e.message}`);
+          console.warn(`[Evaluator] expression resource limit exceeded (fail-close): ${e.message}`);
         }
-        // S-expression 解析失败 → 求值失败（fail-close）
+        // S-expression parse failure → evaluation failure (fail-close)
         return false;
       }
     }
@@ -513,9 +513,9 @@ export class Evaluator {
 
     const raw = this.resolveField(field, context);
 
-    // §10 E11 空值传播：字段缺失时，除 ==null/!=null/exists 外，所有比较返回 false
-    // 语义："字段不存在"统一视为"条件不满足"而非"求值异常"
-    // 只有 exists/not_exists 和 ==null/!=null 能感知字段的存在性
+    // §10 E11 null propagation: when a field is missing, all comparisons return false except ==null/!=null/exists
+    // Semantics: "field absent" is uniformly treated as "condition not satisfied", not "evaluation error"
+    // Only exists/not_exists and ==null/!=null can perceive a field's presence
     const isAbsent = raw === undefined || raw === null;
     if (isAbsent) {
       if (operator === 'exists') return false;
@@ -526,46 +526,46 @@ export class Evaluator {
       return false;
     }
 
-    // 归一（2026-08-15）：纯条件用表达式树内核求值（E7 单一求值核心）
-    // 别名 matches→match / neq→ne 由 normalizeOperator 统一处理（rule-to-expr.ts）。
+    // Normalization (2026-08-15): pure conditions evaluated via the expression-tree kernel (E7 single evaluation core)
+    // Aliases matches→match / neq→ne handled uniformly by normalizeOperator (rule-to-expr.ts).
     const normalizedOp = normalizeOperator(operator);
     if (normalizedOp !== null && field) {
-      // R2 修复：与 expr 分支（上方）对齐，树内核求值异常一律 fail-close（E12），
-      // 绝不向 Guard 调用方外抛（如上下文含极端数值、超限攻击等）
+      // R2 fix: align with the expr branch (above); tree-kernel evaluation errors always fail-close (E12),
+      // never propagate to the Guard caller (e.g. extreme values, limit attacks)
       try {
         const tree = compileSimpleCondition({ field, operator: normalizedOp, value: cond.value });
         const evalCtx = this.buildTreeContext(context);
         const result = this.treeEvaluator.evaluate(tree, evalCtx);
         const matched = result.value === true;
 
-        // SPEC v2.0 §11: rate 限流（后置：仅字段匹配才计数；含 value 隔离，不同操作独立限流）
-        // 修复（2026-08-27）：原实现语义反了（额度内拦截、超限放行），record 依赖「命中后 commit」形成死锁，
-        // 且 rate 前置导致字段不匹配也计数、rate key 不含 value 导致不同操作共享计数。
-        // 正确语义：前 N 次放行（并计数），第 N+1 次起拦截。
+        // SPEC v2.0 §11: rate limiting (post-match: only counts on field match; includes value isolation, different operations rate-limit independently)
+        // Fix (2026-08-27): the original semantics were inverted (blocked within quota, allowed when exceeded), record relied on "commit after match" causing a deadlock,
+        // and rate was pre-matched so non-matching fields also counted, and the rate key omitted value causing shared counters.
+        // Correct semantics: allow the first N (and count), block from the N+1-th onwards.
         if (matched && cond.rate) {
           const rateKey = this.rateKey(field, operator, cond.value, cond.rate);
           const windowMs = this.parseWindow(cond.rate.split('/')[1] ?? '1m');
           const maxCount = parseInt(cond.rate.split('/')[0] ?? '10', 10);
           if (this.stateManager.checkRate(rateKey, maxCount, windowMs)) {
-            // 未超限：记录本次操作（放行），条件不成立
+            // Within quota: record this operation (allow), condition not satisfied
             this.stateManager.recordRate(rateKey, windowMs);
             return false;
           }
-          // 超限：条件成立（触发拦截）
+          // Exceeded: condition satisfied (trigger block)
         }
 
-        // SPEC v2.0 §11: within 去重（后置：仅字段匹配才计数；含 value 隔离）
-        // 修复（2026-08-27）：原实现死代码（首次无历史→不命中→不记录→永远无历史）。
-        // 正确语义：首次触发（无历史）→ record + 放行；窗口内再次触发（有历史）→ 拦截。
+        // SPEC v2.0 §11: within dedup (post-match: only counts on field match; includes value isolation)
+        // Fix (2026-08-27): the original was dead code (first time no history → no match → not recorded → never any history).
+        // Correct semantics: first trigger (no history) → record + allow; re-trigger within the window (has history) → block.
         if (matched && cond.within) {
           const trackerKey = this.withinKey(field, operator, cond.value);
           const windowMs = this.parseWindow(cond.within);
           if (!this.stateManager.checkWithin(trackerKey, windowMs)) {
-            // 窗口内无历史（首次触发）：记录本次，条件不成立（放行）
+            // No history within the window (first trigger): record, condition not satisfied (allow)
             this.stateManager.recordWithin(trackerKey);
             return false;
           }
-          // 窗口内有历史：条件成立（触发拦截）
+          // History within the window: condition satisfied (trigger block)
         }
 
         return matched;
@@ -574,9 +574,9 @@ export class Evaluator {
       }
     }
 
-    // normalizeOperator 覆盖全部 28 个纯条件算子；走到这里说明是
-    // 非纯算子（within/rate 已在主循环/前置处理，pattern/keywords 非纯）。
-    // E7：唯一求值核心 = 表达式树内核，不再有并行的 switch 求值器。
+    // normalizeOperator covers all 28 pure condition operators; reaching here means it is a
+    // non-pure operator (within/rate already handled in the main loop / pre-stage, pattern/keywords non-pure).
+    // E7: the only evaluation core = expression-tree kernel, no parallel switch evaluator.
     return false;
   }
 

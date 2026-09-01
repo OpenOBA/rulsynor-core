@@ -81,7 +81,7 @@ describe('OpSemRegistry', () => {
       const r = registry.classify('exec', {});
       expect(r.code).toBe('OP_EXEC');
       expect(r.risk).toBe('high');
-      expect(r.label).toBe('未知操作');
+      expect(r.label).toBe('unknown operation');
     });
 
     it('isLoaded is false before load', () => {

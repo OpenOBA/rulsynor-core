@@ -1,23 +1,23 @@
 /**
- * Clock — 时间抽象层
+ * Clock — time abstraction layer
  *
- * 使时间依赖规则（within/rate）可测试。
- * Phase 0 必须完成（Henry 决策 #2）。
+ * Makes time-dependent rules (within/rate) testable.
+ * Must be completed in Phase 0 (Henry decision #2).
  */
 
 export interface Clock {
-  /** 返回当前时间（毫秒级 Unix timestamp） */
+  /** Return the current time (millisecond Unix timestamp) */
   now(): number;
 
-  /** 冻结到指定时间（测试用） */
+  /** Freeze to a specified time (test only) */
   freeze?(time: number): void;
 
-  /** 时间快进（测试用） */
+  /** Advance time (test only) */
   advance?(ms: number): void;
 }
 
 /**
- * SystemClock — 真实系统时钟
+ * SystemClock — real system clock
  */
 export class SystemClock implements Clock {
   now(): number {
@@ -26,9 +26,9 @@ export class SystemClock implements Clock {
 }
 
 /**
- * VirtualClock — 虚拟时钟（测试用）
+ * VirtualClock — virtual clock (test only)
  *
- * 初始时间为 0。支持 freeze 到任意时间点、advance 快进。
+ * Initial time is 0. Supports freeze to any point in time and advance.
  */
 export class VirtualClock implements Clock {
   private _now: number;

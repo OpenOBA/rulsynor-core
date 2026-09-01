@@ -5,10 +5,10 @@
  * when rules are loaded from DB or file system.
  *
  * This is the entry point for rule quality enforcement:
- *   - RuleStore.load() calls check()（DbRuleStore/FileRuleStore 实现延后，非 MVP）
+ *   - RuleStore.load() calls check() (DbRuleStore/FileRuleStore implementation deferred, not MVP)
  *   - RuleService.createFromTemplate() already validates per-rule
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-21
  */
 
@@ -42,7 +42,7 @@ export class RuleQualityGate {
   /**
    * Check all loaded rules against SPEC v2.0 quality gates.
    *
-   * §16 规则质量门禁（本实现 11 项 = 8 SPEC 核心 + 3 实现扩展）:
+   * §16 rule quality gate (this implementation has 11 checks = 8 SPEC core + 3 implementation extensions):
    *   Error (reject on load):
    *     1. wild-when-with-blocking-then (§10.6)
    *     2. no-condition-on-security-rule (§10.6)  ← v1.1 new
@@ -110,7 +110,7 @@ export class RuleQualityGate {
       const astErr = ruleValidator.checkASTComplexity(rule);
       if (astErr) issues.push(astErr);
 
-      // §16: 命名格式完整校验（error，二元判定）
+      // §16: full naming-format validation (error, binary judgment)
       const nameFullErr = ruleValidator.checkNamingConventionFull(rule);
       if (nameFullErr) issues.push(nameFullErr);
 

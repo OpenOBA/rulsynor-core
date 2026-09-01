@@ -107,7 +107,7 @@ export interface DecisionObject {
   confidence_score: number;
   data_modification_expected: boolean;
   extensions: unknown[];
-  /** 签名模式字段：哈希模式下不输出（签名层落地后启用） */
+  /** Signature-mode field: not output in hash mode (enabled after the signing layer lands) */
   signature?: string;
   signing_key_id?: string;
 }
@@ -238,11 +238,11 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     confidence_score: confidenceScore,
     data_modification_expected: dataModification,
     extensions: [],
-    // 哈希模式下 MUST NOT 输出 signature / signing_key_id（RFC-002 §1.1：签名模式字段，
-    // 哈希模式不存在；§1.3#6 Omit over Null：禁置空/占位值）。
-    // 历史实现曾输出 signature:'NOT_SIGNED' / signing_key_id:'no-key-v1' 占位值 ——
-    // 后果是合规假阳（fail-open）：若 activated_fields 声明了 signature，
-    // 存在性检查会因「字段存在」而通过，而实际并未签名（见 2026-08-25 深度 review）。
+    // In hash mode MUST NOT output signature / signing_key_id (RFC-002 §1.1: signature-mode fields,
+    // absent in hash mode; §1.3#6 Omit over Null: no empty/placeholder values).
+    // The historical implementation output signature:'NOT_SIGNED' / signing_key_id:'no-key-v1' placeholders —
+    // causing compliance false-positive (fail-open): if activated_fields declares signature,
+    // the existence check passes because "field exists", while actually nothing was signed (see 2026-08-25 deep review).
   };
 
   // JCS + SHA-256
@@ -251,8 +251,8 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   // position tampering detection (AV-013 canary).
   const preimage: Record<string, unknown> = { ...recordWithoutHash };
   delete (preimage.audit as Record<string, unknown>).hash;
-  // 防御性删除（RUNNER_CONTRACT R2）：哈希模式下两字段不存在，删除为 no-op；
-  // 签名层落地后仍 MUST 剔除，故保留。
+  // Defensive deletion (RUNNER_CONTRACT R2): in hash mode the two fields don't exist, deletion is a no-op;
+  // after the signing layer lands they MUST still be stripped, so kept.
   delete preimage.signature;
   delete preimage.signing_key_id;
 

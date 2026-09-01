@@ -327,7 +327,7 @@ describe('checkNamingConventionFull — ADR-003 前缀注册制门禁', () => {
     expect(r).not.toBeNull();
     expect(r?.code).toBe('NON_STANDARD_NAME_FULL');
     expect(r?.level).toBe('error');
-    expect(r?.message).toContain('未登记');
+    expect(r?.message).toContain('unregistered');
   });
 
   it('前缀已登记但格式非法（编号位数/描述大写）→ error', () => {

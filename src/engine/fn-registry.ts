@@ -4,12 +4,12 @@
  * Industry function registration, sandbox execution, resource quotas,
  * and degradation protocol (on_timeout fallback).
  *
- * ⚠️ 信任边界（S7 说明）：timeout 通过 Promise.race 实现，仅覆盖异步 impl。
- * 同步死循环 impl 会阻塞事件循环，超时无法触发；超时后 impl 亦不可取消。
- * 因此注册的 fn 实现 MUST 为部署方可信代码（与规则包同级信任锚）。
- * SPEC §59 Worker Threads 硬隔离列入 Phase 2（与 ECDSA 签名基础设施同批）。
+ * ⚠️ Trust boundary (S7 note): timeout is implemented via Promise.race, covering only async impls.
+ * A synchronous infinite-loop impl blocks the event loop, so the timeout cannot fire; nor can the impl be cancelled after timeout.
+ * Therefore registered fn implementations MUST be deployer-trusted code (same trust anchor level as the rule package).
+ * SPEC §59 Worker Threads hard isolation is deferred to Phase 2 (same batch as ECDSA signing infrastructure).
  *
- * @author 唐浩然 · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-02 · updated 2026-08-10 (sandbox + quotas + degradation)
  * @license MIT
  */
@@ -38,7 +38,7 @@ export interface FnRegistration {
   fallbackValue?: unknown;
   /** SPEC v2.0 §16.1: Sandbox scope. Default: 'pure' */
   sandbox?: SandboxScope;
-  /** SPEC v2.0 §16.1: 确定性豁免声明——用于 Guard 求值路径的函数须声明并保证确定性。默认 false（不确定，不得进 Guard 求值） */
+  /** SPEC v2.0 §16.1: determinism declaration — functions used on the Guard evaluation path must declare and guarantee determinism. Default false (non-deterministic, must not enter Guard evaluation) */
   deterministic?: boolean;
 }
 
@@ -80,7 +80,7 @@ export class ERDLFnRegistry {
     return this.fns.get(name)?.signature;
   }
 
-  /** SPEC v2.0 §16.1：查询函数是否声明确定性（Guard 求值路径须确定性） */
+  /** SPEC v2.0 §16.1: query whether a function declares determinism (Guard evaluation path requires determinism) */
   isDeterministic(name: string): boolean {
     return this.fns.get(name)?.deterministic === true;
   }

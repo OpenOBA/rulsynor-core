@@ -4,7 +4,7 @@
  * Core type definitions for ERDL rules.
  * Supports personal rules, team standards, enterprise policies, and compliance mandates.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-07 · updated 2026-07-09 (compliance scope + extended categories)
  * @license MIT
  */
@@ -22,12 +22,12 @@ import type { ConditionOperator as SchemaConditionOperator } from './erdl-schema
 export type ConditionKind = 'context_matches';
 
 /** Spec v2.0 §11 comparison operators */
-// 2026-08-28 review 收口：原为本地 28 项联合类型（第二份枚举定义）。
-// 现从单一事实源派生，禁止在本文件再列举运算符。
+// 2026-08-28 review: was a local 28-item union type (a second enum definition).
+// Now derived from the single source of truth; listing operators again in this file is forbidden.
 export type ConditionOperator = SchemaConditionOperator;
 
 export interface RuleCondition {
-  /** 条件种类（SPEC v1.1 遗留，v2.0 已废弃；保留为可选以兼容旧数据，求值逻辑不读取） */
+  /** Condition kind (SPEC v1.1 legacy, deprecated in v2.0; kept optional for old-data compatibility, ignored by evaluation logic) */
   kind?: ConditionKind;
 
   /** Keywords to match against agent intent (intent_contains) */
@@ -52,9 +52,9 @@ export interface RuleCondition {
   rate?: string;
 
   /**
-   * 结构化表达式树（S-expression JSON 形态，SPEC v2.0 §12 外在形态）。
-   * 承载 field/operator/value 无法表达的复杂条件（时间运算/算术/fn 委派等）。
-   * 求值时经 fromSExpr 转树；与 field/operator/value 互斥（E5）。
+   * Structured expression tree (S-expression JSON form, SPEC v2.0 §12 external form).
+   * Carries complex conditions that field/operator/value cannot express (time arithmetic/arithmetic/fn delegation etc.).
+   * Converted to a tree via fromSExpr at evaluation; mutually exclusive with field/operator/value (E5).
    */
   expr?: unknown;
 }
@@ -63,10 +63,10 @@ export interface RuleCondition {
 // Rule Action / Decision
 // ============================================
 
-/** SPEC v2.0 §27: 决策类型（13 对外 + 4 内部 + rulsynor 扩展）。
+/** SPEC v2.0 §27: decision types (13 external + 4 internal + rulsynor extensions).
  *  CENSOR is a rulsynor extension (after-audit pipeline), not in SPEC v2.0. */
 export type Decision =
-  // SPEC v2.0 §27: 13 对外可见
+  // SPEC v2.0 §27: 13 externally visible
   | 'ALLOW'
   | 'DENY'
   | 'CORRECT'
@@ -81,9 +81,9 @@ export type Decision =
   | 'WORKFLOW'
   | 'WORKFLOW_PROGRESS'
   | 'WORKFLOW_WAITING'
-  // rulsynor extension：正向引导（指导员）——规则命中时指导 LLM 按 SOP/最佳实践行动
+  // rulsynor extension: positive guidance (guide) — when matched, guides the LLM to act per SOP/best practice
   | 'GUIDE'
-  // SPEC v2.0 §27: 4 内部推理（不进 Decision Object）
+  // SPEC v2.0 §27: 4 internal reasoning (not in Decision Object)
   | 'STRATEGIZE'
   | 'AUDIT'
   | 'CALCULATE'
@@ -108,9 +108,9 @@ export interface RuleAction {
   /** Instruction for the LLM to follow */
   instruction?: string;
   /**
-   * 关联知识条目 id 列表（完整 SOP / 最佳实践 / 法规原文的引用）。
-   * 指导类决策（GUIDE 等）命中时，LLM 据此检索完整知识详情。
-   * 规则轻量、知识厚重、各司其职。
+   * List of linked knowledge entry ids (references to full SOP / best practice / regulation text).
+   * On a guide-type decision (GUIDE etc.) match, the LLM retrieves full knowledge details from these.
+   * Rules stay lightweight, knowledge stays rich, each does its own job.
    */
   knowledge_refs?: string[];
   /** Reason shown to user when blocked or halted */
@@ -122,7 +122,7 @@ export interface RuleAction {
   explanation?: string | { zh: string; en: string };
   /**
    * Suggested alternative action when the operation is blocked.
-   * Shown as "替代方案: ..." or "Alternative: ...".
+   * Shown as "Alternative: ..." (localized).
    */
   alternative?: string | { zh: string; en: string };
   /** Execution Ring level (0-3). Guardian rules default Ring 0. */
@@ -163,7 +163,7 @@ export type RuleCategory =
   | 'custom';
 
 /**
- * SPEC v1.2 遗留 §3.2.0  — Six-tier rule hierarchy.
+ * SPEC v1.2 legacy §3.2.0  — Six-tier rule hierarchy.
  * Tier 0 (Moral), 1 (Compliance), 2 (Security), 3 (Policy), 4 (Role), 5 (Convention).
  */
 export type RuleTier = 0 | 1 | 2 | 3 | 4 | 5;
@@ -177,7 +177,7 @@ export const TIER_LABELS: Record<RuleTier, string> = {
   5: 'Convention',
 };
 
-/** SPEC v1.2 遗留 §3.2.0a  — Tier override semantics */
+/** SPEC v1.2 legacy §3.2.0a  — Tier override semantics */
 export type TierOverride = 'none' | 'human_approval' | 'emergency_override' | 'always';
 
 export const TIER_RING_COMPAT: Record<RuleTier, number[]> = {
@@ -232,14 +232,14 @@ export interface RuleDefinition {
   version?: number;
 
   /**
-   * 法条依据（法规条款出处，如《信访工作条例》第二十三条第2款）。
-   * 供审批裁决渲染带出（seed 提取入库与 DB 读回链路延后，非 MVP）。
+   * Legal basis (source of the regulation clause, e.g. Article 23(2) of the Petition Work Regulations).
+   * Rendered for approval adjudication (seed extraction and DB read-back deferred, not MVP).
    */
   legal_basis?: string | null;
 
   /**
-   * 法条原文摘录（规则依据的法规原文）。
-   * 供审批裁决渲染带出（seed 提取入库延后，非 MVP）。
+   * Excerpt of the legal text (the original regulation the rule is based on).
+   * Rendered for approval adjudication (seed extraction deferred, not MVP).
    */
   source_text?: string | null;
 
@@ -274,15 +274,15 @@ export interface RuleMatch {
   alternative?: string | { zh: string; en: string };
   ring?: RingLevel;
   correction?: string;
-  /** CORRECT 决策携带的修正后参数（参数覆盖） */
+  /** Corrected arguments carried by the CORRECT decision (parameter override) */
   correctedArgs?: Record<string, unknown>;
   priority: number;
 }
 
 /**
- * 有状态算子（within/rate）的窗口计数快照（SPEC v2.0 §11 / RFC-002 §2.4）。
- * 进 DO 的 `evaluation.temporal_state`，使「为何此刻触发限流」可离线重算验证。
- * 字段结构与 RFC-002 §2.4 冻结一致：{ rule_id, operator, field, window_ms, count, limit? }。
+ * Window count snapshot for stateful operators (within/rate) (SPEC v2.0 §11 / RFC-002 §2.4).
+ * Goes into the DO `evaluation.temporal_state`, so "why rate-limiting fired at this moment" can be recomputed offline.
+ * Field structure frozen consistent with RFC-002 §2.4: { rule_id, operator, field, window_ms, count, limit? }.
  */
 export interface TemporalStateEntry {
   rule_id: string;
@@ -290,7 +290,7 @@ export interface TemporalStateEntry {
   field: string;
   window_ms: number;
   count: number;
-  /** rate 算子的上限（如 "5/1m" 的 5）；within 无上限，省略 */
+  /** Upper limit of the rate operator (e.g. 5 in "5/1m"); within has no limit, omitted */
   limit?: number;
 }
 
@@ -319,7 +319,7 @@ export interface EvaluationResult {
   /** Total rules matched */
   totalMatched: number;
 
-  /** 有状态算子（within/rate）窗口计数快照（进 DO temporal_state，RFC-002 §2.4）；无命中时省略/空数组 */
+  /** Window count snapshot of stateful operators (within/rate) (into DO temporal_state, RFC-002 §2.4); omitted/empty array when no match */
   temporalState?: TemporalStateEntry[];
 }
 

@@ -77,7 +77,7 @@ describe('PlanParser', () => {
     });
 
     it('提取元数据', () => {
-      expect(plan.goal).toBe('未说明');
+      expect(plan.goal).toBe('not specified');
       expect(plan.successCriteria).toContain('ESLint');
       expect(plan.estimatedRounds).toBe(4);
       expect(plan.riskLevel).toBe('low');

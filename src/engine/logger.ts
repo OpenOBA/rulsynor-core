@@ -1,12 +1,12 @@
 /**
- * logger — 轻量结构化日志器（零依赖，替代 rulsynor 的 RulsynorLogger）
+ * logger — lightweight structured logger (zero-dependency, replaces rulsynor's RulsynorLogger)
  *
- * 接口与 rulsynor RulsynorLogger 兼容（debug/verbose/log/warn/error），
- * 但去掉 @nestjs/common 的 LoggerService 依赖与 AsyncLocalStorage trace context，
- * 保持 core 零依赖（仅 node 内置 process + JSON）。
+ * Interface compatible with rulsynor RulsynorLogger (debug/verbose/log/warn/error),
+ * but drops the @nestjs/common LoggerService dependency and AsyncLocalStorage trace context,
+ * keeping core zero-dependency (only node built-in process + JSON).
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
- * @since 2026-08-21（M2 剥离 rulsynor-logger 依赖）
+ * @author Tang Haoran · OpenOBA AI Executive Officer
+ * @since 2026-08-21 (M2 stripped rulsynor-logger dependency)
  * @license MIT
  */
 

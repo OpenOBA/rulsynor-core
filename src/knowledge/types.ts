@@ -66,7 +66,7 @@ export const OCCUPATION_LABELS: Record<Occupation, string> = {
   financial_officer: '数字财务专员',
   data_analyst: '数据分析师',
   content_writer: '内容运营专员',
-  // 蓝图打通（2026-08-27）：后端 occupation_blueprint 真实岗位
+  // Blueprint integration (2026-08-27): real occupations from the backend occupation_blueprint
   shuibao_reviewer: '水保方案审查员',
   xinfang_reviewer: '信访合规审查员',
   huzhu_reviewer: '互助保障审核员',

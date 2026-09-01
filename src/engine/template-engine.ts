@@ -11,7 +11,7 @@
  * Context fields: Templates accept any valid SPEC v2.0 §11 context field name
  * (tool.name, sem.code, sem.sub_code, project.*, task.*, etc.) as the `field` parameter.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-17
  */
 
@@ -97,8 +97,8 @@ export interface TemplateOutput {
 // Template Registry
 // ============================================
 
-// 2026-08-28 收口：原仅 13 个标签，导致前端下拉只能选内核 28 个运算符中的 13 个。
-// 现覆盖全部 28 条件运算符 + 2 修饰符；erdl-schema.spec 断言「每个运算符都有标签」，缺一即红。
+// 2026-08-28 review: was only 13 labels, so the frontend dropdown could only select 13 of the kernel's 28 operators.
+// Now covers all 28 condition operators + 2 modifiers; erdl-schema.spec asserts "every operator has a label", missing one is red.
 import {
   CONDITION_OPERATORS,
   CONDITION_MODIFIERS,
@@ -107,7 +107,7 @@ import {
 } from './erdl-schema.js';
 
 const COMPARISON_OP_LABELS: Record<string, { zh: string; en: string }> = {
-  // 比较 6
+  // comparison 6
   eq: { zh: '等于 (=)', en: 'equals (=)' },
   ne: { zh: '不等于 (≠)', en: 'not equals (≠)' },
   gt: { zh: '大于 (>)', en: 'greater than (>)' },
@@ -121,26 +121,26 @@ const COMPARISON_OP_LABELS: Record<string, { zh: string; en: string }> = {
   match: { zh: '匹配正则', en: 'matches regex' },
   exists: { zh: '存在', en: 'exists' },
   not_exists: { zh: '不存在', en: 'not exists' },
-  // 边界否定 2
+  // boundary negation 2
   starts_with: { zh: '以…开头', en: 'starts with' },
   ends_with: { zh: '以…结尾', en: 'ends with' },
   not_starts_with: { zh: '不以…开头', en: 'not starts with' },
   not_ends_with: { zh: '不以…结尾', en: 'not ends with' },
-  // 长度 5（Unicode 码点计数）
+  // length 5 (Unicode code point count)
   length_gt: { zh: '长度大于', en: 'length >' },
   length_gte: { zh: '长度大于等于', en: 'length >=' },
   length_lt: { zh: '长度小于', en: 'length <' },
   length_lte: { zh: '长度小于等于', en: 'length <=' },
   length_eq: { zh: '长度等于', en: 'length =' },
-  // 范围 2（闭区间，仅数值）
+  // range 2 (closed interval, numeric only)
   between: { zh: '在区间内 [min,max]', en: 'between [min,max]' },
   not_between: { zh: '不在区间内', en: 'not between' },
-  // 计数 4（数组元素数）
+  // count 4 (array element count)
   count_gt: { zh: '元素数大于', en: 'count >' },
   count_gte: { zh: '元素数大于等于', en: 'count >=' },
   count_lt: { zh: '元素数小于', en: 'count <' },
   count_lte: { zh: '元素数小于等于', en: 'count <=' },
-  // 修饰符 2（有状态算子，写在 condition 的 within/rate 字段，不是 operator 取值）
+  // modifier 2 (stateful operators, written in the condition's within/rate fields, not operator values)
   within: { zh: '时间窗口内去重（修饰符）', en: 'within window (modifier)' },
   rate: { zh: '速率限制（修饰符）', en: 'rate limit (modifier)' },
 };
@@ -517,11 +517,11 @@ export class TemplateEngine {
   }
 
   /**
-   * 运算符标签（UI operator 下拉数据源）。
+   * Operator labels (UI operator dropdown data source).
    *
-   * 2026-08-28 全量 review 修复：本方法原样返回 COMPARISON_OP_LABELS（含 within/rate 共 30 键），
-   * 导致 UI 把「修饰符」当 operator 供选，而校验器 VALID_ALL_OPS 只放行 28 个条件运算符
-   * → 用户一选必被拒。现只暴露 28 个条件运算符，**与校验器放行域严格一致**。
+   * 2026-08-28 full review fix: this method originally returned COMPARISON_OP_LABELS as-is (30 keys incl. within/rate),
+   * causing the UI to offer "modifiers" as operators, while the validator VALID_ALL_OPS only allows 28 condition operators
+   * → any selection by the user is rejected. Now only the 28 condition operators are exposed, **strictly consistent with the validator's allowed domain**.
    */
   getOperatorLabels(): Record<string, { zh: string; en: string }> {
     const out: Record<string, { zh: string; en: string }> = {};
@@ -533,27 +533,27 @@ export class TemplateEngine {
   }
 
   /**
-   * 每个模板的**运算符可选域**（2026-08-28 全量 review 新增）。
+   * The **allowed operator domain** per template (added in the 2026-08-28 full review).
    *
-   * 缺陷背景：UI 对所有模板统一渲染全量运算符下拉，而校验器对 fieldCompare /
-   * fieldInAndCompare 只放行 6 个比较符 → 用户选了其余必被拒；而 twoFieldAnd/Or 虽放行 28，
-   * 但模板的 value 是标量输入，选 in/between 类会在编译期报错。
-   * 因此可选域 = 校验器放行域 ∩ 模板 value 形态能表达的运算符。
+   * Defect background: the UI renders the full operator dropdown for all templates, while the validator only
+   * allows 6 comparison operators for fieldCompare / fieldInAndCompare → any other selection is rejected; while
+   * twoFieldAnd/Or allow 28, but the template's value is a scalar input, so selecting in/between types errors at compile time.
+   * Hence allowed domain = validator's allowed domain ∩ operators expressible by the template's value shape.
    */
   getTemplateOperatorDomains(): Record<string, readonly string[]> {
     return {
-      // 校验器：checkComparisonOp → 仅 6 个比较符
+      // validator: checkComparisonOp → only 6 comparison operators
       fieldCompare: OP_COMPARE,
       fieldInAndCompare: OP_COMPARE,
-      // 校验器：checkAllOp → 28 全集；但模板 value 为标量 → 取标量形态子集
+      // validator: checkAllOp → all 28; but template value is scalar → take the scalar-shape subset
       twoFieldAnd: OP_VALUE_SCALAR,
       twoFieldOr: OP_VALUE_SCALAR,
     };
   }
 
   /**
-   * 修饰符标签（within/rate）。它们**不是 operator 取值**，而是 condition 的独立字段，
-   * UI 应在 condition 的 within/rate 字段位置使用本表，不得混进 operator 下拉。
+   * Modifier labels (within/rate). They are **not operator values**, but independent condition fields;
+   * the UI should use this table at the condition's within/rate field positions, not mix them into the operator dropdown.
    */
   getModifierLabels(): Record<string, { zh: string; en: string }> {
     const out: Record<string, { zh: string; en: string }> = {};

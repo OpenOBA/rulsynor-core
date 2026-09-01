@@ -172,7 +172,7 @@ describe('quality gate fail-close (SPEC v2.0 §16 加载期 MUST)', () => {
       when: { conditions: [] },
       then: { decision: 'DENY' },
     });
-    expect(() => toCompiledRules([bad])).toThrow(/质量门禁拒绝加载/);
+    expect(() => toCompiledRules([bad])).toThrow(/rejected load/);
   });
 
   it('rejects kebab-case rule name (non-§16 naming)', () => {
@@ -182,6 +182,6 @@ describe('quality gate fail-close (SPEC v2.0 §16 加载期 MUST)', () => {
       when: { conditions: [{ field: 'tool.name', operator: 'eq', value: 'exec' }] },
       then: { decision: 'DENY' },
     });
-    expect(() => toCompiledRules([bad])).toThrow(/质量门禁拒绝加载/);
+    expect(() => toCompiledRules([bad])).toThrow(/rejected load/);
   });
 });
