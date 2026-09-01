@@ -33,7 +33,7 @@ when:
       operator: eq
       value: "write_file"
     - field: "context.tool.args.content"
-      operator: matches
+      operator: match
       value: "(DATABASE_URL|PASSWORD|SECRET|API_KEY|TOKEN|password)\\s*[=:]"
 then:
   decision: DENY
@@ -130,7 +130,7 @@ when:
       operator: eq
       value: "exec"
     - field: "context.tool.args.command"
-      operator: matches
+      operator: match
       value: "(whoami|id|uname\\s+-a|cat\\s+/etc/passwd|netstat|ss\\s+-tlnp|ps\\s+aux|env|printenv)"
 then:
   decision: QUARANTINE

@@ -1,20 +1,21 @@
 /**
- * normalize — 字符串 NFC 规范化（SPEC v2.0 §10 E10）
+ * normalize — string NFC normalization (SPEC v2.0 §10 E10)
  *
- * 字符串字面量在进入规范化树 / 哈希前，统一做 Unicode NFC 规范化，
- * 保证"视觉相同、码点不同"的字符串（如 é vs e+组合符）产生相同字节序列。
+ * String literals, before entering the canonical tree / hash, uniformly apply Unicode NFC
+ * normalization, ensuring that "visually identical but different code points" strings
+ * (e.g. é vs e + combining mark) produce the same byte sequence.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
 
-/** NFC 规范化字符串（JS 内置 normalize('NFC')） */
+/** NFC-normalize a string (JS built-in normalize('NFC')) */
 export function normalizeNfc(input: string): string {
   return input.normalize('NFC');
 }
 
-/** 递归规范化对象中所有字符串值（用于字面量规范化） */
+/** Recursively normalize all string values in an object (for literal normalization) */
 export function normalizeStringValue(value: unknown): unknown {
   if (typeof value === 'string') return normalizeNfc(value);
   if (Array.isArray(value)) return value.map(normalizeStringValue);

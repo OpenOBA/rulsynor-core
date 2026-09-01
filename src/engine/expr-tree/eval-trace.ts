@@ -1,19 +1,22 @@
 /**
- * eval-trace — 求值溯源链（SPEC v2.0 §17，E6「树即证据」）
+ * eval-trace — evaluation provenance chain (SPEC v2.0 §17, E6 "tree as evidence")
  *
- * 表达层的求值是「树即证据」：每个派生值一条 DerivationRecord，构成可独立重算的溯源链；
- * eval_trace 是节点级推理链，Expression MUST、Simple SHOULD，记入决策对象。
+ * Expression-layer evaluation is "tree as evidence": every derived value gets one
+ * DerivationRecord, forming an independently recomputable provenance chain;
+ * eval_trace is the node-level reasoning chain — Expression MUST, Simple SHOULD — recorded
+ * into the decision object.
  *
- * DerivationRecord 字段（SPEC §17）：
- * - 节点标识（node type + 位置）
- * - 语义规范哈希（节点在其规范形式下的哈希）
- * - 上下文快照哈希（求值时的上下文快照，非引用）
- * - 输入值快照（非引用，undefined 输入区分）
- * - 输出与判定
+ * DerivationRecord fields (SPEC §17):
+ * - node identifier (node type + position)
+ * - semantic canonical hash (the node's hash in its canonical form)
+ * - context snapshot hash (a snapshot of the evaluation context, not a reference)
+ * - input value snapshot (non-reference, undefined inputs distinguished)
+ * - output and verdict
  *
- * gloss（G4）与 eval_trace 共同构成决策对象的两面：人读 gloss 判对错，算校验 eval_trace 证真伪。
+ * gloss (G4) and eval_trace together form the two faces of the decision object: the
+ * human-readable gloss judges correctness, the machine-verified eval_trace proves authenticity.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
@@ -22,43 +25,43 @@ import { createHash } from 'node:crypto';
 import type { ExprNode } from './node-types.js';
 import { canonicalTree } from './canonical.js';
 
-/** 单条派生记录（DerivationRecord） */
+/** A single derivation record (DerivationRecord) */
 export interface DerivationRecord {
-  /** 节点类型 */
+  /** Node type */
   nodeType: string;
-  /** 节点在树中的位置（人类可读定位辅助；节点唯一标识由 nodeHash 保证） */
+  /** Node position in the tree (human-readable location aid; node uniqueness is guaranteed by nodeHash) */
   path: string;
-  /** 节点规范形式的哈希（语义规范哈希，即节点标识） */
+  /** Hash of the node's canonical form (semantic canonical hash, i.e. the node identifier) */
   nodeHash: string;
-  /** 上下文快照哈希（求值时 context 的非引用快照哈希，供独立重算校验） */
+  /** Context snapshot hash (non-reference snapshot hash of the evaluation context, for independent recompute verification) */
   contextHash: string;
-  /** 输入值快照（非引用，undefined/缺失区分；叶子节点记录 resolve 值，组合节点留空由调用方填充） */
+  /** Input value snapshot (non-reference; undefined/missing distinguished; leaf nodes record the resolve value, composite nodes left empty and filled by the caller) */
   inputValues: Array<{ type: string; value: unknown; absent: boolean }>;
-  /** 输出值 */
+  /** Output value */
   output: unknown;
-  /** 判定结果（boolean 或值） */
+  /** Verdict (boolean or value) */
   verdict: unknown;
-  /** 求值警告（若有） */
+  /** Evaluation warnings (if any) */
   warnings?: string[];
 }
 
-/** 完整 eval_trace */
+/** Complete eval_trace */
 export interface EvalTrace {
-  /** 根节点哈希 */
+  /** Root node hash */
   rootHash: string;
-  /** 逐节点的派生记录 */
+  /** Per-node derivation records */
   records: DerivationRecord[];
-  /** 最终结果 */
+  /** Final result */
   finalValue: unknown;
 }
 
-/** 值快照：安全序列化（undefine/null 区分，非引用） */
+/** Value snapshot: safe serialization (undefined/null distinguished, non-reference) */
 function snapshot(value: unknown): { type: string; value: unknown; absent: boolean } {
   if (value === undefined) return { type: 'undefined', value: null, absent: true };
   if (value === null) return { type: 'null', value: null, absent: false };
   const t = typeof value;
   if (t === 'bigint') {
-    // 裸 bigint（非 Rational）防御性转字符串，避免 JSON 序列化崩溃
+    // Bare bigint (non-Rational): defensively convert to string to avoid JSON serialization crashes
     return { type: 'bigint', value: String(value), absent: false };
   }
   if (
@@ -67,7 +70,7 @@ function snapshot(value: unknown): { type: string; value: unknown; absent: boole
     typeof (value as { num?: unknown }).num === 'bigint' &&
     typeof (value as { den?: unknown }).den === 'bigint'
   ) {
-    // Rational 对象快照
+    // Rational object snapshot
     return {
       type: 'rational',
       value: `${(value as { num: bigint }).num}/${(value as { den: bigint }).den}`,
@@ -75,7 +78,7 @@ function snapshot(value: unknown): { type: string; value: unknown; absent: boole
     };
   }
   if (t === 'object') {
-    // 对象快照（JSON 序列化，非引用）
+    // Object snapshot (JSON serialization, non-reference)
     try {
       return { type: 'object', value: JSON.parse(JSON.stringify(value)), absent: false };
     } catch {
@@ -85,31 +88,31 @@ function snapshot(value: unknown): { type: string; value: unknown; absent: boole
   return { type: t, value, absent: false };
 }
 
-/** 节点规范哈希（用于语义规范哈希） */
+/** Node canonical hash (used as the semantic canonical hash) */
 export function hashNodeCanonical(node: ExprNode): string {
   return createHash('sha256').update(canonicalTree(node)).digest('hex');
 }
 
-/** 空 trace */
+/** Empty trace */
 export function emptyTrace(): EvalTrace {
   return { rootHash: '', records: [], finalValue: null };
 }
 
 // ═══════════════════════════════════════════
-// TraceCollector — 求值过程中收集 DerivationRecord
+// TraceCollector — collects DerivationRecords during evaluation
 // ═══════════════════════════════════════════
 
-/** 求值器在递归过程中调用的 trace 收集器 */
+/** Trace collector called by the evaluator during recursion */
 export class TraceCollector {
   private readonly records: DerivationRecord[] = [];
   private contextHash: string = '';
 
-  /** 设置上下文快照哈希（求值开始时调用一次） */
+  /** Set the context snapshot hash (called once at evaluation start) */
   setContextHash(hash: string): void {
     this.contextHash = hash;
   }
 
-  /** 记录一条派生记录 */
+  /** Record a derivation record */
   record(
     nodeType: string,
     path: string,
@@ -131,7 +134,7 @@ export class TraceCollector {
     });
   }
 
-  /** 产出完整 EvalTrace */
+  /** Produce the complete EvalTrace */
   toTrace(root: ExprNode, finalValue: unknown): EvalTrace {
     return {
       rootHash: hashNodeCanonical(root),

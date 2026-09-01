@@ -1,23 +1,24 @@
 /**
- * FixedPoint — 严格定点小数有理数运算（SPEC v2.0 §10 E2 / §10.4(b)）
+ * FixedPoint — strict fixed-point decimal rational arithmetic (SPEC v2.0 §10 E2 / §10.4(b))
  *
- * 约束（严格实现，不留坑）：
- * - 中间计算用【高精度有界有理数】（bigint 分子/分母），不做舍入
- *   → 避免多步运算累积舍入误差，满足 §10.3 跨实现逐字节一致哈希
- * - 仅【输出节点】按 scale=14 + half-even（银行家舍入，IEEE 754-2019 ROUND_HALF_EVEN）
- *   舍入为字符串序列化
+ * Constraints (strict implementation, no pitfalls):
+ * - Intermediate computation uses [high-precision bounded rationals] (bigint numerator/denominator),
+ *   no rounding → avoids cumulative rounding errors across multi-step operations, satisfying §10.3
+ *   cross-implementation byte-for-byte consistent hashing
+ * - Only [output nodes] round to scale=14 + half-even (banker's rounding, IEEE 754-2019
+ *   ROUND_HALF_EVEN) and serialize to string
  *
- * 有理数表示：{ num: bigint, den: bigint }，den > 0，恒为最简（gcd 归约）。
- * 所有运算返回规范化有理数；`toDecimalString()` 是唯一的舍入出口。
+ * Rational representation: { num: bigint, den: bigint }, den > 0, always in simplest form (gcd reduction).
+ * All operations return a normalized rational; `toDecimalString()` is the only rounding exit.
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
 
 export const DECIMAL_SCALE = 14;
 
-/** 有理数（分子/分母，分母恒正，恒最简） */
+/** Rational (numerator/denominator, denominator always positive, always simplest) */
 export interface Rational {
   num: bigint;
   den: bigint;
@@ -41,7 +42,7 @@ function gcd(a: bigint, b: bigint): bigint {
   return a;
 }
 
-/** 规范化有理数：分母恒正 + gcd 归约 */
+/** Normalize a rational: denominator always positive + gcd reduction */
 function normalize(num: bigint, den: bigint): Rational {
   if (den === 0n) throw new FixedPointError('Division by zero');
   if (den < 0n) {
@@ -56,16 +57,16 @@ function normalize(num: bigint, den: bigint): Rational {
   return { num, den };
 }
 
-/** 从整数构造有理数 */
+/** Construct a rational from an integer */
 export function fromInt(n: number | bigint | string): Rational {
   const big = typeof n === 'bigint' ? n : BigInt(String(n));
   return { num: big, den: 1n };
 }
 
-/** 从十进制字符串构造有理数（如 "0.15" → 15/100 → 3/20） */
+/** Construct a rational from a decimal string (e.g. "0.15" → 15/100 → 3/20) */
 export function fromDecimalString(s: string): Rational {
   const str = s.trim();
-  if (!/^-?\d+(\.\d+)?$/.test(str)) throw new FixedPointError(`非法十进制字面量: ${s}`);
+  if (!/^-?\d+(\.\d+)?$/.test(str)) throw new FixedPointError(`invalid decimal literal: ${s}`);
   const neg = str.startsWith('-');
   const abs = neg ? str.slice(1) : str;
   const [intPart, fracPart = ''] = abs.split('.');
@@ -76,15 +77,15 @@ export function fromDecimalString(s: string): Rational {
 }
 
 /**
- * 将 JS number 的 String() 输出中的科学计数法展开为普通十进制字符串。
- * String(1e-7) === "1e-7"、String(1e21) === "1e+21"，fromDecimalString 不接受该格式。
- * 展开后保持 String(v) 的最短往返十进制语义（确定性、跨实现一致）。
+ * Expand scientific notation in the String() output of a JS number into a plain decimal string.
+ * String(1e-7) === "1e-7", String(1e21) === "1e+21"; fromDecimalString does not accept that format.
+ * The expansion preserves String(v)'s shortest round-trip decimal semantics (deterministic, cross-implementation consistent).
  */
 function expandExponential(s: string): string {
   if (!/[eE]/.test(s)) return s;
   const [mantissa, expStr] = s.split(/[eE]/);
   const exp = parseInt(expStr, 10);
-  if (!Number.isFinite(exp)) throw new FixedPointError(`非法指数: ${s}`);
+  if (!Number.isFinite(exp)) throw new FixedPointError(`invalid exponent: ${s}`);
   const neg = mantissa.startsWith('-');
   const m = neg ? mantissa.slice(1) : mantissa;
   const [intPart, fracPart = ''] = m.split('.');
@@ -98,11 +99,11 @@ function expandExponential(s: string): string {
 }
 
 /**
- * 从 JS number 构造有理数（运行时上下文入口，E12 fail-close 语义由调用方处理）。
- * 非有限值（NaN/±Infinity）抛 FixedPointError。
+ * Construct a rational from a JS number (runtime context entry; E12 fail-close semantics handled by the caller).
+ * Non-finite values (NaN/±Infinity) throw FixedPointError.
  */
 export function fromNumber(v: number): Rational {
-  if (!Number.isFinite(v)) throw new FixedPointError(`非有限数值: ${v}`);
+  if (!Number.isFinite(v)) throw new FixedPointError(`non-finite value: ${v}`);
   return fromDecimalString(expandExponential(String(v)));
 }
 
@@ -122,7 +123,7 @@ export function neg(a: Rational): Rational {
   return { num: -a.num, den: a.den };
 }
 
-/** 比较：-1/0/1 */
+/** Compare: -1/0/1 */
 export function compare(a: Rational, b: Rational): number {
   const lhs = a.num * b.den;
   const rhs = b.num * a.den;
@@ -130,8 +131,8 @@ export function compare(a: Rational, b: Rational): number {
 }
 
 /**
- * scale=14 + half-even 舍入为十进制字符串。
- * 这是唯一的舍入出口——中间计算一律保持有理数，不在此前舍入。
+ * Round to a decimal string at scale=14 + half-even.
+ * This is the only rounding exit — intermediate computation always stays rational, no earlier rounding.
  */
 export function toDecimalString(r: Rational, scale: number = DECIMAL_SCALE): string {
   const pow = 10n ** BigInt(scale);
@@ -139,32 +140,32 @@ export function toDecimalString(r: Rational, scale: number = DECIMAL_SCALE): str
   const neg = num < 0n;
   const absNum = neg ? -num : num;
 
-  // 整数部分 + 余数
+  // Integer part + remainder
   const intPart = absNum / den;
   const remainder = absNum % den;
 
-  // 目标：remainder / den 的前 scale 位小数 + 第 scale+1 位用于舍入判断
+  // Goal: the first scale decimal digits of remainder / den, plus the (scale+1)-th digit for rounding
   // scaled = floor(remainder * 10^(scale+1) / den)
   const scaled = (remainder * pow * 10n) / den;
-  const kept = scaled / 10n; // 前 scale 位
-  const nextDigit = Number(scaled % 10n); // 第 scale+1 位（0-9）
+  const kept = scaled / 10n; // first scale digits
+  const nextDigit = Number(scaled % 10n); // the (scale+1)-th digit (0-9)
 
-  // 判断是否有剩余尾数（nextDigit 之后还有非零）
+  // Check whether there is a remainder after the next digit
   const afterNext = (remainder * pow * 10n) % den;
   const hasRest = afterNext !== 0n;
 
-  // half-even 的"最后保留位"：scale>0 时看 kept 末位，scale=0 时看整数部分 intPart 末位
+  // half-even "last kept digit": scale>0 → the last digit of kept; scale=0 → the last digit of intPart
   const lastKeptDigit = Number(scale > 0 ? kept % 10n : intPart % 10n);
 
   let rounded = kept;
   if (nextDigit > 5) {
     rounded += 1n;
   } else if (nextDigit === 5 && (hasRest || lastKeptDigit % 2 === 1)) {
-    // half-even：尾数非零 或 保留位为奇数 → 进一
+    // half-even: remainder non-zero OR the kept digit is odd → round up
     rounded += 1n;
   }
 
-  // 若舍入导致整数部分进位（如 0.999... → 1.000...）
+  // If rounding carries into the integer part (e.g. 0.999... → 1.000...)
   let intStr = intPart.toString();
   let fracStr = rounded.toString().padStart(scale, '0');
   if (rounded >= pow) {
@@ -172,18 +173,18 @@ export function toDecimalString(r: Rational, scale: number = DECIMAL_SCALE): str
     fracStr = (rounded - pow).toString().padStart(scale, '0');
   }
 
-  // 去掉尾部多余的 0——按 SPEC §28.2 最小规范表示：整数不带小数点，小数去尾零
+  // Strip trailing zeros — per SPEC §28.2 minimal canonical representation: integer without decimal point, decimal without trailing zeros
   const trimmed = scale > 0 ? `${fracStr}`.replace(/0+$/, '') : '';
   const out = scale > 0 ? (trimmed === '' ? intStr : `${intStr}.${trimmed}`) : intStr;
   return (neg ? '-' : '') + out;
 }
 
-/** 求值有理数是否为整数（分母==1） */
+/** Check whether a rational is an integer (denominator == 1) */
 export function isInteger(r: Rational): boolean {
   return r.den === 1n;
 }
 
-/** 有理数转 number（仅用于需要与 JS 互操作的边界，不用于规则求值） */
+/** Rational to number (only for JS interop boundaries, not for rule evaluation) */
 export function toNumber(r: Rational): number {
   return Number(r.num) / Number(r.den);
 }

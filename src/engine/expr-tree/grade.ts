@@ -1,20 +1,21 @@
 /**
- * grade — 规则分级（SPEC v2.0 §16.2）
+ * grade — rule grading (SPEC v2.0 §16.2)
  *
- * Grade 决定审计强度与可重算性声明；Grade 元数据走扩展字段，不进核心冻结字段。
+ * Grade determines audit strength and recomputability declaration; Grade metadata goes through
+ * extension fields, not into the core frozen fields.
  *
- * | Grade | 表达方式 | 审计 SLA |
+ * | Grade | Expression form | Audit SLA |
  * |:---:|------|------|
- * | A | 纯 Simple（28 条件运算符） | 最高，同级文本可重算 |
- * | B | Expression 树（完整内核：量词/算术/聚合/时间） | 高，eval_trace MUST |
- * | C | 含函数委派 | 分层，C 级不得冒充纯文本可重算 |
+ * | A | pure Simple (28 condition operators) | highest, same-level text recomputable |
+ * | B | Expression tree (full kernel: quantifier/arithmetic/aggregate/time) | high, eval_trace MUST |
+ * | C | contains function delegation | layered, C must not masquerade as plain-text recomputable |
  *
- * Grade 由规则内容【推导】而来，非手动标注：
- * - 用了函数委派 → C
- * - 用了 Simple 28 条件运算符之外的内核节点（算术/量词/聚合/时间） → B
- * - 仅用 Simple 28 条件运算符 → A
+ * Grade is [derived] from rule content, not manually annotated:
+ * - uses function delegation → C
+ * - uses kernel nodes beyond the Simple 28 condition operators (arithmetic/quantifier/aggregate/time) → B
+ * - uses only the Simple 28 condition operators → A
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
@@ -24,7 +25,7 @@ import { childNodes } from './limits.js';
 
 export type RuleGrade = 'A' | 'B' | 'C';
 
-/** Simple 28 条件运算符对应的节点类型（无算术/量词/聚合/时间扩展） */
+/** Node types corresponding to the Simple 28 condition operators (no arithmetic/quantifier/aggregate/time extensions) */
 const SIMPLE_ONLY_NODE_TYPES = new Set<ExprNode['type']>([
   'field',
   'var',
@@ -41,10 +42,11 @@ const SIMPLE_ONLY_NODE_TYPES = new Set<ExprNode['type']>([
 ]);
 
 /**
- * 推导表达式树的 Grade（不含函数委派判断，函数委派由外部传入 hasFnDelegation）。
- * - 含函数委派 → C
- * - 含扩展节点（算术/量词/聚合/时间）→ B
- * - 仅 Simple 节点 → A
+ * Derive the Grade of an expression tree (excluding the function-delegation judgment, which is
+ * passed in externally via hasFnDelegation).
+ * - contains function delegation → C
+ * - contains extension nodes (arithmetic/quantifier/aggregate/time) → B
+ * - only Simple nodes → A
  */
 export function deriveGradeFromTree(root: ExprNode, hasFnDelegation: boolean): RuleGrade {
   if (hasFnDelegation) return 'C';
@@ -52,11 +54,11 @@ export function deriveGradeFromTree(root: ExprNode, hasFnDelegation: boolean): R
   return 'A';
 }
 
-/** 判断树是否用了 Simple 之外的内核扩展节点（算术/量词/聚合/时间） */
+/** Check whether the tree uses kernel extension nodes beyond Simple (arithmetic/quantifier/aggregate/time) */
 function treeUsesExtensionNodes(node: ExprNode): boolean {
-  // 根节点若为扩展类型 → true
+  // If the root is an extension type → true
   if (!SIMPLE_ONLY_NODE_TYPES.has(node.type)) return true;
-  // 递归检查子节点
+  // Recursively check child nodes
   const children = childNodes(node);
   for (const child of children) {
     if (treeUsesExtensionNodes(child)) return true;
@@ -64,9 +66,9 @@ function treeUsesExtensionNodes(node: ExprNode): boolean {
   return false;
 }
 
-/** Grade 的审计 SLA 提示（用于文档/展示） */
+/** Grade audit SLA hint (for docs/display) */
 export const GRADE_AUDIT_SLA: Record<RuleGrade, string> = {
-  A: '最高：同级文本可重算',
-  B: '高：eval_trace MUST',
-  C: '分层：C 级不得冒充纯文本可重算',
+  A: 'Highest: same-level text recomputable',
+  B: 'High: eval_trace MUST',
+  C: 'Layered: C must not masquerade as plain-text recomputable',
 };

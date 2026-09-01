@@ -1,16 +1,16 @@
 /**
- * limits — 资源上限检查（SPEC v2.0 §10 E4）
+ * limits — resource limit check (SPEC v2.0 §10 E4)
  *
- * 防表达式树膨胀攻击的硬性资源配额：
- * - 算术深度 ≤ 2
- * - 树深 ≤ 6
- * - 节点数 ≤ 64
- * - 数组 ≤ 10000
- * - 单规则求值 ≤ 50ms
- * - 量词不嵌套
- * - 正则步数 ≤ 10000（见 safe-regex）
+ * Hard resource quotas against expression-tree bloat attacks:
+ * - arithmetic depth ≤ 2
+ * - tree depth ≤ 6
+ * - node count ≤ 64
+ * - array ≤ 10000
+ * - per-rule evaluation ≤ 50ms
+ * - quantifier must not nest
+ * - regex step count ≤ 10000 (see safe-regex)
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
@@ -33,7 +33,7 @@ export class ExprLimitError extends Error {
   }
 }
 
-/** 统计树的节点数、深度、算术深度 */
+/** Count the tree's node count, depth, and arithmetic depth */
 export function measure(
   node: ExprNode,
   depth = 0,
@@ -55,30 +55,30 @@ export function measure(
   return { nodes, depth: maxDepth, arithDepth: maxArithDepth };
 }
 
-/** 校验树是否超限，超限抛 ExprLimitError */
+/** Validate whether the tree exceeds limits; throws ExprLimitError when exceeded */
 export function enforceLimits(root: ExprNode): void {
   const { nodes, depth, arithDepth } = measure(root);
   if (nodes > LIMITS.MAX_NODES) {
-    throw new ExprLimitError(`节点数 ${nodes} 超过上限 ${LIMITS.MAX_NODES}`);
+    throw new ExprLimitError(`node count ${nodes} exceeds the limit ${LIMITS.MAX_NODES}`);
   }
   if (depth > LIMITS.MAX_TREE_DEPTH) {
-    throw new ExprLimitError(`树深 ${depth} 超过上限 ${LIMITS.MAX_TREE_DEPTH}`);
+    throw new ExprLimitError(`tree depth ${depth} exceeds the limit ${LIMITS.MAX_TREE_DEPTH}`);
   }
   if (arithDepth > LIMITS.MAX_ARITH_DEPTH) {
-    throw new ExprLimitError(`算术深度 ${arithDepth} 超过上限 ${LIMITS.MAX_ARITH_DEPTH}`);
+    throw new ExprLimitError(`arithmetic depth ${arithDepth} exceeds the limit ${LIMITS.MAX_ARITH_DEPTH}`);
   }
-  // E4：数组字面量长度 ≤ 10000（§10.2）
+  // E4: array literal length ≤ 10000 (§10.2)
   const arrLen = maxArrayLength(root);
   if (arrLen > LIMITS.MAX_ARRAY_LENGTH) {
-    throw new ExprLimitError(`数组长度 ${arrLen} 超过上限 ${LIMITS.MAX_ARRAY_LENGTH}`);
+    throw new ExprLimitError(`array length ${arrLen} exceeds the limit ${LIMITS.MAX_ARRAY_LENGTH}`);
   }
-  // E4：量词不嵌套（§10.2）
+  // E4: quantifier must not nest (§10.2)
   if (hasNestedQuantifier(root)) {
-    throw new ExprLimitError('量词不嵌套：quantifier 谓词内不得再含量词');
+    throw new ExprLimitError('quantifier must not nest: the quantifier predicate must not contain another quantifier');
   }
 }
 
-/** 遍历树，返回最大数组字面量长度 */
+/** Traverse the tree, return the max array literal length */
 function maxArrayLength(node: ExprNode): number {
   let max = 0;
   const walk = (n: ExprNode): void => {
@@ -89,7 +89,7 @@ function maxArrayLength(node: ExprNode): number {
   return max;
 }
 
-/** 检查量词是否嵌套（quantifier 的 predicate 子树内再含量词） */
+/** Check whether quantifiers are nested (a quantifier predicate subtree containing another quantifier) */
 function hasNestedQuantifier(root: ExprNode): boolean {
   const walk = (n: ExprNode, insideQuantifier: boolean): boolean => {
     if (n.type === 'quantifier') {
@@ -106,7 +106,7 @@ function hasNestedQuantifier(root: ExprNode): boolean {
   return walk(root, false);
 }
 
-/** 取节点的所有子节点 */
+/** Get all child nodes of a node */
 export function childNodes(node: ExprNode): ExprNode[] {
   switch (node.type) {
     case 'field':
