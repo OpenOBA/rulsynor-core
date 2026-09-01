@@ -172,7 +172,7 @@ then:
 
 **The key insight**: rules don't block work. They define *how* work gets done.
 
-**Available operators** (20 — 13 SPEC v1.1 operators with cross-implementation vectors; 7 rulsynor extensions, no vectors yet): `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`/`matches`, `starts_with`, `ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`
+**Available operators** (30 — 28 condition operators + 2 modifiers `within`/`rate`, Spec v2.0 §11): `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
 
 **Decisions your rules can make**:
 
@@ -235,14 +235,14 @@ Copy the prompt template from [`docs/RULE-PROMPT.md`](docs/RULE-PROMPT.md), past
 ```typescript
 import { loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
-// 29 built-in rules + your business rules
+// 30 built-in rules + your business rules
 const presetRules = loadPresetRules();           // PresetRule[]
 const rules = toCompiledRules(presetRules);       // CompiledRule[] — ready for the engine
 
 // Custom rules: load your own .erdl.yaml files
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/finance-team.erdl.yaml', 'utf8');
-// Compile with RuleCompilerImpl (from @openoba/rulsynor-core/engine)
+// Convert via toRuleDefinitions() / toERDLRuleSet() / toCompiledRules()
 ```
 
 **Training is compilation**: YAML rules are parsed, validated (ReDoS check, operator whitelist, missing-field detection), and compiled into a static decision tree. The engine doesn't re-parse at runtime.
@@ -291,7 +291,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 **LangChain**: wrap tools with `guardedToolExecutor`. **MCP Server**: intercept `CallToolRequest`. **Custom ReAct loop**: call `evaluator.evaluate()` before each tool execution. Same pattern. Same API.
 
-> 📦 **Ready-to-run demo**: [`examples/agent-demo.ts`](examples/agent-demo.ts) — a complete ReAct Agent with Guard, 29 preset rules, and audit chain. `export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "Your task"`
+> 📦 **Ready-to-run demo**: [`examples/agent-demo.ts`](examples/agent-demo.ts) — a complete ReAct Agent with Guard, 30 preset rules, and audit chain. `export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "Your task"`
 
 ---
 
@@ -486,8 +486,8 @@ registry.register({
 │  │         GUARD             │           │
 │  │                          │           │
 │  │  Ring 0 → Ring 3         │           │
-│  │  29 preset + your rules  │           │
-│  │  SafeExpr (20 ops)       │           │
+│  │  30 preset + your rules  │           │
+│  │  30 operators / 34 nodes │           │
 │  │  within / rate trackers  │           │
 │  │  CORRECT auto-retry      │           │
 │  │  Guidance for LLM        │           │
@@ -522,12 +522,12 @@ registry.register({
 |------|------|
 | `Evaluator` | Rule engine — ring-sorted, first-match-wins |
 | `GuardStateManager` | Stateful `within`/`rate` counter manager |
-| `SafeExprEvaluator` | Safe expression evaluator (20 operators) |
+| `ExprTreeEvaluator` | Expression-tree evaluator (34 nodes / 30 operators) |
 | `safeRegExp()` | ReDoS-protected regex constructor |
 | `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object (return type: `DecisionObject`) |
 | `generateAID()` | Generate Agent Identity Code (OID 1.2.156.3088) |
 | `getComplianceProfile()` | Jurisdiction-aware compliance auto-configuration |
-| `loadPresetRules()` | Load 29 built-in ERDL YAML rules |
+| `loadPresetRules()` | Load 30 built-in ERDL YAML rules |
 | `toCompiledRules(rules)` | Convert preset rules → `CompiledRule[]` for Evaluator |
 | `toERDLRuleSet(rules)` | Convert preset rules → RuleCompiler format |
 | `extractNavigationGuide(opts)` | Structured LLM guidance from Guard decisions |
@@ -535,19 +535,17 @@ registry.register({
 | `runReActLoop(opts)` | Minimal ReAct loop with Guard evaluation |
 | `createToolExecutor(fn)` | Wrap a function as a ToolExecutor |
 | `PROVENANCE` | Version, vendor, OID prefix, known limitations |
-| `EvaluatorAdapter` | Legacy rulsynor GuardService integration bridge |
 | `SystemClock` / `VirtualClock` | Clock abstraction for temporal rule testing |
 | `OpSemRegistry` | Operation semantic classifier |
-| `RuleCompilerImpl` | ERDL YAML → 4-product compiler |
 | `PlanParser` | Parse LLM natural-language execution plans |
 
 ### Sub-paths
 
 | Path | Contents |
 |------|------|
-| `@openoba/rulsynor-core/engine` | Evaluator, SafeExprEvaluator, RuleCompilerImpl, ERDLFnRegistry, PlanParser, safeRegExp, types |
+| `@openoba/rulsynor-core/engine` | Evaluator, ExprTreeEvaluator, ERDLFnRegistry, PlanParser, safeRegExp, types |
 | `@openoba/rulsynor-core/guard` | buildDecisionObject, generateAID, DecisionObject types |
-| `@openoba/rulsynor-core/compliance` | getComplianceProfile, ComplianceProfile type, 4-framework compliance |
+| `@openoba/rulsynor-core/compliance` | getComplianceProfile, ComplianceProfile type, 6-framework compliance |
 | `@openoba/rulsynor-core/rules` | loadPresetRules, toCompiledRules, toERDLRuleSet, PresetRule type |
 | `@openoba/rulsynor-core/guidance` | extractNavigationGuide — tell the LLM how to recover |
 | `@openoba/rulsynor-core/runtime` | runReActLoop, createToolExecutor |
@@ -569,9 +567,9 @@ human_oversight · audit { previous_hash, commitment, hash }
 
 | Variable | Purpose | Default |
 |------|------|------|
-| `RULSYNOR_JURISDICTIONS` | Comma-separated: CN,EU,US,SG | `CN` |
-| `RULSYNOR_INDUSTRY` | Industry for compliance | `financial-services` |
-| `RULSYNOR_RISK_LEVEL` | Risk tier | `high` |
+| `RULSYNOR_JURISDICTIONS` | Comma-separated: CN,EU,US,SG,BR,IN | *(none — unselected)* |
+| `RULSYNOR_INDUSTRY` | Industry for compliance | *(none — unselected)* |
+| `RULSYNOR_RISK_LEVEL` | Risk tier | *(none — unselected)* |
 | `RULSYNOR_AUTONOMY_LEVEL` | L1-L5 | `L2` |
 | `RULSYNOR_MODEL_ID` | LLM model in DO | `unknown` |
 | `RULSYNOR_AID_REGISTRAR` | Organization code in AID | `000001` |
@@ -585,10 +583,11 @@ This package bundles the normative reference specifications:
 
 | Document | Path | Description |
 |------|------|------|
-| ERDL Spec v1.1 | [`docs/SPEC/erdl-spec-v1.1.md`](docs/SPEC/erdl-spec-v1.1.md) | ERDL language specification (Chinese) |
-| ERDL Spec v1.1 (EN) | [`docs/SPEC/erdl-spec-v1.1.en.md`](docs/SPEC/erdl-spec-v1.1.en.md) | ERDL language specification (English) |
-| RFC 001 | [`docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md`](docs/RFC/OPENOBA-DOBJ-RFC-001-CN.md) | Decision Object audit standard v1.3 (Chinese) |
-| RFC 001 (EN) | [`docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md`](docs/RFC/OPENOBA-DOBJ-RFC-001-EN.md) | Decision Object audit standard v1.3 (English) |
+| ERDL Spec v2.0 | [`docs/SPEC/erdl-spec.md`](docs/SPEC/erdl-spec.md) | ERDL language specification (Chinese) |
+| ERDL Spec v2.0 (EN) | [`docs/SPEC/erdl-spec.en.md`](docs/SPEC/erdl-spec.en.md) | ERDL language specification (English) |
+| SPEC v2.0 | [`docs/SPEC/spec-2.0.md`](docs/SPEC/spec-2.0.md) | OpenOBA Professionalized AI Employee open spec (Chinese) |
+| SPEC v2.0 (EN) | [`docs/SPEC/spec-2.0-en.md`](docs/SPEC/spec-2.0-en.md) | OpenOBA Professionalized AI Employee open spec (English) |
+| RFC 002 | [`docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md`](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object audit standard v1.5 (Chinese) |
 
 The cross-implementation test vector set lives in its own authoritative repository: [`OpenOBA/erdl-vectors`](https://github.com/OpenOBA/erdl-vectors). Any conforming ERDL engine can self-test independently against the published vectors.
 
@@ -601,7 +600,7 @@ The cross-implementation test vector set lives in its own authoritative reposito
 - [`CHANGELOG.md`](CHANGELOG.md) — change log (Keep a Changelog)
 - [`ROADMAP.md`](ROADMAP.md) — version roadmap
 
-> **Current status**: `0.1.0-alpha` — engine aligned to Spec v2.0; Decision Object migrating from v1.3 to v1.5 (RFC-002). The bundled specs above (ERDL v1.1 / RFC-001 DO v1.3) will be refreshed to v2.0 / RFC-002 as part of the `0.1.0-beta` milestone.
+> **Current status**: `0.1.0-alpha` — engine aligned to Spec v2.0 (30 operators / 34 nodes); Decision Object still v1.3 caliber (`decision_type` legacy field), migrating to v1.5 (RFC-002) in the `0.1.0-beta` milestone.
 
 ---
 
