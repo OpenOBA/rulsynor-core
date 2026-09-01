@@ -145,8 +145,8 @@ describe('toERDLRuleSet', () => {
   const set = toERDLRuleSet(loadPresetRules());
 
   it('has correct protocol and version', () => {
-    expect(set.protocol).toBe('erdl-v1');
-    expect(set.version).toBe('1.0');
+    expect(set.protocol).toBe('erdl/v2');
+    expect(set.version).toBe('2.0.0');
     expect(set.metadata.source).toBe('rulsynor-core-preset');
   });
 

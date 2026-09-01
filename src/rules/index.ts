@@ -109,8 +109,8 @@ export function toERDLRuleSet(rules: PresetRule[]): {
   });
 
   return {
-    protocol: 'erdl-v1',
-    version: '1.0',
+    protocol: 'erdl/v2',
+    version: '2.0.0',
     metadata: { source: 'rulsynor-core-preset' },
     rules: defs,
   };
