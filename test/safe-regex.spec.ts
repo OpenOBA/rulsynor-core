@@ -1,7 +1,13 @@
 /**
  * safe-regex.test.ts — ReDoS protection unit tests
  */
-import { safeRegExp, safeTest, analyzePattern, SafeRegExpError, REGEX_MAX_INPUT_LENGTH } from '../src/engine/safe-regex.js';
+import {
+  safeRegExp,
+  safeTest,
+  analyzePattern,
+  SafeRegExpError,
+  REGEX_MAX_INPUT_LENGTH,
+} from '../src/engine/safe-regex.js';
 
 describe('safeRegExp', () => {
   describe('valid patterns', () => {
@@ -139,7 +145,11 @@ describe('safeRegExp', () => {
 
     it('error message on invalid syntax', () => {
       let msg = '';
-      try { safeRegExp('[unclosed'); } catch (e: unknown) { msg = (e as Error).message; }
+      try {
+        safeRegExp('[unclosed');
+      } catch (e: unknown) {
+        msg = (e as Error).message;
+      }
       expect(msg).toContain('invalid pattern');
     });
   });
@@ -153,7 +163,9 @@ describe('safeRegExp', () => {
     });
 
     it('SSRF private IP pattern', () => {
-      const r = safeRegExp('(10\\.\\d+\\.\\d+\\.\\d+|172\\.(1[6-9]|2\\d|3[01])\\.|192\\.168\\.|127\\.0\\.0\\.|0\\.0\\.0\\.0|localhost|metadata|169\\.254\\.)');
+      const r = safeRegExp(
+        '(10\\.\\d+\\.\\d+\\.\\d+|172\\.(1[6-9]|2\\d|3[01])\\.|192\\.168\\.|127\\.0\\.0\\.|0\\.0\\.0\\.0|localhost|metadata|169\\.254\\.)',
+      );
       expect(r.test('10.0.0.1')).toBe(true);
       expect(r.test('192.168.1.1')).toBe(true);
       expect(r.test('127.0.0.1')).toBe(true);

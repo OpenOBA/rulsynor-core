@@ -15,80 +15,82 @@
  * @since 2026-07-17
  */
 
-import { RuleYamlSerializer, type ExtractedSpec5 } from './rule-yaml-serializer.js'
+import { RuleYamlSerializer, type ExtractedSpec5 } from './rule-yaml-serializer.js';
 
 // ============================================
 // Types
 // ============================================
 
 export type TemplateId =
-  | 'toolInList'          // T1: tool.name ∈ [A, B, C]
-  | 'toolInAndMatch'      // T2: tool.name ∈ [...] AND content ~= /pat/
-  | 'toolEqAndCmd'        // T3: tool.name = X AND args.command ~= /pat/
-  | 'toolEq'              // T4: tool.name = X
-  | 'fieldCompare'        // T5: field {=,≠,>,<,≥,≤} value
-  | 'fieldInList'         // T6: field ∈ [A, B]
-  | 'twoFieldAnd'         // T7: f1 op1 v1 AND f2 op2 v2
-  | 'twoFieldOr'          // T8: f1 op1 v1 OR f2 op2 v2
-  | 'fieldInAndCompare'   // T9: f1 ∈ [...] AND f2 op v
-  | 'fieldExists'         // T10: field EXISTS / NOT EXISTS
-  | 'fieldMatch'          // T11: field ~= /pattern/
-  | 'fieldContains'       // T12: field contains substring
+  | 'toolInList' // T1: tool.name ∈ [A, B, C]
+  | 'toolInAndMatch' // T2: tool.name ∈ [...] AND content ~= /pat/
+  | 'toolEqAndCmd' // T3: tool.name = X AND args.command ~= /pat/
+  | 'toolEq' // T4: tool.name = X
+  | 'fieldCompare' // T5: field {=,≠,>,<,≥,≤} value
+  | 'fieldInList' // T6: field ∈ [A, B]
+  | 'twoFieldAnd' // T7: f1 op1 v1 AND f2 op2 v2
+  | 'twoFieldOr' // T8: f1 op1 v1 OR f2 op2 v2
+  | 'fieldInAndCompare' // T9: f1 ∈ [...] AND f2 op v
+  | 'fieldExists' // T10: field EXISTS / NOT EXISTS
+  | 'fieldMatch' // T11: field ~= /pattern/
+  | 'fieldContains'; // T12: field contains substring
 
-export type TemplateParamType = 'toolNames' | 'field' | 'operator' | 'value' | 'pattern' | 'list' | 'boolean' | 'decision'
+export type TemplateParamType =
+  'toolNames' | 'field' | 'operator' | 'value' | 'pattern' | 'list' | 'boolean' | 'decision';
 
 export interface TemplateParam {
-  key: string
-  label: string
-  labelEn: string
-  type: TemplateParamType
-  required: boolean
-  placeholder?: string
-  description?: string
+  key: string;
+  label: string;
+  labelEn: string;
+  type: TemplateParamType;
+  required: boolean;
+  placeholder?: string;
+  description?: string;
 }
 
 export interface TemplateDef {
-  id: TemplateId
-  name: string
-  nameEn: string
-  description: string
-  descriptionEn: string
-  icon: string
-  params: TemplateParam[]
+  id: TemplateId;
+  name: string;
+  nameEn: string;
+  description: string;
+  descriptionEn: string;
+  icon: string;
+  params: TemplateParam[];
   /** Human-language example sentence */
-  sentence: string
-  sentenceEn: string
+  sentence: string;
+  sentenceEn: string;
 }
 
-export type OperatorComparison = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte'
-export type OperatorSet = 'in' | 'not_in'
-export type OperatorText = 'contains' | 'not_contains'
-export type OperatorMatch = 'match'
-export type OperatorExist = 'exists' | 'not_exists'
-export type AllOperators = OperatorComparison | OperatorSet | OperatorText | OperatorMatch | OperatorExist
+export type OperatorComparison = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte';
+export type OperatorSet = 'in' | 'not_in';
+export type OperatorText = 'contains' | 'not_contains';
+export type OperatorMatch = 'match';
+export type OperatorExist = 'exists' | 'not_exists';
+export type AllOperators =
+  OperatorComparison | OperatorSet | OperatorText | OperatorMatch | OperatorExist;
 
-export type Decision = 'ALLOW' | 'DENY' | 'CORRECT' | 'REQUEST_HUMAN' | 'EMERGENCY_HALT'
+export type Decision = 'ALLOW' | 'DENY' | 'CORRECT' | 'REQUEST_HUMAN' | 'EMERGENCY_HALT';
 
 export interface TemplateInput {
-  templateId: TemplateId
-  ruleName: string
-  decision: Decision
-  message: string
-  priority: number
-  category: string
+  templateId: TemplateId;
+  ruleName: string;
+  decision: Decision;
+  message: string;
+  priority: number;
+  category: string;
   /** Template-specific parameters */
-  params: Record<string, unknown>
+  params: Record<string, unknown>;
   /** Optional bilingual explanation */
-  explanation?: string | { zh: string; en: string }
+  explanation?: string | { zh: string; en: string };
   /** Optional alternative suggestion */
-  alternative?: string | { zh: string; en: string }
+  alternative?: string | { zh: string; en: string };
 }
 
 export interface TemplateOutput {
-  yaml: string
-  ruleObject: Record<string, unknown>
-  success: boolean
-  error?: string
+  yaml: string;
+  ruleObject: Record<string, unknown>;
+  success: boolean;
+  error?: string;
 }
 
 // ============================================
@@ -97,46 +99,51 @@ export interface TemplateOutput {
 
 // 2026-08-28 收口：原仅 13 个标签，导致前端下拉只能选内核 28 个运算符中的 13 个。
 // 现覆盖全部 28 条件运算符 + 2 修饰符；erdl-schema.spec 断言「每个运算符都有标签」，缺一即红。
-import { CONDITION_OPERATORS, CONDITION_MODIFIERS, OP_COMPARE, OP_VALUE_SCALAR } from './erdl-schema.js'
+import {
+  CONDITION_OPERATORS,
+  CONDITION_MODIFIERS,
+  OP_COMPARE,
+  OP_VALUE_SCALAR,
+} from './erdl-schema.js';
 
 const COMPARISON_OP_LABELS: Record<string, { zh: string; en: string }> = {
   // 比较 6
-  'eq': { zh: '等于 (=)', en: 'equals (=)' },
-  'ne': { zh: '不等于 (≠)', en: 'not equals (≠)' },
-  'gt': { zh: '大于 (>)', en: 'greater than (>)' },
-  'gte': { zh: '大于等于 (≥)', en: 'greater than or equal (≥)' },
-  'lt': { zh: '小于 (<)', en: 'less than (<)' },
-  'lte': { zh: '小于等于 (≤)', en: 'less than or equal (≤)' },
-  'in': { zh: '在列表中 (∈)', en: 'in list (∈)' },
-  'not_in': { zh: '不在列表中 (∉)', en: 'not in list (∉)' },
-  'contains': { zh: '包含', en: 'contains' },
-  'not_contains': { zh: '不包含', en: 'not contains' },
-  'match': { zh: '匹配正则', en: 'matches regex' },
-  'exists': { zh: '存在', en: 'exists' },
-  'not_exists': { zh: '不存在', en: 'not exists' },
+  eq: { zh: '等于 (=)', en: 'equals (=)' },
+  ne: { zh: '不等于 (≠)', en: 'not equals (≠)' },
+  gt: { zh: '大于 (>)', en: 'greater than (>)' },
+  gte: { zh: '大于等于 (≥)', en: 'greater than or equal (≥)' },
+  lt: { zh: '小于 (<)', en: 'less than (<)' },
+  lte: { zh: '小于等于 (≤)', en: 'less than or equal (≤)' },
+  in: { zh: '在列表中 (∈)', en: 'in list (∈)' },
+  not_in: { zh: '不在列表中 (∉)', en: 'not in list (∉)' },
+  contains: { zh: '包含', en: 'contains' },
+  not_contains: { zh: '不包含', en: 'not contains' },
+  match: { zh: '匹配正则', en: 'matches regex' },
+  exists: { zh: '存在', en: 'exists' },
+  not_exists: { zh: '不存在', en: 'not exists' },
   // 边界否定 2
-  'starts_with': { zh: '以…开头', en: 'starts with' },
-  'ends_with': { zh: '以…结尾', en: 'ends with' },
-  'not_starts_with': { zh: '不以…开头', en: 'not starts with' },
-  'not_ends_with': { zh: '不以…结尾', en: 'not ends with' },
+  starts_with: { zh: '以…开头', en: 'starts with' },
+  ends_with: { zh: '以…结尾', en: 'ends with' },
+  not_starts_with: { zh: '不以…开头', en: 'not starts with' },
+  not_ends_with: { zh: '不以…结尾', en: 'not ends with' },
   // 长度 5（Unicode 码点计数）
-  'length_gt': { zh: '长度大于', en: 'length >' },
-  'length_gte': { zh: '长度大于等于', en: 'length >=' },
-  'length_lt': { zh: '长度小于', en: 'length <' },
-  'length_lte': { zh: '长度小于等于', en: 'length <=' },
-  'length_eq': { zh: '长度等于', en: 'length =' },
+  length_gt: { zh: '长度大于', en: 'length >' },
+  length_gte: { zh: '长度大于等于', en: 'length >=' },
+  length_lt: { zh: '长度小于', en: 'length <' },
+  length_lte: { zh: '长度小于等于', en: 'length <=' },
+  length_eq: { zh: '长度等于', en: 'length =' },
   // 范围 2（闭区间，仅数值）
-  'between': { zh: '在区间内 [min,max]', en: 'between [min,max]' },
-  'not_between': { zh: '不在区间内', en: 'not between' },
+  between: { zh: '在区间内 [min,max]', en: 'between [min,max]' },
+  not_between: { zh: '不在区间内', en: 'not between' },
   // 计数 4（数组元素数）
-  'count_gt': { zh: '元素数大于', en: 'count >' },
-  'count_gte': { zh: '元素数大于等于', en: 'count >=' },
-  'count_lt': { zh: '元素数小于', en: 'count <' },
-  'count_lte': { zh: '元素数小于等于', en: 'count <=' },
+  count_gt: { zh: '元素数大于', en: 'count >' },
+  count_gte: { zh: '元素数大于等于', en: 'count >=' },
+  count_lt: { zh: '元素数小于', en: 'count <' },
+  count_lte: { zh: '元素数小于等于', en: 'count <=' },
   // 修饰符 2（有状态算子，写在 condition 的 within/rate 字段，不是 operator 取值）
-  'within': { zh: '时间窗口内去重（修饰符）', en: 'within window (modifier)' },
-  'rate': { zh: '速率限制（修饰符）', en: 'rate limit (modifier)' },
-}
+  within: { zh: '时间窗口内去重（修饰符）', en: 'within window (modifier)' },
+  rate: { zh: '速率限制（修饰符）', en: 'rate limit (modifier)' },
+};
 
 export const TEMPLATES: TemplateDef[] = [
   {
@@ -149,7 +156,15 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) Agent 调用的工具 在 [列表] 中 → 应当(then) [执行动作]',
     sentenceEn: 'when tool name ∈ [list] → then [action]',
     params: [
-      { key: 'toolNames', label: '工具名称', labelEn: 'Tool Names', type: 'toolNames', required: true, placeholder: '选择工具…', description: '选择要拦截/放行的工具名' },
+      {
+        key: 'toolNames',
+        label: '工具名称',
+        labelEn: 'Tool Names',
+        type: 'toolNames',
+        required: true,
+        placeholder: '选择工具…',
+        description: '选择要拦截/放行的工具名',
+      },
     ],
   },
   {
@@ -162,8 +177,22 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) 工具 在 [列表] 中 且 内容 匹配 /正则/ → 应当(then) [执行动作]',
     sentenceEn: 'when tool ∈ [list] AND content ~= /pattern/ → then [action]',
     params: [
-      { key: 'toolNames', label: '工具名称', labelEn: 'Tool Names', type: 'toolNames', required: true },
-      { key: 'matchPattern', label: '匹配正则', labelEn: 'Match Pattern', type: 'pattern', required: true, placeholder: '例如: \\bany\\b 或 eval\\(', description: '正则表达式，用于匹配工具参数内容' },
+      {
+        key: 'toolNames',
+        label: '工具名称',
+        labelEn: 'Tool Names',
+        type: 'toolNames',
+        required: true,
+      },
+      {
+        key: 'matchPattern',
+        label: '匹配正则',
+        labelEn: 'Match Pattern',
+        type: 'pattern',
+        required: true,
+        placeholder: '例如: \\bany\\b 或 eval\\(',
+        description: '正则表达式，用于匹配工具参数内容',
+      },
     ],
   },
   {
@@ -176,8 +205,22 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) 工具 = [名称] 且 命令 匹配 /正则/ → 应当(then) [执行动作]',
     sentenceEn: 'when tool = [name] AND command ~= /pattern/ → then [action]',
     params: [
-      { key: 'toolName', label: '工具名称', labelEn: 'Tool Name', type: 'field', required: true, placeholder: '例如: exec' },
-      { key: 'matchPattern', label: '命令正则', labelEn: 'Command Pattern', type: 'pattern', required: true, placeholder: '例如: git stash' },
+      {
+        key: 'toolName',
+        label: '工具名称',
+        labelEn: 'Tool Name',
+        type: 'field',
+        required: true,
+        placeholder: '例如: exec',
+      },
+      {
+        key: 'matchPattern',
+        label: '命令正则',
+        labelEn: 'Command Pattern',
+        type: 'pattern',
+        required: true,
+        placeholder: '例如: git stash',
+      },
     ],
   },
   {
@@ -190,7 +233,14 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) 工具 = [名称] → 应当(then) [执行动作]',
     sentenceEn: 'when tool = [name] → then [action]',
     params: [
-      { key: 'toolName', label: '工具名称', labelEn: 'Tool Name', type: 'field', required: true, placeholder: '例如: exec' },
+      {
+        key: 'toolName',
+        label: '工具名称',
+        labelEn: 'Tool Name',
+        type: 'field',
+        required: true,
+        placeholder: '例如: exec',
+      },
     ],
   },
   {
@@ -203,9 +253,24 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段] [比较符] [值] → 应当(then) [执行动作]',
     sentenceEn: 'when [field] [operator] [value] → then [action]',
     params: [
-      { key: 'field', label: '字段名', labelEn: 'Field', type: 'field', required: true, placeholder: '例如: amount 或 sem.code', description: 'SPEC v2.0 §11 上下文字段。例如: tool.name, sem.code, amount' },
+      {
+        key: 'field',
+        label: '字段名',
+        labelEn: 'Field',
+        type: 'field',
+        required: true,
+        placeholder: '例如: amount 或 sem.code',
+        description: 'SPEC v2.0 §11 上下文字段。例如: tool.name, sem.code, amount',
+      },
       { key: 'operator', label: '比较符', labelEn: 'Operator', type: 'operator', required: true },
-      { key: 'value', label: '值', labelEn: 'Value', type: 'value', required: true, placeholder: '例如: 100' },
+      {
+        key: 'value',
+        label: '值',
+        labelEn: 'Value',
+        type: 'value',
+        required: true,
+        placeholder: '例如: 100',
+      },
     ],
   },
   {
@@ -218,8 +283,24 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段] ∈ [列表] → 应当(then) [执行动作]',
     sentenceEn: 'when [field] ∈ [list] → then [action]',
     params: [
-      { key: 'field', label: '字段名', labelEn: 'Field', type: 'field', required: true, placeholder: '例如: status 或 sem.code', description: 'SPEC v2.0 §11 上下文字段' },
-      { key: 'values', label: '值列表', labelEn: 'Values', type: 'list', required: true, placeholder: '一行一个值…', description: '每行一个值' },
+      {
+        key: 'field',
+        label: '字段名',
+        labelEn: 'Field',
+        type: 'field',
+        required: true,
+        placeholder: '例如: status 或 sem.code',
+        description: 'SPEC v2.0 §11 上下文字段',
+      },
+      {
+        key: 'values',
+        label: '值列表',
+        labelEn: 'Values',
+        type: 'list',
+        required: true,
+        placeholder: '一行一个值…',
+        description: '每行一个值',
+      },
     ],
   },
   {
@@ -232,11 +313,37 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段1] [比较符1] [值1] 且 [字段2] [比较符2] [值2] → 应当(then) [执行动作]',
     sentenceEn: 'when [field1] [op1] [val1] AND [field2] [op2] [val2] → then [action]',
     params: [
-      { key: 'field1', label: '字段 1', labelEn: 'Field 1', type: 'field', required: true, description: 'SPEC v2.0 §11 field' },
-      { key: 'operator1', label: '比较符 1', labelEn: 'Operator 1', type: 'operator', required: true },
+      {
+        key: 'field1',
+        label: '字段 1',
+        labelEn: 'Field 1',
+        type: 'field',
+        required: true,
+        description: 'SPEC v2.0 §11 field',
+      },
+      {
+        key: 'operator1',
+        label: '比较符 1',
+        labelEn: 'Operator 1',
+        type: 'operator',
+        required: true,
+      },
       { key: 'value1', label: '值 1', labelEn: 'Value 1', type: 'value', required: true },
-      { key: 'field2', label: '字段 2', labelEn: 'Field 2', type: 'field', required: true, description: 'SPEC v2.0 §11 field' },
-      { key: 'operator2', label: '比较符 2', labelEn: 'Operator 2', type: 'operator', required: true },
+      {
+        key: 'field2',
+        label: '字段 2',
+        labelEn: 'Field 2',
+        type: 'field',
+        required: true,
+        description: 'SPEC v2.0 §11 field',
+      },
+      {
+        key: 'operator2',
+        label: '比较符 2',
+        labelEn: 'Operator 2',
+        type: 'operator',
+        required: true,
+      },
       { key: 'value2', label: '值 2', labelEn: 'Value 2', type: 'value', required: true },
     ],
   },
@@ -250,11 +357,37 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段1] [比较符1] [值1] 或 [字段2] [比较符2] [值2] → 应当(then) [执行动作]',
     sentenceEn: 'when [field1] [op1] [val1] OR [field2] [op2] [val2] → then [action]',
     params: [
-      { key: 'field1', label: '字段 1', labelEn: 'Field 1', type: 'field', required: true, description: 'SPEC v2.0 §11 field' },
-      { key: 'operator1', label: '比较符 1', labelEn: 'Operator 1', type: 'operator', required: true },
+      {
+        key: 'field1',
+        label: '字段 1',
+        labelEn: 'Field 1',
+        type: 'field',
+        required: true,
+        description: 'SPEC v2.0 §11 field',
+      },
+      {
+        key: 'operator1',
+        label: '比较符 1',
+        labelEn: 'Operator 1',
+        type: 'operator',
+        required: true,
+      },
       { key: 'value1', label: '值 1', labelEn: 'Value 1', type: 'value', required: true },
-      { key: 'field2', label: '字段 2', labelEn: 'Field 2', type: 'field', required: true, description: 'SPEC v2.0 §11 field' },
-      { key: 'operator2', label: '比较符 2', labelEn: 'Operator 2', type: 'operator', required: true },
+      {
+        key: 'field2',
+        label: '字段 2',
+        labelEn: 'Field 2',
+        type: 'field',
+        required: true,
+        description: 'SPEC v2.0 §11 field',
+      },
+      {
+        key: 'operator2',
+        label: '比较符 2',
+        labelEn: 'Operator 2',
+        type: 'operator',
+        required: true,
+      },
       { key: 'value2', label: '值 2', labelEn: 'Value 2', type: 'value', required: true },
     ],
   },
@@ -268,9 +401,23 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段1] ∈ [列表] 且 [字段2] [比较符] [值] → 应当(then) [执行动作]',
     sentenceEn: 'when [field1] ∈ [list] AND [field2] [op] [val] → then [action]',
     params: [
-      { key: 'field1', label: '列表字段', labelEn: 'List Field', type: 'field', required: true, description: 'SPEC v2.0 §11 field' },
+      {
+        key: 'field1',
+        label: '列表字段',
+        labelEn: 'List Field',
+        type: 'field',
+        required: true,
+        description: 'SPEC v2.0 §11 field',
+      },
       { key: 'values', label: '值列表', labelEn: 'Values', type: 'list', required: true },
-      { key: 'field2', label: '比较字段', labelEn: 'Compare Field', type: 'field', required: true, description: 'SPEC v2.0 §11 field' },
+      {
+        key: 'field2',
+        label: '比较字段',
+        labelEn: 'Compare Field',
+        type: 'field',
+        required: true,
+        description: 'SPEC v2.0 §11 field',
+      },
       { key: 'operator', label: '比较符', labelEn: 'Operator', type: 'operator', required: true },
       { key: 'value', label: '值', labelEn: 'Value', type: 'value', required: true },
     ],
@@ -285,7 +432,14 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段] 存在/不存在 时 → 应当(then) [执行动作]',
     sentenceEn: 'when [field] exists / not exists → then [action]',
     params: [
-      { key: 'field', label: '字段名', labelEn: 'Field', type: 'field', required: true, placeholder: '例如: approval_id' },
+      {
+        key: 'field',
+        label: '字段名',
+        labelEn: 'Field',
+        type: 'field',
+        required: true,
+        placeholder: '例如: approval_id',
+      },
       { key: 'exists', label: '存在/不存在', labelEn: 'Exists?', type: 'boolean', required: true },
     ],
   },
@@ -299,8 +453,22 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段] 匹配 /正则/ → 应当(then) [执行动作]',
     sentenceEn: 'when [field] ~= /pattern/ → then [action]',
     params: [
-      { key: 'field', label: '字段名', labelEn: 'Field', type: 'field', required: true, placeholder: '例如: code' },
-      { key: 'pattern', label: '正则', labelEn: 'Pattern', type: 'pattern', required: true, placeholder: '^[A-Z]{2}-\\d{4}$' },
+      {
+        key: 'field',
+        label: '字段名',
+        labelEn: 'Field',
+        type: 'field',
+        required: true,
+        placeholder: '例如: code',
+      },
+      {
+        key: 'pattern',
+        label: '正则',
+        labelEn: 'Pattern',
+        type: 'pattern',
+        required: true,
+        placeholder: '^[A-Z]{2}-\\d{4}$',
+      },
     ],
   },
   {
@@ -313,11 +481,25 @@ export const TEMPLATES: TemplateDef[] = [
     sentence: '当(when) [字段] 包含 [子串] → 应当(then) [执行动作]',
     sentenceEn: 'when [field] contains [substring] → then [action]',
     params: [
-      { key: 'field', label: '字段名', labelEn: 'Field', type: 'field', required: true, placeholder: '例如: title' },
-      { key: 'value', label: '子串', labelEn: 'Substring', type: 'value', required: true, placeholder: '例如: 紧急' },
+      {
+        key: 'field',
+        label: '字段名',
+        labelEn: 'Field',
+        type: 'field',
+        required: true,
+        placeholder: '例如: title',
+      },
+      {
+        key: 'value',
+        label: '子串',
+        labelEn: 'Substring',
+        type: 'value',
+        required: true,
+        placeholder: '例如: 紧急',
+      },
     ],
   },
-]
+];
 
 // ============================================
 // Template Engine
@@ -326,12 +508,12 @@ export const TEMPLATES: TemplateDef[] = [
 export class TemplateEngine {
   /** Get all template definitions (for building the UI) */
   getTemplates(): TemplateDef[] {
-    return TEMPLATES
+    return TEMPLATES;
   }
 
   /** Get a specific template by ID */
   getTemplate(id: TemplateId): TemplateDef | undefined {
-    return TEMPLATES.find((t) => t.id === id)
+    return TEMPLATES.find(t => t.id === id);
   }
 
   /**
@@ -342,14 +524,13 @@ export class TemplateEngine {
    * → 用户一选必被拒。现只暴露 28 个条件运算符，**与校验器放行域严格一致**。
    */
   getOperatorLabels(): Record<string, { zh: string; en: string }> {
-    const out: Record<string, { zh: string; en: string }> = {}
+    const out: Record<string, { zh: string; en: string }> = {};
     for (const op of CONDITION_OPERATORS) {
-      const l = COMPARISON_OP_LABELS[op]
-      if (l) out[op] = l
+      const l = COMPARISON_OP_LABELS[op];
+      if (l) out[op] = l;
     }
-    return out
+    return out;
   }
-
 
   /**
    * 每个模板的**运算符可选域**（2026-08-28 全量 review 新增）。
@@ -367,7 +548,7 @@ export class TemplateEngine {
       // 校验器：checkAllOp → 28 全集；但模板 value 为标量 → 取标量形态子集
       twoFieldAnd: OP_VALUE_SCALAR,
       twoFieldOr: OP_VALUE_SCALAR,
-    }
+    };
   }
 
   /**
@@ -375,12 +556,12 @@ export class TemplateEngine {
    * UI 应在 condition 的 within/rate 字段位置使用本表，不得混进 operator 下拉。
    */
   getModifierLabels(): Record<string, { zh: string; en: string }> {
-    const out: Record<string, { zh: string; en: string }> = {}
+    const out: Record<string, { zh: string; en: string }> = {};
     for (const m of CONDITION_MODIFIERS) {
-      const l = COMPARISON_OP_LABELS[m]
-      if (l) out[m] = l
+      const l = COMPARISON_OP_LABELS[m];
+      if (l) out[m] = l;
     }
-    return out
+    return out;
   }
 
   /**
@@ -390,24 +571,35 @@ export class TemplateEngine {
    * (template assembly, not yaml.dump).
    */
   generate(input: TemplateInput): TemplateOutput {
-    const tpl = this.getTemplate(input.templateId)
+    const tpl = this.getTemplate(input.templateId);
     if (!tpl) {
-      return { yaml: '', ruleObject: {}, success: false, error: `Unknown template: ${input.templateId}` }
+      return {
+        yaml: '',
+        ruleObject: {},
+        success: false,
+        error: `Unknown template: ${input.templateId}`,
+      };
     }
 
     try {
-      const data = this.buildSpec5(input)
+      const data = this.buildSpec5(input);
 
       // Use RuleYamlSerializer for deterministic SPEC v2.0 §11 F1-F8 output
-      const serializer = new RuleYamlSerializer('.') // dir unused by serializeSpec5
-      const yamlStr = serializer.serializeSpec5(data)
+      const serializer = new RuleYamlSerializer('.'); // dir unused by serializeSpec5
+      const yamlStr = serializer.serializeSpec5(data);
 
-      return { yaml: yamlStr, ruleObject: data as unknown as Record<string, unknown>, success: true }
+      return {
+        yaml: yamlStr,
+        ruleObject: data as unknown as Record<string, unknown>,
+        success: true,
+      };
     } catch (err) {
       return {
-        yaml: '', ruleObject: {}, success: false,
+        yaml: '',
+        ruleObject: {},
+        success: false,
         error: err instanceof Error ? err.message : String(err),
-      }
+      };
     }
   }
 
@@ -416,27 +608,30 @@ export class TemplateEngine {
   // ============================================
 
   private buildSpec5(input: TemplateInput): ExtractedSpec5 {
-    const conditions = this.buildConditions(input.templateId, input.params)
+    const conditions = this.buildConditions(input.templateId, input.params);
 
     const rule: Record<string, unknown> = {
       name: input.ruleName,
       description: `Rule generated from template: ${input.templateId}`,
       priority: input.priority,
       ring: this.ringForPriority(input.priority),
-      when: conditions.length === 0 ? 'true' : {
-        logic: this.isOrTemplate(input.templateId) ? 'OR' : 'AND',
-        conditions,
-      },
+      when:
+        conditions.length === 0
+          ? 'true'
+          : {
+              logic: this.isOrTemplate(input.templateId) ? 'OR' : 'AND',
+              conditions,
+            },
       then: input.decision,
       message: input.message,
-    }
+    };
 
     // Computed override from priority (Ring 0 = critical, Ring 1 = high)
-    if (input.priority <= 2) rule.override = 'critical'
-    else if (input.priority <= 5) rule.override = 'high'
+    if (input.priority <= 2) rule.override = 'critical';
+    else if (input.priority <= 5) rule.override = 'high';
 
-    if (input.explanation) rule.explanation = input.explanation
-    if (input.alternative) rule.alternative = input.alternative
+    if (input.explanation) rule.explanation = input.explanation;
+    if (input.alternative) rule.alternative = input.alternative;
 
     return {
       protocol: 'erdl/v2',
@@ -449,83 +644,83 @@ export class TemplateEngine {
         tags: [input.category],
       },
       rules: [rule],
-    }
+    };
   }
 
   private ringForPriority(priority: number): number {
-    if (priority <= 2) return 0
-    if (priority <= 5) return 1
-    if (priority <= 20) return 2
-    return 3
+    if (priority <= 2) return 0;
+    if (priority <= 5) return 1;
+    if (priority <= 20) return 2;
+    return 3;
   }
 
   private isOrTemplate(id: TemplateId): boolean {
-    return id === 'twoFieldOr'
+    return id === 'twoFieldOr';
   }
 
   private buildConditions(
     id: TemplateId,
     params: Record<string, unknown>,
   ): Array<Record<string, unknown>> {
-    const p = params
+    const p = params;
 
     switch (id) {
       case 'toolInList':
-        return [{ field: 'tool.name', operator: 'in', value: p.toolNames }]
+        return [{ field: 'tool.name', operator: 'in', value: p.toolNames }];
 
       case 'toolInAndMatch':
         return [
           { field: 'tool.name', operator: 'in', value: p.toolNames },
           { field: 'tool.args', operator: 'match', value: p.matchPattern },
-        ]
+        ];
 
       case 'toolEqAndCmd':
         return [
           { field: 'tool.name', operator: 'eq', value: p.toolName },
           { field: 'tool.args.command', operator: 'match', value: p.matchPattern },
-        ]
+        ];
 
       case 'toolEq':
-        return [{ field: 'tool.name', operator: 'eq', value: p.toolName }]
+        return [{ field: 'tool.name', operator: 'eq', value: p.toolName }];
 
       case 'fieldCompare':
-        return [{ field: p.field, operator: p.operator, value: p.value }]
+        return [{ field: p.field, operator: p.operator, value: p.value }];
 
       case 'fieldInList':
-        return [{ field: p.field, operator: 'in', value: p.values }]
+        return [{ field: p.field, operator: 'in', value: p.values }];
 
       case 'twoFieldAnd':
         return [
           { field: p.field1, operator: p.operator1, value: p.value1 },
           { field: p.field2, operator: p.operator2, value: p.value2 },
-        ]
+        ];
 
       case 'twoFieldOr':
         return [
           { field: p.field1, operator: p.operator1, value: p.value1 },
           { field: p.field2, operator: p.operator2, value: p.value2 },
-        ]
+        ];
 
       case 'fieldInAndCompare':
         return [
           { field: p.field1, operator: 'in', value: p.values },
           { field: p.field2, operator: p.operator, value: p.value },
-        ]
+        ];
 
       case 'fieldExists':
-        return [{ field: p.field, operator: p.exists ? 'exists' : 'not_exists' }]
+        return [{ field: p.field, operator: p.exists ? 'exists' : 'not_exists' }];
 
       case 'fieldMatch':
-        return [{ field: p.field, operator: 'match', value: p.pattern }]
+        return [{ field: p.field, operator: 'match', value: p.pattern }];
 
       case 'fieldContains':
-        return [{ field: p.field, operator: 'contains', value: p.value }]
+        return [{ field: p.field, operator: 'contains', value: p.value }];
 
       default:
-        return []
+        return [];
     }
   }
 }
 
 /** Singleton */
-export const templateEngine = new TemplateEngine()
+export const templateEngine = new TemplateEngine();

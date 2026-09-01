@@ -22,25 +22,36 @@ describe('@rulsynor/core', () => {
   //（'NOT_SIGNED'/'no-key-v1'），它们违反 Omit over Null 且造成合规假阳；
   // 两字段本来就不进哈希原像，故 audit.hash 不变（无兼容性破坏）。
   describe('Decision Object', () => {
-    const base = () => buildDecisionObject({
-      input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
-      decision: 'ALLOW',
-      actionTaken: 'allowed',
-      reason: 'ok',
-      matchedRules: [],
-      totalEvaluated: 0,
-      totalMatched: 0,
-      rules: [],
-      evaluationDurationMs: 5,
-    });
+    const base = () =>
+      buildDecisionObject({
+        input: {
+          runId: 't',
+          step: 0,
+          toolName: 'exec',
+          toolArgs: {},
+          context: {},
+          agentId: 'a',
+          sessionId: 's',
+        },
+        decision: 'ALLOW',
+        actionTaken: 'allowed',
+        reason: 'ok',
+        matchedRules: [],
+        totalEvaluated: 0,
+        totalMatched: 0,
+        rules: [],
+        evaluationDurationMs: 5,
+      });
 
-    it('23 fields（移除 signature/signing_key_id 占位值后）', () => expect(Object.keys(base())).toHaveLength(23));
+    it('23 fields（移除 signature/signing_key_id 占位值后）', () =>
+      expect(Object.keys(base())).toHaveLength(23));
     it('哈希模式 MUST NOT 携带 signature/signing_key_id（禁占位值，RFC-002 §1.1/§1.3#6）', () => {
       const keys = Object.keys(base());
       expect(keys).not.toContain('signature');
       expect(keys).not.toContain('signing_key_id');
     });
-    it('audit.hash format', () => expect((base() as any).audit.hash).toMatch(/^sha256:[a-f0-9]{64}$/));
+    it('audit.hash format', () =>
+      expect((base() as any).audit.hash).toMatch(/^sha256:[a-f0-9]{64}$/));
     it('JCS self-consistent', () => {
       const do1 = base();
       const { canonicalize } = require('json-canonicalize');
@@ -54,10 +65,13 @@ describe('@rulsynor/core', () => {
       delete clone.audit.hash;
       delete clone.signature;
       delete clone.signing_key_id;
-      expect(`sha256:${c.createHash('sha256').update(canonicalize(clone)).digest('hex')}`).toBe(stored);
+      expect(`sha256:${c.createHash('sha256').update(canonicalize(clone)).digest('hex')}`).toBe(
+        stored,
+      );
     });
     it('agent 8 fields', () => expect(Object.keys((base() as any).agent)).toHaveLength(8));
-    it('agent.aid OID prefix', () => expect((base() as any).agent.aid).toMatch(/^1\.2\.156\.3088\./));
+    it('agent.aid OID prefix', () =>
+      expect((base() as any).agent.aid).toMatch(/^1\.2\.156\.3088\./));
     it('extensions []', () => expect((base() as any).extensions).toEqual([]));
   });
 
@@ -112,7 +126,10 @@ describe('@rulsynor/core', () => {
 
     it('风险条件层：risk_level=critical → signature 强制激活（不论法域）', () => {
       const { resetComplianceProfileCache } = require('../src/compliance/index.js');
-      const saved = { j: process.env['RULSYNOR_JURISDICTIONS'], r: process.env['RULSYNOR_RISK_LEVEL'] };
+      const saved = {
+        j: process.env['RULSYNOR_JURISDICTIONS'],
+        r: process.env['RULSYNOR_RISK_LEVEL'],
+      };
       try {
         // SG 法域本身不要求 signature，但 critical 仍须激活
         process.env['RULSYNOR_JURISDICTIONS'] = 'SG';
@@ -125,15 +142,18 @@ describe('@rulsynor/core', () => {
         resetComplianceProfileCache();
         expect(getComplianceProfile().activated_fields).not.toContain('signature');
       } finally {
-        if (saved.j === undefined) delete process.env['RULSYNOR_JURISDICTIONS']; else process.env['RULSYNOR_JURISDICTIONS'] = saved.j;
-        if (saved.r === undefined) delete process.env['RULSYNOR_RISK_LEVEL']; else process.env['RULSYNOR_RISK_LEVEL'] = saved.r;
+        if (saved.j === undefined) delete process.env['RULSYNOR_JURISDICTIONS'];
+        else process.env['RULSYNOR_JURISDICTIONS'] = saved.j;
+        if (saved.r === undefined) delete process.env['RULSYNOR_RISK_LEVEL'];
+        else process.env['RULSYNOR_RISK_LEVEL'] = saved.r;
         resetComplianceProfileCache();
       }
     });
   });
 
   describe('AID', () => {
-    it('OID format', () => expect(generateAID()).toMatch(/^1\.2\.156\.3088\.1\.\d+\.\d+\.[a-f0-9]{8}$/));
+    it('OID format', () =>
+      expect(generateAID()).toMatch(/^1\.2\.156\.3088\.1\.\d+\.\d+\.[a-f0-9]{8}$/));
   });
 
   describe('Provenance', () => {
@@ -145,7 +165,9 @@ describe('@rulsynor/core', () => {
 
     it('returns navigation guide from DENY result', () => {
       const guide = extractNavigationGuide({
-        matchedRules: [{ ruleId: 'rule-deny-exec', decision: 'DENY', reason: 'Blocked dangerous command' }],
+        matchedRules: [
+          { ruleId: 'rule-deny-exec', decision: 'DENY', reason: 'Blocked dangerous command' },
+        ],
         decision: 'DENY',
         reason: 'Blocked dangerous command',
       });
@@ -156,7 +178,9 @@ describe('@rulsynor/core', () => {
 
     it('extracts CORRECT guidance', () => {
       const guide = extractNavigationGuide({
-        matchedRules: [{ ruleId: 'rule-fix-path', decision: 'CORRECT', reason: 'Use relative path instead' }],
+        matchedRules: [
+          { ruleId: 'rule-fix-path', decision: 'CORRECT', reason: 'Use relative path instead' },
+        ],
         decision: 'CORRECT',
         reason: 'Use relative path instead',
       });
@@ -212,18 +236,32 @@ describe('@rulsynor/core', () => {
 
     it('advanceCorrectLoop resolves on ALLOW', () => {
       const { advanceCorrectLoop } = require('../src/preflight/guard-integration.js');
-      const result = advanceCorrectLoop({
-        ruleId: 'r1', originalToolCall: { name: 'exec', args: {} }, correction: 'fix', round: 1, state: 'correct_round_1',
-      }, 'ALLOW');
+      const result = advanceCorrectLoop(
+        {
+          ruleId: 'r1',
+          originalToolCall: { name: 'exec', args: {} },
+          correction: 'fix',
+          round: 1,
+          state: 'correct_round_1',
+        },
+        'ALLOW',
+      );
       expect(result.state).toBe('correct_resolved');
       expect(result.execute).toBe(true);
     });
 
     it('advanceCorrectLoop escalates after round 3', () => {
       const { advanceCorrectLoop } = require('../src/preflight/guard-integration.js');
-      const result = advanceCorrectLoop({
-        ruleId: 'r1', originalToolCall: { name: 'exec', args: {} }, correction: 'fix', round: 3, state: 'correct_round_3',
-      }, 'DENY');
+      const result = advanceCorrectLoop(
+        {
+          ruleId: 'r1',
+          originalToolCall: { name: 'exec', args: {} },
+          correction: 'fix',
+          round: 3,
+          state: 'correct_round_3',
+        },
+        'DENY',
+      );
       expect(result.state).toBe('correct_escalated');
       expect(result.escalate).toBe(true);
     });

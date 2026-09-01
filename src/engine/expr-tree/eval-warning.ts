@@ -11,46 +11,46 @@
  */
 
 export type EvalWarningKind =
-  | 'type_mismatch'          // 严格类型匹配失败（§11.2）
-  | 'division_by_zero'       // 除零
-  | 'field_absent'           // 字段缺失（空值传播）
-  | 'quantifier_empty'       // 量词空数组安全折叠（E8）
-  | 'aggregate_empty'        // 聚合空数组安全折叠（§10.4(d)）
-  | 'regex_re_dos'           // 正则 ReDoS 风险
-  | 'array_over_limit'       // 数组超上限
-  | 'invalid_date'           // 日期解析失败
-  | 'not_ruleable'           // 无法确定性求值
+  | 'type_mismatch' // 严格类型匹配失败（§11.2）
+  | 'division_by_zero' // 除零
+  | 'field_absent' // 字段缺失（空值传播）
+  | 'quantifier_empty' // 量词空数组安全折叠（E8）
+  | 'aggregate_empty' // 聚合空数组安全折叠（§10.4(d)）
+  | 'regex_re_dos' // 正则 ReDoS 风险
+  | 'array_over_limit' // 数组超上限
+  | 'invalid_date' // 日期解析失败
+  | 'not_ruleable'; // 无法确定性求值
 
 export interface EvalWarning {
-  kind: EvalWarningKind
-  message: string
+  kind: EvalWarningKind;
+  message: string;
   /** 触发警告的节点类型 */
-  nodeType?: string
+  nodeType?: string;
 }
 
 export interface EvalResult {
   /** 求值结果值（number/string/boolean/array/null） */
-  value: unknown
+  value: unknown;
   /** 求值过程中收集的警告 */
-  warnings: EvalWarning[]
+  warnings: EvalWarning[];
   /** 是否发生了不可恢复的错误（结构性错误，外部兜底） */
-  errored: boolean
-  error?: string
+  errored: boolean;
+  error?: string;
 }
 
 export function ok(value: unknown, warnings: EvalWarning[] = []): EvalResult {
-  return { value, warnings, errored: false }
+  return { value, warnings, errored: false };
 }
 
 export function err(message: string, warnings: EvalWarning[] = []): EvalResult {
-  return { value: null, warnings, errored: true, error: message }
+  return { value: null, warnings, errored: true, error: message };
 }
 
 /** 合并多个子求值结果的警告 */
 export function mergeWarnings(...results: EvalResult[]): EvalWarning[] {
-  const out: EvalWarning[] = []
+  const out: EvalWarning[] = [];
   for (const r of results) {
-    out.push(...r.warnings)
+    out.push(...r.warnings);
   }
-  return out
+  return out;
 }

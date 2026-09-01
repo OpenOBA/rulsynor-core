@@ -87,7 +87,11 @@ export function safeRegExp(pattern: string, flags?: string): RegExp {
  * 调用方语义为「条件是否命中」——截断只限制匹配窗口，不改变 fail-close 方向：
  * 匹配类规则未命中 → 条件 false → 规则不触发，与既有空值传播语义一致。
  */
-export function safeTest(re: RegExp, input: string, maxInputLength: number = REGEX_MAX_INPUT_LENGTH): boolean {
+export function safeTest(
+  re: RegExp,
+  input: string,
+  maxInputLength: number = REGEX_MAX_INPUT_LENGTH,
+): boolean {
   const bounded = input.length > maxInputLength ? input.slice(0, maxInputLength) : input;
   return re.test(bounded);
 }

@@ -49,7 +49,7 @@ describe('PlanParser', () => {
 
     it('extracts step descriptions', () => {
       const result = p.parse(
-        'PLAN:\n步骤1: read config file | 工具: read | 操作: READ | 目的: load settings'
+        'PLAN:\n步骤1: read config file | 工具: read | 操作: READ | 目的: load settings',
       );
       expect(result.steps[0].description).toContain('read config file');
       expect(result.steps[0].opSem).toBe('OP_READ');
@@ -58,42 +58,34 @@ describe('PlanParser', () => {
 
     it('extracts goal field', () => {
       const result = p.parse(
-        '目标: deploy the application\nPLAN:\n步骤1: npm install\n步骤2: npm run build'
+        '目标: deploy the application\nPLAN:\n步骤1: npm install\n步骤2: npm run build',
       );
       expect(result.goal).toBe('deploy the application');
     });
 
     it('extracts success criteria', () => {
-      const result = p.parse(
-        'PLAN:\n步骤1: test\n成功标准: all tests pass'
-      );
+      const result = p.parse('PLAN:\n步骤1: test\n成功标准: all tests pass');
       expect(result.successCriteria).toBe('all tests pass');
     });
 
     it('extracts estimated rounds', () => {
-      const result = p.parse(
-        'PLAN:\n步骤1: do work\n预计轮次: 3'
-      );
+      const result = p.parse('PLAN:\n步骤1: do work\n预计轮次: 3');
       expect(result.estimatedRounds).toBe(3);
     });
 
     it('extracts risk level', () => {
-      const result = p.parse(
-        'PLAN:\n步骤1: dangerous op\n风险: high'
-      );
+      const result = p.parse('PLAN:\n步骤1: dangerous op\n风险: high');
       expect(result.riskLevel).toBe('high');
     });
 
     it('extracts alternatives', () => {
-      const result = p.parse(
-        'PLAN:\n步骤1: do it\n替代方案: use a different tool'
-      );
+      const result = p.parse('PLAN:\n步骤1: do it\n替代方案: use a different tool');
       expect(result.alternatives).toBe('use a different tool');
     });
 
     it('handles Step N: format (English)', () => {
       const result = p.parse(
-        'PLAN:\nStep 1: read file | Tools: cat | Operation: READ | Purpose: inspect'
+        'PLAN:\nStep 1: read file | Tools: cat | Operation: READ | Purpose: inspect',
       );
       expect(result.steps[0].index).toBe(1);
       expect(result.steps[0].tools).toEqual(['cat']);
@@ -101,9 +93,7 @@ describe('PlanParser', () => {
     });
 
     it('handles numbered format', () => {
-      const result = p.parse(
-        'PLAN:\n1. write file\n2. test\n3. deploy'
-      );
+      const result = p.parse('PLAN:\n1. write file\n2. test\n3. deploy');
       expect(result.steps).toHaveLength(3);
       expect(result.steps[0].index).toBe(1);
       expect(result.steps[2].index).toBe(3);
@@ -111,14 +101,14 @@ describe('PlanParser', () => {
 
     it('handles multi-tool steps', () => {
       const result = p.parse(
-        'PLAN:\n步骤1: setup | 工具: npm, node, git | 操作: EXEC | 目的: prepare'
+        'PLAN:\n步骤1: setup | 工具: npm, node, git | 操作: EXEC | 目的: prepare',
       );
       expect(result.steps[0].tools).toEqual(['npm', 'node', 'git']);
     });
 
     it('extracts multiple steps in order', () => {
       const result = p.parse(
-        'PLAN:\n步骤1: read | 工具: cat | 操作: READ | 目的: check\n步骤2: modify | 工具: sed | 操作: WRITE | 目的: fix\n步骤3: verify | 工具: test | 操作: EXEC | 目的: confirm'
+        'PLAN:\n步骤1: read | 工具: cat | 操作: READ | 目的: check\n步骤2: modify | 工具: sed | 操作: WRITE | 目的: fix\n步骤3: verify | 工具: test | 操作: EXEC | 目的: confirm',
       );
       expect(result.steps).toHaveLength(3);
       expect(result.steps[0].opSem).toBe('OP_READ');
@@ -128,7 +118,8 @@ describe('PlanParser', () => {
 
     it('skips metadata lines but still parses formatted steps', () => {
       // Metadata (目标/成功标准/预计) comes first, then PLAN with steps
-      const text = '目标: deploy\n成功标准: live\n预计轮次: 2\nPLAN:\n步骤1: build | 工具: npm | 操作: EXEC | 目的: compile';
+      const text =
+        '目标: deploy\n成功标准: live\n预计轮次: 2\nPLAN:\n步骤1: build | 工具: npm | 操作: EXEC | 目的: compile';
       const result = p.parse(text);
       expect(result.steps.length).toBeGreaterThanOrEqual(1);
       expect(result.goal).toBe('deploy');

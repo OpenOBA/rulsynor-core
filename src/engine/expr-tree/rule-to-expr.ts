@@ -14,32 +14,36 @@
  * @license MIT
  */
 
-import type { RuleDefinition, RuleCondition } from '../rule-definition.js'
-import type { ExprNode } from './node-types.js'
-import { fromSExpr, extractWhenExpr } from './s-expression.js'
-import { compileSimpleConditions, type SimpleCondition, type SimpleOperator } from './simple-compiler.js'
-import { CONDITION_OPERATORS } from '../erdl-schema.js'
+import type { RuleDefinition, RuleCondition } from '../rule-definition.js';
+import type { ExprNode } from './node-types.js';
+import { fromSExpr, extractWhenExpr } from './s-expression.js';
+import {
+  compileSimpleConditions,
+  type SimpleCondition,
+  type SimpleOperator,
+} from './simple-compiler.js';
+import { CONDITION_OPERATORS } from '../erdl-schema.js';
 
 /** RuleCondition 的 operator → SimpleOperator（归一别名 + 过滤非纯算子） */
 export function normalizeOperator(op: string | undefined): SimpleOperator | null {
-  if (!op) return null
+  if (!op) return null;
   // 别名归一（与旧 evaluator v1.3 aliasing 一致）
-  if (op === 'matches') op = 'match'
-  if (op === 'neq') op = 'ne'
+  if (op === 'matches') op = 'match';
+  if (op === 'neq') op = 'ne';
   // 判定是否为 SimpleOperator
   // 2026-08-28 review 收口：原为本地 28 项数组（第二份枚举）。现用单一事实源判定。
-  return (CONDITION_OPERATORS as readonly string[]).includes(op) ? (op as SimpleOperator) : null
+  return (CONDITION_OPERATORS as readonly string[]).includes(op) ? (op as SimpleOperator) : null;
 }
 
 /** 单个 RuleCondition → SimpleCondition（无法编译的返回 null） */
 export function ruleConditionToSimple(cond: RuleCondition): SimpleCondition | null {
   // 非纯条件（within/rate/pattern/keywords）不编译
-  if (cond.within || cond.rate || cond.pattern || cond.keywords) return null
-  const field = cond.field
-  if (!field) return null
-  const op = normalizeOperator(cond.operator)
-  if (op === null) return null
-  return { field, operator: op, value: cond.value }
+  if (cond.within || cond.rate || cond.pattern || cond.keywords) return null;
+  const field = cond.field;
+  if (!field) return null;
+  const op = normalizeOperator(cond.operator);
+  if (op === null) return null;
+  return { field, operator: op, value: cond.value };
 }
 
 /**
@@ -47,19 +51,19 @@ export function ruleConditionToSimple(cond: RuleCondition): SimpleCondition | nu
  * 返回 null 表示该规则含非纯条件（within/rate/pattern/keywords），无法编译成纯树。
  */
 export function ruleWhenToExpr(rule: RuleDefinition): ExprNode | null {
-  const conds = rule.conditions ?? []
+  const conds = rule.conditions ?? [];
   if (conds.length === 0) {
     // 空条件 = 恒真（catch-all）
-    return { type: 'literal', value: true }
+    return { type: 'literal', value: true };
   }
-  const simples: SimpleCondition[] = []
+  const simples: SimpleCondition[] = [];
   for (const cond of conds) {
-    const s = ruleConditionToSimple(cond)
-    if (s === null) return null // 含非纯条件
-    simples.push(s)
+    const s = ruleConditionToSimple(cond);
+    if (s === null) return null; // 含非纯条件
+    simples.push(s);
   }
-  const logic = rule.conditionLogic ?? 'AND'
-  return compileSimpleConditions(simples, logic)
+  const logic = rule.conditionLogic ?? 'AND';
+  return compileSimpleConditions(simples, logic);
 }
 
 /**
@@ -75,29 +79,29 @@ export function ruleWhenToExpr(rule: RuleDefinition): ExprNode | null {
 export function jsonWhenToExpr(when: Record<string, unknown>): ExprNode | null {
   // §12 Expression 投影面：优先识别 when.expr 包裹形态（SPEC §12 权威），
   // 兼容 when 顶层即树的旧形态。
-  const exprValue = extractWhenExpr(when)
+  const exprValue = extractWhenExpr(when);
   if (exprValue !== null) {
     try {
-      return fromSExpr(exprValue)
+      return fromSExpr(exprValue);
     } catch {
-      return null
+      return null;
     }
   }
 
-  const conds = when?.conditions as Array<Record<string, unknown>> | undefined
+  const conds = when?.conditions as Array<Record<string, unknown>> | undefined;
   if (!Array.isArray(conds) || conds.length === 0) {
     // 空条件 → 恒真
-    return { type: 'literal', value: true }
+    return { type: 'literal', value: true };
   }
-  const logic = (when.logic as 'AND' | 'OR') ?? 'AND'
-  const simples: SimpleCondition[] = []
+  const logic = (when.logic as 'AND' | 'OR') ?? 'AND';
+  const simples: SimpleCondition[] = [];
   for (const c of conds) {
-    const field = c?.field as string | undefined
-    const op = c?.operator as string | undefined
-    if (!field || !op) return null
-    const normOp = normalizeOperator(op)
-    if (normOp === null) return null
-    simples.push({ field, operator: normOp, value: c.value })
+    const field = c?.field as string | undefined;
+    const op = c?.operator as string | undefined;
+    if (!field || !op) return null;
+    const normOp = normalizeOperator(op);
+    if (normOp === null) return null;
+    simples.push({ field, operator: normOp, value: c.value });
   }
-  return compileSimpleConditions(simples, logic)
+  return compileSimpleConditions(simples, logic);
 }

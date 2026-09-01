@@ -46,11 +46,22 @@ export interface RegulatoryReference {
 // 三层激活（行业条件层 / 风险条件层）未实装、validateActivatedFields 未接入，
 // 属已登记的 P1 工程缺口（rfc-002-收口审计计划 §12.3），随后续重构补齐。
 const REGULATORY_REFERENCES: RegulatoryReference[] = [
-  { framework: 'EU-AI-Act', version: 'Regulation-2024-1689', amended_by: 'Digital-Omnibus-2026', jurisdiction: 'EU', effective_date: '2027-12-02' },
+  {
+    framework: 'EU-AI-Act',
+    version: 'Regulation-2024-1689',
+    amended_by: 'Digital-Omnibus-2026',
+    jurisdiction: 'EU',
+    effective_date: '2027-12-02',
+  },
   { framework: 'GB-Z-185-2026', version: '2026-05-22', jurisdiction: 'CN' },
   { framework: 'NIST-AI-RMF', version: '1.0', jurisdiction: 'US' },
   { framework: 'COSO-GenAI', version: '2026', jurisdiction: 'ALL' },
-  { framework: 'LGPD', version: 'Lei-13.709-2018', jurisdiction: 'BR', effective_date: '2020-09-18' },
+  {
+    framework: 'LGPD',
+    version: 'Lei-13.709-2018',
+    jurisdiction: 'BR',
+    effective_date: '2020-09-18',
+  },
   { framework: 'DPDP', version: '2023-Act-22', jurisdiction: 'IN' },
 ];
 
@@ -62,13 +73,47 @@ const REGULATORY_REFERENCES: RegulatoryReference[] = [
 // compliance_field_missing；② 若用占位值补上，则反而造成合规假阳（fail-open）。
 // 故与向量集取齐：哈希层不声明 signature，签名层落地后再补入。
 const JURISDICTION_FIELD_MAP: Record<string, string[]> = {
-  EU: ['model_id', 'agent.known_limitations', 'confidence_score', 'fairness_assessment', 'impact_assessment_id', 'data_modification_expected', 'autonomy_level', 'context_snapshot_hash', 'sanitized_context'],
-  CN: ['agent.aid', 'agent.tool_registry_hash', 'agent.algorithm_filing_no', 'agent.model_registration_id', 'data_modification_expected', 'autonomy_level', 'context_snapshot_hash', 'sanitized_context'],
-  US: ['model_id', 'confidence_score', 'fairness_assessment', 'impact_assessment_id', 'data_modification_expected', 'autonomy_level', 'context_snapshot_hash', 'sanitized_context'],
+  EU: [
+    'model_id',
+    'agent.known_limitations',
+    'confidence_score',
+    'fairness_assessment',
+    'impact_assessment_id',
+    'data_modification_expected',
+    'autonomy_level',
+    'context_snapshot_hash',
+    'sanitized_context',
+  ],
+  CN: [
+    'agent.aid',
+    'agent.tool_registry_hash',
+    'agent.algorithm_filing_no',
+    'agent.model_registration_id',
+    'data_modification_expected',
+    'autonomy_level',
+    'context_snapshot_hash',
+    'sanitized_context',
+  ],
+  US: [
+    'model_id',
+    'confidence_score',
+    'fairness_assessment',
+    'impact_assessment_id',
+    'data_modification_expected',
+    'autonomy_level',
+    'context_snapshot_hash',
+    'sanitized_context',
+  ],
   SG: ['autonomy_level', 'confidence_score', 'data_modification_expected'],
   // BR · LGPD：Art.20 自动化决策复核权 → autonomy_level；Art.20 §1 标准与程序可告知 → model_id；
   // Art.18 删除权 + PII 分离 → sanitized_context。LGPD 不要求不可否认签名，不含 signature。
-  BR: ['model_id', 'data_modification_expected', 'autonomy_level', 'context_snapshot_hash', 'sanitized_context'],
+  BR: [
+    'model_id',
+    'data_modification_expected',
+    'autonomy_level',
+    'context_snapshot_hash',
+    'sanitized_context',
+  ],
   // IN · DPDP：§12(1)(d) 擦除权 → sanitized_context；§12(1)(a-c) 更正/补全/更新 → data_modification_expected；
   // §12(2) 下游级联通知需数据流可溯 → context_snapshot_hash。DPDP 无自动化决策专条，不激活 autonomy_level/model_id。
   IN: ['data_modification_expected', 'context_snapshot_hash', 'sanitized_context'],
@@ -79,7 +124,10 @@ let cachedProfile: ComplianceProfile | null = null;
 /** 解析逗号分隔列表；未配置或全空 → 空数组（= 未选择） */
 function parseList(raw: string | undefined): string[] {
   if (!raw) return [];
-  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return raw
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
 export function getComplianceProfile(): ComplianceProfile {
@@ -87,7 +135,9 @@ export function getComplianceProfile(): ComplianceProfile {
 
   // 未配置 = 未选择：不猜默认值，不告警
   const jurisdictions = parseList(process.env['RULSYNOR_JURISDICTIONS']);
-  const industries = parseList(process.env['RULSYNOR_INDUSTRIES'] ?? process.env['RULSYNOR_INDUSTRY']);
+  const industries = parseList(
+    process.env['RULSYNOR_INDUSTRIES'] ?? process.env['RULSYNOR_INDUSTRY'],
+  );
   const riskLevel = (process.env['RULSYNOR_RISK_LEVEL'] || '').trim();
 
   const fieldSet = new Set<string>();
@@ -109,7 +159,9 @@ export function getComplianceProfile(): ComplianceProfile {
   // 未选择法域 → 不挂任何法规引用（含 jurisdiction='ALL' 的标准组织框架）：
   // 「全域适用」不等于「用户已选择接受其约束」。
   const refs = jurisdictions.length
-    ? REGULATORY_REFERENCES.filter((r) => jurisdictions.includes(r.jurisdiction) || r.jurisdiction === 'ALL')
+    ? REGULATORY_REFERENCES.filter(
+        r => jurisdictions.includes(r.jurisdiction) || r.jurisdiction === 'ALL',
+      )
     : [];
 
   // Omit over Null：空即省略

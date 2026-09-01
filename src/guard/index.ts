@@ -80,7 +80,11 @@ export interface DecisionObject {
   rule_set_version: { id: string; timestamp: string };
   policies: Array<{ id: string; name: string; author_id: string; version: number; hash: string }>;
   evaluation: {
-    evaluation_details: { total_evaluated: number; total_matched: number; evaluation_duration_ms: number };
+    evaluation_details: {
+      total_evaluated: number;
+      total_matched: number;
+      evaluation_duration_ms: number;
+    };
     matched_rules: Array<Record<string, unknown>>;
     triggered_rules: Array<Record<string, unknown>>;
   };
@@ -111,13 +115,24 @@ export interface DecisionObject {
 // ── Public API ──
 
 export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
-  const { input, decision, actionTaken, reason, matchedRules, totalEvaluated, totalMatched, rules, evaluationDurationMs, modelId } = opts;
+  const {
+    input,
+    decision,
+    actionTaken,
+    reason,
+    matchedRules,
+    totalEvaluated,
+    totalMatched,
+    rules,
+    evaluationDurationMs,
+    modelId,
+  } = opts;
   const timestamp = new Date().toISOString();
   const decisionId = crypto.randomUUID();
   const executionTraceId = crypto.randomUUID();
 
   // Policies
-  const policies = rules.map((r) => ({
+  const policies = rules.map(r => ({
     id: r.name,
     name: r.name,
     author_id: 'system',
@@ -126,7 +141,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   }));
 
   // Matched rules
-  const doMatchedRules = matchedRules.map((r) => ({
+  const doMatchedRules = matchedRules.map(r => ({
     rule_id: r.ruleId,
     decision: r.decision,
     ...(r.reason ? { reason: r.reason } : {}),
@@ -136,11 +151,14 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   }));
 
   // Agent — role inferred from id suffix pattern (best-effort; explicit role should be passed by caller)
-  const agentRole = /[.:_-]guardian$/i.test(input.agentId) ? 'guardian'
-    : /[.:_-]operator$/i.test(input.agentId) ? 'operator'
-    : 'observed';
+  const agentRole = /[.:_-]guardian$/i.test(input.agentId)
+    ? 'guardian'
+    : /[.:_-]operator$/i.test(input.agentId)
+      ? 'operator'
+      : 'observed';
 
-  const toolRegistryHash = `sha256:${crypto.createHash('sha256')
+  const toolRegistryHash = `sha256:${crypto
+    .createHash('sha256')
     .update(canonicalize({ count: rules.length, names: rules.map(r => r.name).sort() }))
     .digest('hex')}`;
 
@@ -152,14 +170,18 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const contextSnapshotHash = `sha256:${crypto.createHash('sha256').update(canonicalize(contextObj)).digest('hex')}`;
 
   // Rule set version
-  const ruleIds = rules.map(r => `${r.name}@${r.version ?? 1}`).sort().join('|');
+  const ruleIds = rules
+    .map(r => `${r.name}@${r.version ?? 1}`)
+    .sort()
+    .join('|');
   const ruleSetHash = `sha256:${crypto.createHash('sha256').update(ruleIds).digest('hex')}`;
 
   // Derived fields
   const humanOversight = decision === 'REQUEST_HUMAN' || decision === 'ESCALATE';
   // decision_type maps SPEC decision to lowercase for tooling compatibility (legacy; prefer `decision`)
   const decisionType = decision.toLowerCase();
-  const confidenceScore = totalEvaluated > 0 ? Math.round((totalMatched / totalEvaluated) * 100) : 0;
+  const confidenceScore =
+    totalEvaluated > 0 ? Math.round((totalMatched / totalEvaluated) * 100) : 0;
   const dataModification = isDataModification(input.toolName, actionTaken);
   const appliedRule = matchedRules.length > 0 ? matchedRules[0].ruleId : null;
   const autonomyLevel = process.env['RULSYNOR_AUTONOMY_LEVEL'] || 'L2';
@@ -193,7 +215,11 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     rule_set_version: { id: ruleSetHash, timestamp },
     policies,
     evaluation: {
-      evaluation_details: { total_evaluated: totalEvaluated, total_matched: totalMatched, evaluation_duration_ms: evaluationDurationMs },
+      evaluation_details: {
+        total_evaluated: totalEvaluated,
+        total_matched: totalMatched,
+        evaluation_duration_ms: evaluationDurationMs,
+      },
       matched_rules: doMatchedRules,
       triggered_rules: doMatchedRules,
     },
@@ -244,9 +270,11 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
 export function generateAID(): string {
   const registrarId = process.env['RULSYNOR_AID_REGISTRAR'] || '000001';
   const requesterId = process.env['RULSYNOR_AID_REQUESTER'] || '000001';
-  const instanceId = crypto.createHash('sha256')
+  const instanceId = crypto
+    .createHash('sha256')
     .update(`${process.env['HOSTNAME'] || 'localhost'}-${process.pid}`)
-    .digest('hex').slice(0, 8);
+    .digest('hex')
+    .slice(0, 8);
   return `${PROVENANCE.aidOidPrefix}.1.${registrarId}.${requesterId}.${instanceId}`;
 }
 
@@ -254,9 +282,23 @@ function isDataModification(toolName: string, actionTaken: string): boolean {
   // DENIED / blocked / paused actions have no data modification effect
   if (actionTaken !== 'allowed') return false;
   // Whitelist known write-verb tools (avoids substring false positives like 'post' matching 'postprocess')
-  const writeVerbs = ['write', 'create', 'update', 'delete', 'remove', 'save', 'insert', 'upsert', 'patch', 'put', 'post'];
+  const writeVerbs = [
+    'write',
+    'create',
+    'update',
+    'delete',
+    'remove',
+    'save',
+    'insert',
+    'upsert',
+    'patch',
+    'put',
+    'post',
+  ];
   const lower = toolName.toLowerCase();
   // Match whole word boundaries: tool name must START with or equal a write verb,
   // or have it at word boundary (e.g. 'write_file', 'createOrder')
-  return writeVerbs.some(v => lower === v || lower.startsWith(v + '_') || lower.startsWith(v + '-'));
+  return writeVerbs.some(
+    v => lower === v || lower.startsWith(v + '_') || lower.startsWith(v + '-'),
+  );
 }

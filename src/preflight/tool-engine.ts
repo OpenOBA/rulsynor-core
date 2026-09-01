@@ -2,15 +2,50 @@
 // Real implementation: atcf/rulsynor-core/src/preflight/tool-engine.ts
 
 // Enhancement subtypes
-export interface ToolUsageContext { when?: string; priority?: string; whenToUse?: string; }
-export interface ToolPreconditions { checks?: string[]; inputHints?: string; }
-export interface ToolInputExample { description: string; input: Record<string, unknown>; }
-export interface ToolErrorHandling { onError?: string; fallback?: string; commonErrors?: string; }
-export interface ToolSideEffects { modifies?: string[]; reversible?: boolean; modifiesData?: boolean; }
-export interface ToolRelatedTools { before?: string[]; after?: string[]; insteadOf?: string[]; }
-export interface ToolBusinessPreconditions { timeConstraints?: string[]; rateLimits?: string[]; }
-export interface ToolLifecycle { create?: string; update?: string; deprecate?: string; }
-export interface ToolBusinessRules { when?: string; then?: string; summary?: string; relatedRules?: string[]; relatedKnowledge?: string[]; }
+export interface ToolUsageContext {
+  when?: string;
+  priority?: string;
+  whenToUse?: string;
+}
+export interface ToolPreconditions {
+  checks?: string[];
+  inputHints?: string;
+}
+export interface ToolInputExample {
+  description: string;
+  input: Record<string, unknown>;
+}
+export interface ToolErrorHandling {
+  onError?: string;
+  fallback?: string;
+  commonErrors?: string;
+}
+export interface ToolSideEffects {
+  modifies?: string[];
+  reversible?: boolean;
+  modifiesData?: boolean;
+}
+export interface ToolRelatedTools {
+  before?: string[];
+  after?: string[];
+  insteadOf?: string[];
+}
+export interface ToolBusinessPreconditions {
+  timeConstraints?: string[];
+  rateLimits?: string[];
+}
+export interface ToolLifecycle {
+  create?: string;
+  update?: string;
+  deprecate?: string;
+}
+export interface ToolBusinessRules {
+  when?: string;
+  then?: string;
+  summary?: string;
+  relatedRules?: string[];
+  relatedKnowledge?: string[];
+}
 
 // Top-level enhancement
 export interface ToolEnhancement {
@@ -27,10 +62,14 @@ export interface ToolEnhancement {
   businessRules?: ToolBusinessRules;
 }
 
-export interface ToolEngineResult { toolCalls: Array<{ name: string; arguments: Record<string, unknown> }>; }
+export interface ToolEngineResult {
+  toolCalls: Array<{ name: string; arguments: Record<string, unknown> }>;
+}
 
 /**
  * @deprecated Stub — always returns empty toolCalls.
  * Full implementation planned for v1.1 (see ROADMAP.md § parseToolCalls).
  */
-export function parseToolCalls(_content: string): ToolEngineResult { return { toolCalls: [] }; }
+export function parseToolCalls(_content: string): ToolEngineResult {
+  return { toolCalls: [] };
+}

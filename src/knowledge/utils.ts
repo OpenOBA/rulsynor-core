@@ -8,15 +8,15 @@
  * @since 2026-08-10
  */
 
-import { ATCF_DOMAIN_VALUES, isAtcfDomain } from './types.js'
-import type { AtcfDomain, KnowledgeFragment, ScoredFragment } from './types.js'
+import { ATCF_DOMAIN_VALUES, isAtcfDomain } from './types.js';
+import type { AtcfDomain, KnowledgeFragment, ScoredFragment } from './types.js';
 
 // ═══════════════════════════════════════════════════════════════
 // RING_K disclaimer — shown when knowledge fragments are injected
 // ═══════════════════════════════════════════════════════════════
 
 export const RING_K_DISCLAIMER =
-  '以下知识片段由 RING_K 知识库注入，仅供参考；执行决策以 ERDL Guard 确定性规则为准。'
+  '以下知识片段由 RING_K 知识库注入，仅供参考；执行决策以 ERDL Guard 确定性规则为准。';
 
 // ═══════════════════════════════════════════════════════════════
 // Intent → domain resolution
@@ -36,20 +36,20 @@ export const INTENT_DOMAIN_MAP: Record<AtcfDomain, string[]> = {
   customer_mgmt: ['客户', '会员', '积分', '等级'],
   documentation: ['文档', '模板', '格式', '导出'],
   analytics: ['报表', '趋势', '分析', '统计'],
-}
+};
 
 /** Resolve the most likely ATCF domain for a piece of text (null when no keyword hits). */
 export function resolveDomain(text: string): AtcfDomain | null {
-  let best: AtcfDomain | null = null
-  let bestScore = 0
+  let best: AtcfDomain | null = null;
+  let bestScore = 0;
   for (const domain of ATCF_DOMAIN_VALUES) {
-    const score = INTENT_DOMAIN_MAP[domain].filter((kw) => text.includes(kw)).length
+    const score = INTENT_DOMAIN_MAP[domain].filter(kw => text.includes(kw)).length;
     if (score > bestScore) {
-      bestScore = score
-      best = domain
+      bestScore = score;
+      best = domain;
     }
   }
-  return best
+  return best;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -57,38 +57,38 @@ export function resolveDomain(text: string): AtcfDomain | null {
 // ═══════════════════════════════════════════════════════════════
 
 export interface KnowledgeValidatorInput {
-  id?: string
-  name?: string
-  domain?: string
-  version?: string
-  status?: string
-  type?: string
-  body?: string
+  id?: string;
+  name?: string;
+  domain?: string;
+  version?: string;
+  status?: string;
+  type?: string;
+  body?: string;
 }
 
 export interface KnowledgeValidationResult {
-  valid: boolean
-  errors: string[]
+  valid: boolean;
+  errors: string[];
 }
 
-const KNOWLEDGE_STATUSES = ['draft', 'published', 'deprecated']
-const KNOWLEDGE_TYPES = ['policy', 'api_reference', 'sop', 'faq', 'legal']
+const KNOWLEDGE_STATUSES = ['draft', 'published', 'deprecated'];
+const KNOWLEDGE_TYPES = ['policy', 'api_reference', 'sop', 'faq', 'legal'];
 
 /** Validate parsed knowledge fields (front matter + body presence). */
 export function validateKnowledge(input: KnowledgeValidatorInput): KnowledgeValidationResult {
-  const errors: string[] = []
-  if (!input.name?.trim()) errors.push('name is required')
-  if (!input.domain) errors.push('domain is required')
-  else if (!isAtcfDomain(input.domain)) errors.push(`unknown domain: ${input.domain}`)
-  if (!input.version?.trim()) errors.push('version is required')
-  if (!input.body?.trim()) errors.push('body is required')
+  const errors: string[] = [];
+  if (!input.name?.trim()) errors.push('name is required');
+  if (!input.domain) errors.push('domain is required');
+  else if (!isAtcfDomain(input.domain)) errors.push(`unknown domain: ${input.domain}`);
+  if (!input.version?.trim()) errors.push('version is required');
+  if (!input.body?.trim()) errors.push('body is required');
   if (input.status && !KNOWLEDGE_STATUSES.includes(input.status)) {
-    errors.push(`invalid status: ${input.status}`)
+    errors.push(`invalid status: ${input.status}`);
   }
   if (input.type && !KNOWLEDGE_TYPES.includes(input.type)) {
-    errors.push(`invalid type: ${input.type}`)
+    errors.push(`invalid type: ${input.type}`);
   }
-  return { valid: errors.length === 0, errors }
+  return { valid: errors.length === 0, errors };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -97,14 +97,14 @@ export function validateKnowledge(input: KnowledgeValidatorInput): KnowledgeVali
 
 /** Split raw markdown into fragments on `##+` headings (front matter kept with preamble). */
 export function chunkKnowledge(rawMarkdown: string): KnowledgeFragment[] {
-  const fragments: KnowledgeFragment[] = []
-  const lines = rawMarkdown.split(/\r?\n/)
-  let sectionPath = ''
-  let buf: string[] = []
-  let idx = 0
+  const fragments: KnowledgeFragment[] = [];
+  const lines = rawMarkdown.split(/\r?\n/);
+  let sectionPath = '';
+  let buf: string[] = [];
+  let idx = 0;
 
   const flush = (): void => {
-    const text = buf.join('\n').trim()
+    const text = buf.join('\n').trim();
     if (text) {
       fragments.push({
         fragmentId: `frag-${idx++}`,
@@ -113,21 +113,21 @@ export function chunkKnowledge(rawMarkdown: string): KnowledgeFragment[] {
         text,
         sectionPath: sectionPath || undefined,
         tokenEstimate: Math.ceil(text.length / 4),
-      })
+      });
     }
-    buf = []
-  }
+    buf = [];
+  };
 
   for (const line of lines) {
-    const m = /^(#{2,})\s+(.+)$/.exec(line)
+    const m = /^(#{2,})\s+(.+)$/.exec(line);
     if (m) {
-      flush()
-      sectionPath = m[2].trim()
+      flush();
+      sectionPath = m[2].trim();
     }
-    buf.push(line)
+    buf.push(line);
   }
-  flush()
-  return fragments
+  flush();
+  return fragments;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -136,13 +136,13 @@ export function chunkKnowledge(rawMarkdown: string): KnowledgeFragment[] {
 
 /** Format scored fragments into system-prompt RAG context text. */
 export function formatRagContext(fragments: ScoredFragment[]): string {
-  if (!fragments.length) return ''
+  if (!fragments.length) return '';
   return fragments
     .map((f, i) => {
-      const source = f.knowledgeName ?? f.knowledgeId
-      return `【知识 ${i + 1}】${source}（相关度 ${f.score.toFixed(2)}）\n${f.text}`
+      const source = f.knowledgeName ?? f.knowledgeId;
+      return `【知识 ${i + 1}】${source}（相关度 ${f.score.toFixed(2)}）\n${f.text}`;
     })
-    .join('\n\n')
+    .join('\n\n');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -150,30 +150,40 @@ export function formatRagContext(fragments: ScoredFragment[]): string {
 // ═══════════════════════════════════════════════════════════════
 
 export interface ModeGateStatus {
-  gate: string
-  passed: boolean
-  value: number
-  threshold: number
+  gate: string;
+  passed: boolean;
+  value: number;
+  threshold: number;
 }
 
-const GRADE_SCORE: Record<string, number> = { A: 4, B: 3, C: 2, D: 1 }
+const GRADE_SCORE: Record<string, number> = { A: 4, B: 3, C: 2, D: 1 };
 
 /** Evaluate promotion gates for knowledge mode. live = grade ≥ B + citation ≥ 0.2; shadow = citation ≥ 0.1. */
 export function checkModeGates(
   mode: 'off' | 'shadow' | 'live',
   stats: { qualityGrade?: string; citationRate?: number },
 ): ModeGateStatus[] {
-  const gates: ModeGateStatus[] = []
-  if (mode === 'off') return gates
-  const gradeScore = GRADE_SCORE[stats.qualityGrade ?? 'D'] ?? 0
-  const citationRate = stats.citationRate ?? 0
+  const gates: ModeGateStatus[] = [];
+  if (mode === 'off') return gates;
+  const gradeScore = GRADE_SCORE[stats.qualityGrade ?? 'D'] ?? 0;
+  const citationRate = stats.citationRate ?? 0;
   if (mode === 'live') {
-    gates.push({ gate: 'quality_grade', passed: gradeScore >= 3, value: gradeScore, threshold: 3 })
-    gates.push({ gate: 'citation_rate', passed: citationRate >= 0.2, value: citationRate, threshold: 0.2 })
+    gates.push({ gate: 'quality_grade', passed: gradeScore >= 3, value: gradeScore, threshold: 3 });
+    gates.push({
+      gate: 'citation_rate',
+      passed: citationRate >= 0.2,
+      value: citationRate,
+      threshold: 0.2,
+    });
   } else {
-    gates.push({ gate: 'citation_rate', passed: citationRate >= 0.1, value: citationRate, threshold: 0.1 })
+    gates.push({
+      gate: 'citation_rate',
+      passed: citationRate >= 0.1,
+      value: citationRate,
+      threshold: 0.1,
+    });
   }
-  return gates
+  return gates;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -185,15 +195,15 @@ export function filterToolsByOccupation<T extends { occupations?: string[] }>(
   tools: T[],
   occupation: string,
 ): T[] {
-  return tools.filter((t) => !t.occupations || t.occupations.includes(occupation))
+  return tools.filter(t => !t.occupations || t.occupations.includes(occupation));
 }
 
 /** Render a one-line entity/tool profile for prompt composition. */
 export function formatEntityProfile(entity: {
-  name?: string
-  displayName?: string
-  securityLevel?: string
-  description?: string
+  name?: string;
+  displayName?: string;
+  securityLevel?: string;
+  description?: string;
 }): string {
   return [
     entity.displayName ?? entity.name ?? 'unknown',
@@ -201,46 +211,43 @@ export function formatEntityProfile(entity: {
     entity.description ?? '',
   ]
     .join(' ')
-    .trim()
+    .trim();
 }
 
 export interface ToolAnchorInput {
-  name: string
-  requiredCertLevel?: string
+  name: string;
+  requiredCertLevel?: string;
 }
 
 export interface ToolAnchor {
-  name: string
-  available: boolean
-  reason?: string
+  name: string;
+  available: boolean;
+  reason?: string;
 }
 
-const CERT_ORDER = ['L0', 'L1', 'L2', 'L3']
+const CERT_ORDER = ['L0', 'L1', 'L2', 'L3'];
 
 /** Collect tool anchors with availability against the agent's cert level. */
-export function collectToolAnchors(
-  tools: ToolAnchorInput[],
-  certLevel = 'L1',
-): ToolAnchor[] {
-  return tools.map((t) => {
-    const need = t.requiredCertLevel ?? 'L0'
-    const available = CERT_ORDER.indexOf(certLevel) >= CERT_ORDER.indexOf(need)
-    return { name: t.name, available, reason: available ? undefined : `需 ${need} 证书` }
-  })
+export function collectToolAnchors(tools: ToolAnchorInput[], certLevel = 'L1'): ToolAnchor[] {
+  return tools.map(t => {
+    const need = t.requiredCertLevel ?? 'L0';
+    const available = CERT_ORDER.indexOf(certLevel) >= CERT_ORDER.indexOf(need);
+    return { name: t.name, available, reason: available ? undefined : `需 ${need} 证书` };
+  });
 }
 
 /** Build an index of tool name → rule ids governing it. */
 export function buildGovernedByIndex<T extends { name: string; relatedRules?: string[] }>(
   tools: T[],
 ): Record<string, string[]> {
-  const index: Record<string, string[]> = {}
-  for (const t of tools) index[t.name] = [...(t.relatedRules ?? [])]
-  return index
+  const index: Record<string, string[]> = {};
+  for (const t of tools) index[t.name] = [...(t.relatedRules ?? [])];
+  return index;
 }
 
 /** Compose a `data_ref:` reference used by ERDL rule data directives. */
 export function dataRef(dataRefId: string, version?: string): string {
-  return version ? `data_ref:${dataRefId}@${version}` : `data_ref:${dataRefId}`
+  return version ? `data_ref:${dataRefId}@${version}` : `data_ref:${dataRefId}`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -252,17 +259,17 @@ const RING_BASE_BUDGET: Record<string, number> = {
   RING_K: 4000,
   RING_1: 8000,
   RING_2: 16000,
-}
+};
 
 const CERT_BUDGET_MULTIPLIER: Record<string, number> = {
   L0: 0.5,
   L1: 1,
   L2: 2,
   L3: 4,
-}
+};
 
 /** Resolve the token budget for a ring at a cert level (defaults documented in TokenBudgetBar). */
 export function resolveBudget(ring: string, certLevel = 'L1'): number {
-  const base = RING_BASE_BUDGET[ring] ?? 4000
-  return Math.round(base * (CERT_BUDGET_MULTIPLIER[certLevel] ?? 1))
+  const base = RING_BASE_BUDGET[ring] ?? 4000;
+  return Math.round(base * (CERT_BUDGET_MULTIPLIER[certLevel] ?? 1));
 }

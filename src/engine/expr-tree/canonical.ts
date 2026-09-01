@@ -15,45 +15,45 @@
  * @license MIT
  */
 
-import { createHash } from 'node:crypto'
-import { canonicalize } from 'json-canonicalize'
-import type { ExprNode } from './node-types.js'
-import { toSExpr } from './s-expression.js'
-import { normalizeNfc } from './normalize.js'
+import { createHash } from 'node:crypto';
+import { canonicalize } from 'json-canonicalize';
+import type { ExprNode } from './node-types.js';
+import { toSExpr } from './s-expression.js';
+import { normalizeNfc } from './normalize.js';
 
 /** 递归规范化 S-expression 中的字面量值（严格类型：number 保持 number 交 JCS IEEE754，与 string 区分；字符串 NFC） */
 function normalizeValue(value: unknown): unknown {
   if (typeof value === 'string') {
-    return normalizeNfc(value)
+    return normalizeNfc(value);
   }
   if (Array.isArray(value)) {
-    return value.map(normalizeValue)
+    return value.map(normalizeValue);
   }
   if (typeof value === 'object' && value !== null) {
-    const out: Record<string, unknown> = {}
+    const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = normalizeValue(v)
+      out[k] = normalizeValue(v);
     }
-    return out
+    return out;
   }
   // number / boolean / null：原样保留（严格类型，number 与 string 区分）
-  return value
+  return value;
 }
 
 /** 规范化表达式树 → JCS 字节序列 */
 export function canonicalTree(node: ExprNode): string {
-  const sexpr = toSExpr(node)
-  const normalized = normalizeValue(sexpr)
-  return canonicalize(normalized as Record<string, unknown>)
+  const sexpr = toSExpr(node);
+  const normalized = normalizeValue(sexpr);
+  return canonicalize(normalized as Record<string, unknown>);
 }
 
 /** 规范化表达式树哈希（SHA-256） */
 export function hashTree(node: ExprNode): string {
-  const canonical = canonicalTree(node)
-  return createHash('sha256').update(canonical).digest('hex')
+  const canonical = canonicalTree(node);
+  return createHash('sha256').update(canonical).digest('hex');
 }
 
 /** 返回带前缀的哈希（与 GuardService 的 'sha256:' 前缀一致） */
 export function hashTreeWithPrefix(node: ExprNode): string {
-  return `sha256:${hashTree(node)}`
+  return `sha256:${hashTree(node)}`;
 }

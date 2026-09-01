@@ -67,10 +67,18 @@ export interface RuntimeResult {
 
 export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult> {
   const {
-    llm, evaluator, rules, tools,
-    userMessage, agentId = 'runtime-agent', sessionId = `session-${Date.now()}`,
+    llm,
+    evaluator,
+    rules,
+    tools,
+    userMessage,
+    agentId = 'runtime-agent',
+    sessionId = `session-${Date.now()}`,
     maxSteps = 10,
-    onThought, onToolCall, onGuardEval, onToolResult,
+    onThought,
+    onToolCall,
+    onGuardEval,
+    onToolResult,
   } = opts;
 
   const messages: LLMMessage[] = [
@@ -111,7 +119,9 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       // R3 修复：CORRECT 决策先应用纠偏再决定是否放行（无纠偏内容则 fail-close 不执行）
       let effectiveArgs = tc.arguments;
       const canApplyCorrection =
-        evalResult.decision === 'CORRECT' && typeof evalResult.primaryCorrection === 'string' && evalResult.primaryCorrection.length > 0;
+        evalResult.decision === 'CORRECT' &&
+        typeof evalResult.primaryCorrection === 'string' &&
+        evalResult.primaryCorrection.length > 0;
       if (canApplyCorrection) {
         effectiveArgs = { ...tc.arguments, __correction: evalResult.primaryCorrection };
       }
@@ -125,9 +135,22 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
 
       // Build DO
       const do1 = buildDecisionObject({
-        input: { runId: `runtime-${Date.now()}`, step, toolName: tc.name, toolArgs: effectiveArgs, context: {}, agentId, sessionId, previousAuditHash: prevHash },
+        input: {
+          runId: `runtime-${Date.now()}`,
+          step,
+          toolName: tc.name,
+          toolArgs: effectiveArgs,
+          context: {},
+          agentId,
+          sessionId,
+          previousAuditHash: prevHash,
+        },
         decision: evalResult.decision,
-        actionTaken: shouldExecute ? 'allowed' : evalResult.decision === 'DENY' ? 'blocked' : 'paused',
+        actionTaken: shouldExecute
+          ? 'allowed'
+          : evalResult.decision === 'DENY'
+            ? 'blocked'
+            : 'paused',
         reason: evalResult.primaryReason ?? null,
         matchedRules: evalResult.matchedRules ?? [],
         totalEvaluated: evalResult.totalEvaluated ?? rules.length,
@@ -178,7 +201,13 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
             finalResponse = `Action blocked (unknown decision "${evalResult.decision}", fail-close): ${reason}`;
             break;
         }
-        return { decision: evalResult.decision, thought: response.content, steps: step + 1, auditHashes, finalResponse };
+        return {
+          decision: evalResult.decision,
+          thought: response.content,
+          steps: step + 1,
+          auditHashes,
+          finalResponse,
+        };
       }
 
       // Execute tool
@@ -202,10 +231,18 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
     finalResponse = 'Max steps reached without completion.';
   }
 
-  return { decision: step >= maxSteps ? 'MAX_STEPS' : 'ALLOW', thought: '', steps: step, auditHashes, finalResponse };
+  return {
+    decision: step >= maxSteps ? 'MAX_STEPS' : 'ALLOW',
+    thought: '',
+    steps: step,
+    auditHashes,
+    finalResponse,
+  };
 }
 
 /** Create a simple tool executor from a plain function */
-export function createToolExecutor(fn: (args: Record<string, unknown>) => Promise<string>): ToolExecutor {
+export function createToolExecutor(
+  fn: (args: Record<string, unknown>) => Promise<string>,
+): ToolExecutor {
   return { execute: fn };
 }

@@ -2,7 +2,14 @@
  * s-expression.spec.ts — S-expression 序列化/反序列化（SPEC v2.0 §12）
  * 重点覆盖 fromSExpr 的否定对偶算子、错误路径，以及 isSExprWhen / extractWhenExpr。
  */
-import { toSExpr, fromSExpr, roundtrip, isSExprWhen, extractWhenExpr, SExprParseError } from '../../src/engine/expr-tree/s-expression.js';
+import {
+  toSExpr,
+  fromSExpr,
+  roundtrip,
+  isSExprWhen,
+  extractWhenExpr,
+  SExprParseError,
+} from '../../src/engine/expr-tree/s-expression.js';
 
 describe('fromSExpr — negation dual operators', () => {
   it('not_in → not(in(...))', () => {
@@ -60,7 +67,9 @@ describe('fromSExpr — error paths', () => {
   });
 
   it('rejects unknown date_add unit', () => {
-    expect(() => fromSExpr({ date_add: { unit: 'bad', base: 1, amount: 2 } })).toThrow(SExprParseError);
+    expect(() => fromSExpr({ date_add: { unit: 'bad', base: 1, amount: 2 } })).toThrow(
+      SExprParseError,
+    );
   });
 
   it('rejects unknown date_part unit', () => {
@@ -91,7 +100,9 @@ describe('isSExprWhen', () => {
 
 describe('extractWhenExpr', () => {
   it('extracts wrapped expr form', () => {
-    expect(extractWhenExpr({ expr: { lt: [{ field: 'a' }, 1] } })).toEqual({ lt: [{ field: 'a' }, 1] });
+    expect(extractWhenExpr({ expr: { lt: [{ field: 'a' }, 1] } })).toEqual({
+      lt: [{ field: 'a' }, 1],
+    });
   });
 
   it('extracts top-level tree form', () => {
@@ -120,7 +131,12 @@ describe('roundtrip', () => {
   });
 
   it('compare node roundtrips via toSExpr/fromSExpr', () => {
-    const sexpr = toSExpr({ type: 'compare', op: 'gt', left: { type: 'field', field: 'amount' }, right: { type: 'literal', value: 100 } } as never);
+    const sexpr = toSExpr({
+      type: 'compare',
+      op: 'gt',
+      left: { type: 'field', field: 'amount' },
+      right: { type: 'literal', value: 100 },
+    } as never);
     expect(sexpr).toEqual({ gt: [{ field: 'amount' }, 100] });
     const back = fromSExpr(sexpr);
     expect(back.type).toBe('compare');

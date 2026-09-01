@@ -10,13 +10,15 @@ import {
 } from './index.js';
 
 const args = process.argv.slice(2);
-const tool = args.find((a) => a.startsWith('--tool='))?.split('=')[1] || 'exec';
+const tool = args.find(a => a.startsWith('--tool='))?.split('=')[1] || 'exec';
 // Support --cmd with spaces: --cmd="rm -rf /" or --cmd=rm
-const cmdArg = args.find((a) => a.startsWith('--cmd='));
+const cmdArg = args.find(a => a.startsWith('--cmd='));
 const cmd = cmdArg ? cmdArg.substring('--cmd='.length) : 'rm -rf /';
-const pathArgRaw = args.find((a) => a.startsWith('--path='));
+const pathArgRaw = args.find(a => a.startsWith('--path='));
 const pathArg = pathArgRaw ? pathArgRaw.substring('--path='.length) : '/etc/shadow';
-const urlArg = args.find((a) => a.startsWith('--url='))?.split('=')[1] || 'http://169.254.169.254/latest/meta-data/';
+const urlArg =
+  args.find(a => a.startsWith('--url='))?.split('=')[1] ||
+  'http://169.254.169.254/latest/meta-data/';
 
 const toolArgs: Record<string, string> = { command: cmd };
 if (tool === 'write_file') {
@@ -65,7 +67,7 @@ const record = buildDecisionObject({
   matchedRules: result.matchedRules,
   totalEvaluated: result.totalEvaluated ?? evalRules.length,
   totalMatched: result.totalMatched ?? result.matchedRules.length,
-  rules: evalRules.map((r) => ({ name: r.name, version: 1 })),
+  rules: evalRules.map(r => ({ name: r.name, version: 1 })),
   evaluationDurationMs: duration,
 }) as DecisionObject;
 
@@ -75,18 +77,23 @@ const aid = record.agent.aid;
 const jurisdictions = (record.compliance_profile.jurisdictions as string[] | undefined) ?? [];
 
 // Turn a DENY/CORRECT into guidance the agent can act on.
-const guidanceRules = presetRules.map((r) => ({
+const guidanceRules = presetRules.map(r => ({
   name: (r.parsed.name as string) || r.name,
   action: r.parsed.then
     ? {
-        alternative: (r.parsed.then as Record<string, unknown>).alternative as string | { en: string } | undefined,
+        alternative: (r.parsed.then as Record<string, unknown>).alternative as
+          string | { en: string } | undefined,
         correction: (r.parsed.then as Record<string, unknown>).correction as string | undefined,
       }
     : undefined,
 }));
 
 const guide = extractNavigationGuide({
-  matchedRules: result.matchedRules as Array<{ ruleId: string; decision: string; reason: string | null }>,
+  matchedRules: result.matchedRules as Array<{
+    ruleId: string;
+    decision: string;
+    reason: string | null;
+  }>,
   decision: result.decision,
   reason: result.primaryReason ?? null,
   rules: guidanceRules,
@@ -97,21 +104,29 @@ const alt = guide.alternatives.length ? guide.alternatives.join('; ') : '—';
 const jsonMode = args.includes('--json');
 
 if (jsonMode) {
-  console.log(JSON.stringify({
-    decision: result.decision,
-    reason: result.primaryReason || null,
-    auditHash: record.audit.hash,
-    rulesEvaluated: evalRules.length,
-    aid,
-    jurisdictions,
-    alternative: alt,
-  }));
+  console.log(
+    JSON.stringify({
+      decision: result.decision,
+      reason: result.primaryReason || null,
+      auditHash: record.audit.hash,
+      rulesEvaluated: evalRules.length,
+      aid,
+      jurisdictions,
+      alternative: alt,
+    }),
+  );
 } else {
   console.log('📋 Trained:    ' + evalRules.length + ' rules loaded');
   console.log('🛡️  Decision:   ' + result.decision);
   console.log('📝 Reason:     ' + (result.primaryReason || 'none'));
   console.log('🧾 Recorded:   ' + record.audit.hash + ' (tamper-evident)');
   console.log('🪪 Employee ID:' + ' ' + aid);
-  console.log('📊 Jurisdiction:' + ' ' + (jurisdictions.length ? jurisdictions.join(',') : '(未选择：由部署方通过 RULSYNOR_JURISDICTIONS 声明)'));
+  console.log(
+    '📊 Jurisdiction:' +
+      ' ' +
+      (jurisdictions.length
+        ? jurisdictions.join(',')
+        : '(未选择：由部署方通过 RULSYNOR_JURISDICTIONS 声明)'),
+  );
   console.log('🧭 Alternative:' + ' ' + alt);
 }

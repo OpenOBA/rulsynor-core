@@ -11,19 +11,19 @@
 
 /** NFC 规范化字符串（JS 内置 normalize('NFC')） */
 export function normalizeNfc(input: string): string {
-  return input.normalize('NFC')
+  return input.normalize('NFC');
 }
 
 /** 递归规范化对象中所有字符串值（用于字面量规范化） */
 export function normalizeStringValue(value: unknown): unknown {
-  if (typeof value === 'string') return normalizeNfc(value)
-  if (Array.isArray(value)) return value.map(normalizeStringValue)
+  if (typeof value === 'string') return normalizeNfc(value);
+  if (Array.isArray(value)) return value.map(normalizeStringValue);
   if (typeof value === 'object' && value !== null) {
-    const out: Record<string, unknown> = {}
+    const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = normalizeStringValue(v)
+      out[k] = normalizeStringValue(v);
     }
-    return out
+    return out;
   }
-  return value
+  return value;
 }

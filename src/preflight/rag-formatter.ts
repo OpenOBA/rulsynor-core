@@ -14,31 +14,31 @@ export function trustLabel(
   f: { knowledgeStatus?: string; knowledgeVersion?: string; updatedAt?: string; score?: number },
   nowMs?: number,
 ): string {
-  const status = f.knowledgeStatus ?? 'draft'
-  const score = f.score ?? 0
-  const now = nowMs ?? Date.now()
-  const updatedMs = f.updatedAt ? new Date(f.updatedAt).getTime() : 0
-  const daysSinceUpdate = updatedMs ? (now - updatedMs) / 86400000 : 999
+  const status = f.knowledgeStatus ?? 'draft';
+  const score = f.score ?? 0;
+  const now = nowMs ?? Date.now();
+  const updatedMs = f.updatedAt ? new Date(f.updatedAt).getTime() : 0;
+  const daysSinceUpdate = updatedMs ? (now - updatedMs) / 86400000 : 999;
 
   // Published + high relevance + recent → Official
   if (status === 'published' && score >= 0.7 && daysSinceUpdate <= 90) {
-    return '📄 Official'
+    return '📄 Official';
   }
 
   // Published but older or lower relevance → Verified
   if (status === 'published') {
-    return '📄 Verified'
+    return '📄 Verified';
   }
 
   // Draft status → Draft
   if (status === 'draft') {
-    return '📝 Draft'
+    return '📝 Draft';
   }
 
   // Deprecated / archived
   if (status === 'deprecated' || status === 'archived') {
-    return '⚠️ Deprecated'
+    return '⚠️ Deprecated';
   }
 
-  return '📄 Reference'
+  return '📄 Reference';
 }

@@ -1,7 +1,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import * as yaml from 'js-yaml';
-import type { RuleDefinition, RuleCategory, ConditionOperator, Decision, RingLevel } from '../engine/rule-definition.js';
+import type {
+  RuleDefinition,
+  RuleCategory,
+  ConditionOperator,
+  Decision,
+  RingLevel,
+} from '../engine/rule-definition.js';
 import { ruleQualityGate } from '../engine/rule-quality-gate.js';
 
 // eval('import.meta') avoids Jest's static SyntaxError on import.meta in CJS wrapper.
@@ -41,7 +47,9 @@ export function loadPresetRules(): PresetRule[] {
   return rulesCache;
 }
 
-export function toRuleDefinitions(rules: PresetRule[]): Array<{ name: string; when: unknown; then: unknown; version: number }> {
+export function toRuleDefinitions(
+  rules: PresetRule[],
+): Array<{ name: string; when: unknown; then: unknown; version: number }> {
   return rules.map(r => ({
     name: (r.parsed.name as string) || r.name.replace(/\.erdl\.ya?ml$/, ''),
     when: r.parsed.when,
@@ -54,7 +62,12 @@ export function toRuleDefinitions(rules: PresetRule[]): Array<{ name: string; wh
  * Convert preset rules to ERDLRuleSet format for RuleCompiler.
  * Uses a minimal mapping from the YAML structure to the RuleDefinition interface.
  */
-export function toERDLRuleSet(rules: PresetRule[]): { protocol: string; version: string; metadata: Record<string, unknown>; rules: Record<string, unknown>[] } {
+export function toERDLRuleSet(rules: PresetRule[]): {
+  protocol: string;
+  version: string;
+  metadata: Record<string, unknown>;
+  rules: Record<string, unknown>[];
+} {
   const defs: Record<string, unknown>[] = rules.map(r => {
     const p = r.parsed;
     const when = p.when as Record<string, unknown> | undefined;
@@ -70,28 +83,37 @@ export function toERDLRuleSet(rules: PresetRule[]): { protocol: string; version:
       ring: (p.ring as number) || 0,
       then: (then?.decision as string) || 'DENY',
       message: (then?.instruction as string) || (p.description as string) || '',
-      conditions: conditions?.map(c => ({
-        field: c.field as string,
-        operator: (c.operator as string) || 'eq',
-        value: c.value ?? null,
-      })) || [],
+      conditions:
+        conditions?.map(c => ({
+          field: c.field as string,
+          operator: (c.operator as string) || 'eq',
+          value: c.value ?? null,
+        })) || [],
       conditionLogic: ((when?.logic || when?.conditionLogic) as 'AND' | 'OR') || 'AND',
       enabled: true,
-      action: then ? {
-        decision: then.decision as string,
-        reason: (then.instruction as string) || '',
-        ring: (p.ring as number) || 0,
-        alternative: then.alternative ? (
-          typeof then.alternative === 'string'
-            ? then.alternative
-            : (then.alternative as Record<string,string>).en || JSON.stringify(then.alternative)
-        ) : undefined,
-        correction: (then.correction as string) || undefined,
-      } : undefined,
+      action: then
+        ? {
+            decision: then.decision as string,
+            reason: (then.instruction as string) || '',
+            ring: (p.ring as number) || 0,
+            alternative: then.alternative
+              ? typeof then.alternative === 'string'
+                ? then.alternative
+                : (then.alternative as Record<string, string>).en ||
+                  JSON.stringify(then.alternative)
+              : undefined,
+            correction: (then.correction as string) || undefined,
+          }
+        : undefined,
     };
   });
 
-  return { protocol: 'erdl-v1', version: '1.0', metadata: { source: 'rulsynor-core-preset' }, rules: defs };
+  return {
+    protocol: 'erdl-v1',
+    version: '1.0',
+    metadata: { source: 'rulsynor-core-preset' },
+    rules: defs,
+  };
 }
 
 /**
@@ -112,25 +134,27 @@ export function toERDLRuleSet(rules: PresetRule[]): { protocol: string; version:
  * ```
  */
 export function toCompiledRules(presetRules: PresetRule[]): RuleDefinition[] {
-  const compiled: RuleDefinition[] = toERDLRuleSet(presetRules).rules.map((r) => ({
+  const compiled: RuleDefinition[] = toERDLRuleSet(presetRules).rules.map(r => ({
     id: (r.id as string) || (r.name as string),
     name: (r.name as string) || (r.id as string),
     description: (r.description as string) || '',
     category: (r.category as RuleCategory) || 'security',
     priority: (r.priority as number) || 100,
     enabled: (r.enabled as boolean) ?? true,
-    conditions: ((r.conditions as Array<Record<string, unknown>>) || []).map((c) => ({
+    conditions: ((r.conditions as Array<Record<string, unknown>>) || []).map(c => ({
       field: (c.field as string) || '',
       operator: (c.operator as ConditionOperator) || 'eq',
       value: c.value ?? undefined,
     })),
-    conditionLogic: ((r.conditionLogic as 'AND' | 'OR') || 'AND'),
+    conditionLogic: (r.conditionLogic as 'AND' | 'OR') || 'AND',
     action: {
       decision: (r.then as Decision) || 'DENY',
       reason: (r.message as string) || (r.description as string) || 'Rule matched',
       ring: (r.ring as RingLevel) || 0,
-      alternative: (r.action as Record<string, unknown> | undefined)?.alternative as string | undefined,
-      correction: (r.action as Record<string, unknown> | undefined)?.correction as string | undefined,
+      alternative: (r.action as Record<string, unknown> | undefined)?.alternative as
+        string | undefined,
+      correction: (r.action as Record<string, unknown> | undefined)?.correction as
+        string | undefined,
     },
   }));
 
@@ -138,8 +162,14 @@ export function toCompiledRules(presetRules: PresetRule[]): RuleDefinition[] {
   const report = ruleQualityGate.check(compiled);
   if (report.errors > 0) {
     const errLines = report.details
-      .filter((d) => d.issues.some((i) => i.level === 'error'))
-      .map((d) => `  ${d.ruleName}: ${d.issues.filter((i) => i.level === 'error').map((i) => i.code).join(', ')}`)
+      .filter(d => d.issues.some(i => i.level === 'error'))
+      .map(
+        d =>
+          `  ${d.ruleName}: ${d.issues
+            .filter(i => i.level === 'error')
+            .map(i => i.code)
+            .join(', ')}`,
+      )
       .join('\n');
     throw new Error(`规则质量门禁拒绝加载（${report.errors} 条 error 级违规）：\n${errLines}`);
   }

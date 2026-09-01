@@ -62,10 +62,17 @@ describe('ERDLFnRegistry', () => {
   describe('getAllSignatures', () => {
     it('returns all registered signatures', () => {
       registry.register(makeReg());
-      registry.register(makeReg({
-        signature: { name: 'testFn2', signature: 'testFn2() → void', params: [], returns: 'void' },
-        impl: () => {},
-      }));
+      registry.register(
+        makeReg({
+          signature: {
+            name: 'testFn2',
+            signature: 'testFn2() → void',
+            params: [],
+            returns: 'void',
+          },
+          impl: () => {},
+        }),
+      );
       expect(registry.getAllSignatures()).toHaveLength(2);
       expect(registry.getAllSignatures().map(s => s.name)).toEqual(['testFn', 'testFn2']);
     });
@@ -83,26 +90,32 @@ describe('ERDLFnRegistry', () => {
     });
 
     it('times out on slow function', async () => {
-      registry.register(makeReg({
-        impl: () => new Promise(() => {}), // never resolves
-        timeoutMs: 50,
-      }));
+      registry.register(
+        makeReg({
+          impl: () => new Promise(() => {}), // never resolves
+          timeoutMs: 50,
+        }),
+      );
       await expect(registry.invoke('testFn')).rejects.toThrow(/timed out/);
     }, 5000);
 
     it('completes before timeout', async () => {
-      registry.register(makeReg({
-        impl: () => new Promise(resolve => setTimeout(() => resolve('ok'), 10)),
-        timeoutMs: 200,
-      }));
+      registry.register(
+        makeReg({
+          impl: () => new Promise(resolve => setTimeout(() => resolve('ok'), 10)),
+          timeoutMs: 200,
+        }),
+      );
       const result = await registry.invoke('testFn');
       expect(result).toBe('ok');
     });
 
     it('passes multiple args', async () => {
-      registry.register(makeReg({
-        impl: (...args: unknown[]) => args.join('-'),
-      }));
+      registry.register(
+        makeReg({
+          impl: (...args: unknown[]) => args.join('-'),
+        }),
+      );
       const result = await registry.invoke('testFn', 'a', 'b', 'c');
       expect(result).toBe('a-b-c');
     });
@@ -128,9 +141,11 @@ describe('ERDLFnRegistry', () => {
     });
 
     it('ring-buffer trims at 1000 entries', async () => {
-      registry.register(makeReg({
-        impl: (n: unknown) => n,
-      }));
+      registry.register(
+        makeReg({
+          impl: (n: unknown) => n,
+        }),
+      );
       // Push enough to trigger ring-buffer trim (>1000)
       for (let i = 0; i < 1050; i++) {
         await registry.invoke('testFn', i);

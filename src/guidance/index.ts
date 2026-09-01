@@ -74,7 +74,7 @@ export function extractNavigationGuide(opts: GuidanceOptions): NavigationGuide {
 
   // Extract correction/alternative from primary rule if available
   if (opts.rules && primary) {
-    const primaryRule = opts.rules.find((r) => r.name === primary.ruleId);
+    const primaryRule = opts.rules.find(r => r.name === primary.ruleId);
     if (primaryRule?.action?.alternative) {
       const alt = primaryRule.action.alternative;
       alternatives.push(typeof alt === 'string' ? alt : alt.en);
@@ -87,7 +87,7 @@ export function extractNavigationGuide(opts: GuidanceOptions): NavigationGuide {
   return {
     ruleName: primary?.ruleId ?? 'unknown',
     decision: opts.decision,
-    reason: opts.reason ?? (primary?.reason ?? 'Rule matched'),
+    reason: opts.reason ?? primary?.reason ?? 'Rule matched',
     corrections: [...new Set(corrections)],
     alternatives: [...new Set(alternatives)],
     blockedReasons,

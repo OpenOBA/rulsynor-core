@@ -40,7 +40,7 @@ export class GuardStateManager {
   checkRate(key: string, maxCount: number, windowMs: number): boolean {
     const now = this.clock.now();
     const timestamps = this.rateTracker.get(key) ?? [];
-    const recent = timestamps.filter((t) => now - t < windowMs);
+    const recent = timestamps.filter(t => now - t < windowMs);
     return recent.length < maxCount;
   }
 
@@ -51,7 +51,7 @@ export class GuardStateManager {
   recordRate(key: string, windowMs: number): void {
     const now = this.clock.now();
     const timestamps = this.rateTracker.get(key) ?? [];
-    const recent = timestamps.filter((t) => now - t < windowMs);
+    const recent = timestamps.filter(t => now - t < windowMs);
     recent.push(now);
     this.rateTracker.set(key, recent);
   }
@@ -66,7 +66,7 @@ export class GuardStateManager {
     const now = this.clock.now();
     const tracker = isRate ? this.rateTracker : this.withinTracker;
     const timestamps = tracker.get(key) ?? [];
-    const recent = timestamps.filter((t) => now - t < windowMs);
+    const recent = timestamps.filter(t => now - t < windowMs);
     return recent.length;
   }
 
@@ -81,7 +81,7 @@ export class GuardStateManager {
   checkWithin(key: string, windowMs: number): boolean {
     const now = this.clock.now();
     const timestamps = this.withinTracker.get(key) ?? [];
-    const recent = timestamps.filter((t) => now - t < windowMs);
+    const recent = timestamps.filter(t => now - t < windowMs);
     return recent.length >= 1;
   }
 
@@ -106,12 +106,12 @@ export class GuardStateManager {
   cleanup(maxAgeMs: number): void {
     const now = this.clock.now();
     for (const [key, timestamps] of this.rateTracker) {
-      const recent = timestamps.filter((t) => now - t < maxAgeMs);
+      const recent = timestamps.filter(t => now - t < maxAgeMs);
       if (recent.length === 0) this.rateTracker.delete(key);
       else this.rateTracker.set(key, recent);
     }
     for (const [key, timestamps] of this.withinTracker) {
-      const recent = timestamps.filter((t) => now - t < maxAgeMs);
+      const recent = timestamps.filter(t => now - t < maxAgeMs);
       if (recent.length === 0) this.withinTracker.delete(key);
       else this.withinTracker.set(key, recent);
     }
@@ -134,7 +134,7 @@ export class GuardStateManager {
 
   /** 是否处于冻结窗口内 */
   isFrozen(snapshotTime: number): boolean {
-    return (this.clock.now() - snapshotTime) < this.freezeWindowMs;
+    return this.clock.now() - snapshotTime < this.freezeWindowMs;
   }
 
   /**
@@ -156,7 +156,7 @@ export class GuardStateManager {
     const now = this.clock.now();
     const active: string[] = [];
     for (const [key, timestamps] of this.withinTracker) {
-      const recent = timestamps.filter((t) => now - t < windowMs);
+      const recent = timestamps.filter(t => now - t < windowMs);
       if (recent.length > 0) active.push(key);
     }
     return active;

@@ -51,7 +51,7 @@ describe('normalizeStringValue', () => {
   });
 
   it('normalizes values, preserves keys', () => {
-    const out = normalizeStringValue({ 'cafe': 'e\u0301' });
-    expect(out).toEqual({ 'cafe': '\u00e9' });
+    const out = normalizeStringValue({ cafe: 'e\u0301' });
+    expect(out).toEqual({ cafe: '\u00e9' });
   });
 });

@@ -1,7 +1,12 @@
 /**
  * rules.test.ts — Preset rules loader unit tests
  */
-import { loadPresetRules, toCompiledRules, toRuleDefinitions, toERDLRuleSet } from '../src/rules/index.js';
+import {
+  loadPresetRules,
+  toCompiledRules,
+  toRuleDefinitions,
+  toERDLRuleSet,
+} from '../src/rules/index.js';
 
 describe('loadPresetRules', () => {
   it('loads all 30 preset rules', () => {
@@ -76,10 +81,28 @@ describe('toCompiledRules', () => {
 
   it('all conditions have valid operators', () => {
     const validOps = new Set([
-      'eq','neq','ne','gt','gte','lt','lte','in','not_in',
-      'contains','not_contains','match','matches',
-      'starts_with','ends_with','exists','not_exists',
-      'length_gt','length_gte','length_lt','length_lte','length_eq',
+      'eq',
+      'neq',
+      'ne',
+      'gt',
+      'gte',
+      'lt',
+      'lte',
+      'in',
+      'not_in',
+      'contains',
+      'not_contains',
+      'match',
+      'matches',
+      'starts_with',
+      'ends_with',
+      'exists',
+      'not_exists',
+      'length_gt',
+      'length_gte',
+      'length_lt',
+      'length_lte',
+      'length_eq',
     ]);
     for (const c of rules) {
       for (const cond of c.conditions) {
@@ -143,12 +166,22 @@ describe('quality gate fail-close (SPEC v2.0 §16 加载期 MUST)', () => {
   const makeRule = (parsed: Record<string, unknown>) => ({ name: 'bad#x', content: '', parsed });
 
   it('rejects security rule with empty conditions (error-level)', () => {
-    const bad = makeRule({ name: 'SEC-999-no-cond', category: 'security', when: { conditions: [] }, then: { decision: 'DENY' } });
+    const bad = makeRule({
+      name: 'SEC-999-no-cond',
+      category: 'security',
+      when: { conditions: [] },
+      then: { decision: 'DENY' },
+    });
     expect(() => toCompiledRules([bad])).toThrow(/质量门禁拒绝加载/);
   });
 
   it('rejects kebab-case rule name (non-§16 naming)', () => {
-    const bad = makeRule({ name: 'block-bad', category: 'security', when: { conditions: [{ field: 'tool.name', operator: 'eq', value: 'exec' }] }, then: { decision: 'DENY' } });
+    const bad = makeRule({
+      name: 'block-bad',
+      category: 'security',
+      when: { conditions: [{ field: 'tool.name', operator: 'eq', value: 'exec' }] },
+      then: { decision: 'DENY' },
+    });
     expect(() => toCompiledRules([bad])).toThrow(/质量门禁拒绝加载/);
   });
 });

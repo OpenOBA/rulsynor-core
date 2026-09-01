@@ -11,17 +11,17 @@
 // ═══════════════════════════════════════════════════════════════
 
 export type CorrectLoopState =
-  | 'correct_round_1'    // first correction injected, waiting LLM re-evaluation
-  | 'correct_round_2'    // second correction
-  | 'correct_round_3'    // final attempt before escalation
-  | 'correct_resolved'   // Agent adopted correction → ALLOW
+  | 'correct_round_1' // first correction injected, waiting LLM re-evaluation
+  | 'correct_round_2' // second correction
+  | 'correct_round_3' // final attempt before escalation
+  | 'correct_resolved' // Agent adopted correction → ALLOW
   | 'correct_escalated'; // 3 rounds exhausted → REQUEST_HUMAN
 
 export interface CorrectLoopContext {
   ruleId: string;
   originalToolCall: { name: string; args: Record<string, unknown> };
   correction: string;
-  round: number;            // 1-3
+  round: number; // 1-3
   state: CorrectLoopState;
 }
 
@@ -29,10 +29,13 @@ export interface CorrectLoopContext {
  * Advance the CORRECT loop state machine.
  * Returns the next state and whether tool execution should proceed.
  */
-export function advanceCorrectLoop(ctx: CorrectLoopContext, newDecision: string): {
+export function advanceCorrectLoop(
+  ctx: CorrectLoopContext,
+  newDecision: string,
+): {
   state: CorrectLoopState;
-  execute: boolean;        // true = tool may now execute
-  escalate: boolean;       // true = trigger REQUEST_HUMAN
+  execute: boolean; // true = tool may now execute
+  escalate: boolean; // true = trigger REQUEST_HUMAN
 } {
   // Input validation
   if (ctx.round < 1 || ctx.round > 3 || !Number.isInteger(ctx.round)) {
@@ -148,7 +151,7 @@ export type AbArm = 'control' | 'treatment';
 export function assignAbArm(agentId: string): AbArm {
   let hash = 0;
   for (let i = 0; i < agentId.length; i++) {
-    hash = ((hash << 5) - hash) + agentId.charCodeAt(i);
+    hash = (hash << 5) - hash + agentId.charCodeAt(i);
     hash |= 0;
   }
   return Math.abs(hash) % 2 === 0 ? 'control' : 'treatment';
