@@ -1,17 +1,18 @@
 /**
- * simple-compiler — Simple 条件运算符（28 个）→ 表达式树编译（SPEC v2.0 §11）
+ * simple-compiler — Simple condition operators (28) → expression-tree compilation (SPEC v2.0 §11)
  *
- * SPEC v2.0 §11：“28 个条件运算符 + 2 个修饰符（within/rate）= 30 个语义单元”。
- * 本文件只编译 28 个条件运算符；within/rate 是有状态修饰符，在树外（GuardStateManager），不在此编译。
- * 求值核心从「运算符分支」收敛为「节点类型遍历」。
+ * SPEC v2.0 §11: "28 condition operators + 2 modifiers (within/rate) = 30 semantic units".
+ * This file only compiles the 28 condition operators; within/rate are stateful modifiers, outside
+ * the tree (GuardStateManager), not compiled here. The evaluation core converges from
+ * "operator branching" to "node-type traversal".
  *
- * 28 条件运算符编译归宿（SPEC v2.0 §11 权威映射）：
- * - 13 直接节点：eq/ne/gt/gte/lt/lte · in · contains/starts_with/ends_with/match · exists · between
- * - 6  not 组合：not_in/not_contains/not_starts_with/not_ends_with/not_exists/not_between
- * - 9  length/count 组合：length_gt/gte/lt/lte/eq（5）+ count_gt/gte/lt/lte（4）
- * - 2  时间修饰：within/rate（状态在树外 GuardStateManager，不编译进树求值——见下）
+ * 28 condition operators' compile destinations (SPEC v2.0 §11 authoritative mapping):
+ * - 13 direct nodes: eq/ne/gt/gte/lt/lte · in · contains/starts_with/ends_with/match · exists · between
+ * - 6  not-combinations: not_in/not_contains/not_starts_with/not_ends_with/not_exists/not_between
+ * - 9  length/count combinations: length_gt/gte/lt/lte/eq (5) + count_gt/gte/lt/lte (4)
+ * - 2  time modifiers: within/rate (state outside the tree in GuardStateManager, not compiled into tree evaluation — see below)
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
@@ -19,13 +20,15 @@
 import type { ExprNode } from './node-types.js';
 import type { ConditionOperator } from '../erdl-schema.js';
 
-/** Simple 条件运算符全集（28 个，SPEC v2.0 §11，规范级冻结；不含 within/rate 修饰符） */
-// 2026-08-28 论证阶段收口：原为本地 28 项联合类型。它曾被加进 NO-DUP-ENUM 白名单，
-// 而白名单掩盖了一个真副本 —— simple-compiler 完全可以从单一事实源派生。
-// 结论：白名单只应给「结构上无法派生」的情形（如前端无后端依赖），不得给「能派生但没派生」。
+/** Full set of Simple condition operators (28, SPEC v2.0 §11, spec-level frozen; excluding within/rate modifiers) */
+// 2026-08-28 argumentation-stage consolidation: originally a local 28-item union type. It was once
+// added to the NO-DUP-ENUM whitelist, and the whitelist masked a true duplicate — simple-compiler
+// can be fully derived from the single source of truth.
+// Conclusion: the whitelist should only cover cases that are structurally underivable (e.g. frontend
+// without backend dependency), never "derivable but not derived".
 export type SimpleOperator = ConditionOperator;
 
-/** Simple 条件（field + operator + value 三元组） */
+/** Simple condition (field + operator + value triple) */
 export interface SimpleCondition {
   field: string;
   operator: SimpleOperator;
@@ -39,17 +42,17 @@ export class SimpleCompileError extends Error {
   }
 }
 
-/** 构造 field 引用节点 */
+/** Construct a field reference node */
 function field(name: string): ExprNode {
   return { type: 'field', field: name };
 }
 
-/** 构造 literal 节点 */
+/** Construct a literal node */
 function literal(value: unknown): ExprNode {
   return { type: 'literal', value };
 }
 
-/** 构造比较节点 */
+/** Construct a comparison node */
 function cmp(
   op: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte',
   left: ExprNode,
@@ -58,32 +61,33 @@ function cmp(
   return { type: 'compare', op, left, right };
 }
 
-/** 构造 not 节点 */
+/** Construct a not node */
 function not(arg: ExprNode): ExprNode {
   return { type: 'not', arg };
 }
 
 /**
- * exists 守卫（E11 空值传播）：派生算子（not_* / length_*）对缺失字段必须返回 false，
- * 而非经 not 翻转或数值比较后误判为 true。
- * 编译为 exists(field) AND <inner>——字段缺失（undefined/null）时 exists=false → 整体 false。
- * 修复（2026-08-27）：原实现 not_* 编译成 not(正向算子)，正向算子对缺失字段返回 false，
- * not(false)=true 翻转了空值传播（fail-open 安全漏洞）；length_* 同理（length(缺失)=0，0>负数/0==0 误判 true）。
+ * exists guard (E11 null propagation): derived operators (not_* / length_*) must return false for
+ * missing fields, rather than being wrongly judged true after a not-flip or numeric comparison.
+ * Compiled to exists(field) AND <inner> — when the field is missing (undefined/null), exists=false → overall false.
+ * Fix (2026-08-27): the original implementation compiled not_* as not(positive operator); the positive
+ * operator returns false for a missing field, so not(false)=true flipped null propagation (a fail-open
+ * security hole); same for length_* (length(missing)=0, 0>negative/0==0 wrongly judged true).
  */
 function andExists(fieldName: string, inner: ExprNode): ExprNode {
   return { type: 'and', args: [{ type: 'exists', arg: field(fieldName) }, inner] };
 }
 
 /**
- * 编译单个 Simple 条件 → 表达式树节点。
- * 对齐 §11 权威映射，无悬空。
+ * Compile a single Simple condition → expression-tree node.
+ * Aligned with the §11 authoritative mapping, no dangling.
  */
 export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
   const { field: fieldName, operator, value } = cond;
-  if (!fieldName) throw new SimpleCompileError('field 不能为空');
+  if (!fieldName) throw new SimpleCompileError('field must not be empty');
 
   switch (operator) {
-    // ── 13 直接节点 ──
+    // ── 13 direct nodes ──
     case 'eq':
     case 'ne':
     case 'gt':
@@ -101,9 +105,9 @@ export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
     case 'exists':
       return { type: 'exists', arg: field(fieldName) };
     case 'between': {
-      // value 应为 [min, max]
+      // value should be [min, max]
       if (!Array.isArray(value) || value.length !== 2) {
-        throw new SimpleCompileError(`between 需要 [min, max] 数组，实际 ${JSON.stringify(value)}`);
+        throw new SimpleCompileError(`between requires a [min, max] array, got ${JSON.stringify(value)}`);
       }
       return {
         type: 'between',
@@ -113,7 +117,7 @@ export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
       };
     }
 
-    // ── 6 not 组合（not_* 加 exists 守卫，字段缺失时不 not 翻转）──
+    // ── 6 not-combinations (not_* with exists guard, no not-flip when field missing) ──
     case 'not_in':
       return andExists(
         fieldName,
@@ -135,12 +139,12 @@ export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
         not({ type: 'string', op: 'ends_with', left: field(fieldName), right: literal(value) }),
       );
     case 'not_exists':
-      // not_exists 是唯一可感知字段存在性的算子之一（E11），保持 not(exists)，不加 exists 守卫
+      // not_exists is one of the only operators that sense field presence (E11), keep not(exists), no exists guard
       return not({ type: 'exists', arg: field(fieldName) });
     case 'not_between': {
       if (!Array.isArray(value) || value.length !== 2) {
         throw new SimpleCompileError(
-          `not_between 需要 [min, max] 数组，实际 ${JSON.stringify(value)}`,
+          `not_between requires a [min, max] array, got ${JSON.stringify(value)}`,
         );
       }
       return andExists(
@@ -154,7 +158,7 @@ export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
       );
     }
 
-    // ── 9 length/count 组合（length_*/count_* 加 exists 守卫，字段缺失时不 0/null 值误判）──
+    // ── 9 length/count combinations (length_*/count_* with exists guard, no 0/null misjudgment when field missing) ──
     case 'length_gt':
       return andExists(fieldName, cmp('gt', lengthOf(fieldName), literal(value)));
     case 'length_gte':
@@ -175,24 +179,24 @@ export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
       return andExists(fieldName, cmp('lte', countOf(fieldName), literal(value)));
 
     default:
-      // within/rate 是有状态算子，不在此编译（状态在树外）
-      throw new SimpleCompileError(`不支持的 Simple 运算符：${operator}`);
+      // within/rate are stateful operators, not compiled here (state outside the tree)
+      throw new SimpleCompileError(`unsupported Simple operator: ${operator}`);
   }
 }
 
-/** length(field) 节点 */
+/** length(field) node */
 function lengthOf(fieldName: string): ExprNode {
   return { type: 'length', arg: field(fieldName) };
 }
 
-/** count(field) 节点（聚合 count） */
+/** count(field) node (aggregate count) */
 function countOf(fieldName: string): ExprNode {
   return { type: 'aggregate', fn: 'count', over: field(fieldName) };
 }
 
 /**
- * 编译一组 Simple 条件 → and 组合树。
- * 空数组 → literal true（恒真）。
+ * Compile a group of Simple conditions → and-combination tree.
+ * Empty array → literal true (always true).
  */
 export function compileSimpleConditions(
   conds: SimpleCondition[],

@@ -1,20 +1,24 @@
 /**
- * decision-table — 决策表投影（SPEC v2.0 §13）
+ * decision-table — decision-table projection (SPEC v2.0 §13)
  *
- * 决策表是矩阵形态（行=条件组合，列=条件维度），面向业务/财务人员的定价、审批、折扣类规则。
- * 编译到同一内核（表达式树）——每行的条件组合编译为 and 树，行间语义见下方说明。
+ * A decision table is a matrix form (rows = condition combinations, columns = condition
+ * dimensions), for pricing/approval/discount rules written by business/finance people.
+ * Compiled to the same kernel (expression tree) — each row's condition combination compiles
+ * to an and tree; row semantics are explained below.
  *
- * SPEC §13 仅定义「矩阵形态，编译到同一内核」的性质，未定义具体行列语法。
- * 本实现采用标准决策表语义（DMN 简化），并【显式标注】此结构约定，避免悬空：
- * - 列 = 条件字段（列名）
- * - 行 = 该列的条件值（一行内所有条件 AND）
- * - 每行一个决策（action）
- * - 行间命中策略：单命中（first match），由调用方按优先级选择
+ * SPEC §13 only defines the property "matrix form, compiled to the same kernel", not the
+ * concrete row/column syntax. This implementation uses standard decision-table semantics
+ * (DMN simplified) and [explicitly annotates] this structural convention, to avoid dangling:
+ * - column = condition field (column name)
+ * - row = the column's condition value (all conditions in a row are AND-ed)
+ * - one decision (action) per row
+ * - row hit strategy: single hit (first match), selected by priority by the caller
  *
- * 编译产物是「行 → { 条件树(ExprNode) + 决策 }」的列表，
- * 每行的条件树是同一表达式树内核的 and 组合——这正是「编译到同一内核」的落地。
+ * The compile output is a list of "row → { condition tree (ExprNode) + decision }"; each row's
+ * condition tree is an and-combination of the same expression-tree kernel — this is the concrete
+ * implementation of "compiled to the same kernel".
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
@@ -22,31 +26,31 @@
 import type { ExprNode } from './node-types.js';
 import { compileSimpleCondition } from './simple-compiler.js';
 
-/** 决策表（矩阵形态） */
+/** Decision table (matrix form) */
 export interface DecisionTable {
-  /** 条件列（字段名） */
+  /** Condition columns (field names) */
   columns: string[];
-  /** 行：每行是 条件值 + 决策 */
+  /** Rows: each row is condition values + decision */
   rows: DecisionTableRow[];
 }
 
-/** 决策表的一行 */
+/** One row of a decision table */
 export interface DecisionTableRow {
-  /** 该行各列的条件值（key=列名，value=期望值；缺失列=不约束） */
+  /** Condition values for each column of this row (key=column name, value=expected value; missing column = unconstrained) */
   conditions: Record<string, unknown>;
-  /** 该行的决策（action） */
+  /** The row's decision (action) */
   decision: string;
-  /** 优先级（单命中策略下，先匹配优先） */
+  /** Priority (under single-hit, first match wins) */
   priority?: number;
 }
 
-/** 编译产物：一行 → 条件树 + 决策 */
+/** Compile output: one row → condition tree + decision */
 export interface CompiledDecisionRow {
-  /** 该行条件编译成的表达式树（and 组合） */
+  /** The expression tree compiled from this row's conditions (and-combination) */
   expr: ExprNode;
-  /** 该行决策 */
+  /** This row's decision */
   decision: string;
-  /** 优先级 */
+  /** Priority */
   priority: number;
 }
 
@@ -58,32 +62,32 @@ export class DecisionTableError extends Error {
 }
 
 /**
- * 编译决策表 → 行条件树列表。
- * 每行的 conditions 编译为 and 树（所有非 null 条件 eq），一行一个决策。
+ * Compile a decision table → a list of row condition trees.
+ * Each row's conditions compile to an and tree (all non-null conditions as eq), one decision per row.
  */
 export function compileDecisionTable(table: DecisionTable): CompiledDecisionRow[] {
   if (!table.columns || table.columns.length === 0) {
-    throw new DecisionTableError('决策表必须至少有一列');
+    throw new DecisionTableError('decision table must have at least one column');
   }
   if (!table.rows || table.rows.length === 0) {
-    throw new DecisionTableError('决策表必须至少有一行');
+    throw new DecisionTableError('decision table must have at least one row');
   }
 
   return table.rows.map((row, idx) => {
     const conds: ExprNode[] = [];
     for (const col of table.columns) {
       const value = row.conditions[col];
-      if (value === undefined) continue; // 该列不约束
+      if (value === undefined) continue; // this column is unconstrained
       conds.push(compileSimpleCondition({ field: col, operator: 'eq', value }));
     }
     if (conds.length === 0) {
-      throw new DecisionTableError(`第 ${idx + 1} 行没有任何条件约束`);
+      throw new DecisionTableError(`row ${idx + 1} has no condition constraint`);
     }
     const expr: ExprNode = conds.length === 1 ? conds[0] : { type: 'and', args: conds };
     return {
       expr,
       decision: row.decision,
-      priority: row.priority ?? idx, // 缺省按行序
+      priority: row.priority ?? idx, // defaults to row order
     };
   });
 }

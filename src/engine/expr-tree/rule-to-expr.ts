@@ -1,15 +1,15 @@
 /**
- * rule-to-expr — RuleDefinition（平铺 conditions）→ 表达式树编译（归一桥梁）
+ * rule-to-expr — RuleDefinition (flat conditions) → expression-tree compilation (normalization bridge)
  *
- * 把旧平铺求值器（evaluator.ts）的 RuleCondition[] 编译为表达式树，
- * 供影子验证（新旧对照）与归一（替换条件求值层）使用。
+ * Compiles the old flat evaluator's (evaluator.ts) RuleCondition[] into an expression tree,
+ * for shadow verification (old vs new) and normalization (replacing the condition evaluation layer).
  *
- * 对齐语义：
- * - 运算符别名归一：matches→match、neq→ne（与旧 evaluator 的 v1.3 aliasing 一致）
- * - 仅编译纯条件（field+operator+value）；within/rate/pattern/keywords 不编译（有状态/非纯）
- * - conditionLogic：AND（缺省）/ OR → and/or 树
+ * Alignment semantics:
+ * - operator alias normalization: matches→match, neq→ne (consistent with the old evaluator's v1.3 aliasing)
+ * - only pure conditions are compiled (field+operator+value); within/rate/pattern/keywords are not compiled (stateful/non-pure)
+ * - conditionLogic: AND (default) / OR → and/or tree
  *
- * @author 唐浩然 (Tang Haoran) · OpenOBA AI 执行官
+ * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license MIT
  */
@@ -24,20 +24,20 @@ import {
 } from './simple-compiler.js';
 import { CONDITION_OPERATORS } from '../erdl-schema.js';
 
-/** RuleCondition 的 operator → SimpleOperator（归一别名 + 过滤非纯算子） */
+/** RuleCondition's operator → SimpleOperator (normalize aliases + filter non-pure operators) */
 export function normalizeOperator(op: string | undefined): SimpleOperator | null {
   if (!op) return null;
-  // 别名归一（与旧 evaluator v1.3 aliasing 一致）
+  // Alias normalization (consistent with the old evaluator v1.3 aliasing)
   if (op === 'matches') op = 'match';
   if (op === 'neq') op = 'ne';
-  // 判定是否为 SimpleOperator
-  // 2026-08-28 review 收口：原为本地 28 项数组（第二份枚举）。现用单一事实源判定。
+  // Check whether it is a SimpleOperator
+  // 2026-08-28 review consolidation: originally a local 28-item array (a second enum). Now uses the single source of truth.
   return (CONDITION_OPERATORS as readonly string[]).includes(op) ? (op as SimpleOperator) : null;
 }
 
-/** 单个 RuleCondition → SimpleCondition（无法编译的返回 null） */
+/** A single RuleCondition → SimpleCondition (returns null when not compilable) */
 export function ruleConditionToSimple(cond: RuleCondition): SimpleCondition | null {
-  // 非纯条件（within/rate/pattern/keywords）不编译
+  // Non-pure conditions (within/rate/pattern/keywords) are not compiled
   if (cond.within || cond.rate || cond.pattern || cond.keywords) return null;
   const field = cond.field;
   if (!field) return null;
@@ -47,19 +47,19 @@ export function ruleConditionToSimple(cond: RuleCondition): SimpleCondition | nu
 }
 
 /**
- * RuleDefinition 的 when 条件 → 表达式树。
- * 返回 null 表示该规则含非纯条件（within/rate/pattern/keywords），无法编译成纯树。
+ * RuleDefinition's when condition → expression tree.
+ * Returns null when the rule contains non-pure conditions (within/rate/pattern/keywords) and cannot compile to a pure tree.
  */
 export function ruleWhenToExpr(rule: RuleDefinition): ExprNode | null {
   const conds = rule.conditions ?? [];
   if (conds.length === 0) {
-    // 空条件 = 恒真（catch-all）
+    // Empty condition = always true (catch-all)
     return { type: 'literal', value: true };
   }
   const simples: SimpleCondition[] = [];
   for (const cond of conds) {
     const s = ruleConditionToSimple(cond);
-    if (s === null) return null; // 含非纯条件
+    if (s === null) return null; // contains a non-pure condition
     simples.push(s);
   }
   const logic = rule.conditionLogic ?? 'AND';
@@ -67,18 +67,18 @@ export function ruleWhenToExpr(rule: RuleDefinition): ExprNode | null {
 }
 
 /**
- * LLM 生成的规则 JSON 的 when → 表达式树（统一入口，同时支持两种形态）。
+ * The when of an LLM-generated rule JSON → expression tree (unified entry, supports both forms).
  *
- * 两种 when 形态：
- * - 平铺 { logic, conditions }（Simple 投影面）
- * - S-expression 表达式树（Expression 投影面，含时间运算等扩展节点）
+ * Two when forms:
+ * - flat { logic, conditions } (Simple projection)
+ * - S-expression expression tree (Expression projection, including extension nodes like time operations)
  *
- * 供 regulation-rule / rule.service computeGlossGrade 等 NL 生成入口使用；
- * 对不规范 JSON 做容错 + 别名归一。返回 null 表示无法编译。
+ * For NL generation entries like regulation-rule / rule.service computeGlossGrade; tolerates
+ * irregular JSON + alias normalization. Returns null when not compilable.
  */
 export function jsonWhenToExpr(when: Record<string, unknown>): ExprNode | null {
-  // §12 Expression 投影面：优先识别 when.expr 包裹形态（SPEC §12 权威），
-  // 兼容 when 顶层即树的旧形态。
+  // §12 Expression projection: prefer the when.expr wrapped form (SPEC §12 authoritative),
+  // compatible with the old form where when is a tree at the top level.
   const exprValue = extractWhenExpr(when);
   if (exprValue !== null) {
     try {
@@ -90,7 +90,7 @@ export function jsonWhenToExpr(when: Record<string, unknown>): ExprNode | null {
 
   const conds = when?.conditions as Array<Record<string, unknown>> | undefined;
   if (!Array.isArray(conds) || conds.length === 0) {
-    // 空条件 → 恒真
+    // Empty condition → always true
     return { type: 'literal', value: true };
   }
   const logic = (when.logic as 'AND' | 'OR') ?? 'AND';
