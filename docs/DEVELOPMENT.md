@@ -1,287 +1,236 @@
 # Developer Guide — @openoba/rulsynor-core
 
-> For end users writing ERDL rules, see [RULE-AUTHORING.md](./RULE-AUTHORING.md).
-> For the submission workflow, see [CONTRIBUTING.md](../CONTRIBUTING.md).
+> 面向扩展/二开 rulsynor-core 的开发者。规则创作见 [RULE-AUTHORING.md](./RULE-AUTHORING.md)，提交流程见 [CONTRIBUTING.md](../CONTRIBUTING.md)。
 
 ---
 
-## Architecture Overview
+## 架构总览
+
+rulsynor-core 采用**单一求值核心**（Spec v2.0 §10 E7：Simple 与 Expression 编译到同一核心，禁止两个求值器）。
 
 ```
-                    ┌──────────────────────┐
-                    │    Evaluator          │  orchestration layer
-                    │  (src/engine/evaluator) │  ring sort → first-match-wins
-                    └──────┬───────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                 ▼
-┌─────────────────┐ ┌──────────────┐ ┌──────────────────┐
-│ StaticRuleTree   │ │RuntimeEval   │ │ GuardStateManager │
-│ ring/priority    │ │ per-condition │ │ within/rate       │
-│ sort + AND/OR    │ │ operator eval │ │ counters + freeze │
-└─────────────────┘ └──────────────┘ └──────────────────┘
-          │                │                 │
-          └────────────────┼─────────────────┘
-                           ▼
-                  ┌──────────────────┐
-                  │  Decision Object  │
-                  │  JCS + SHA-256    │
-                  │  25-field audit   │
-                  └──────────────────┘
+ERDL 规则（YAML / S-expression）
+        │
+        ▼
+  simple-compiler.ts / rule-to-expr.ts   ← Simple 30 运算符 → 表达式树
+        │
+        ▼
+  expr-tree/evaluator.ts                  ← 34 节点表达式树求值器（ExprTreeEvaluator）
+        │
+        ▼
+  evaluator.ts                            ← 规则求值器（环排序 + first-match-wins + override）
+        │
+        ▼
+  Decision Object（JCS + SHA-256 审计链）
 ```
 
-### Three-Layer Evaluation Engine
+| 模块 | 文件 | 职责 |
+|------|------|------|
+| **Evaluator** | `src/engine/evaluator.ts` | 规则求值编排：环排序、first-match-wins、override 语义 |
+| **ExprTreeEvaluator** | `src/engine/expr-tree/evaluator.ts` | 34 节点表达式树求值（唯一求值核心） |
+| **Simple 编译** | `src/engine/expr-tree/simple-compiler.ts` | Simple 30 运算符 → 表达式树编译映射 |
+| **单一事实源** | `src/engine/erdl-schema.ts` | 运算符/决策/节点/分类枚举 + `SCHEMA_COUNTS` 自证 |
+| **GuardStateManager** | `src/engine/guard-state-manager.ts` | within/rate 有状态计数器（树外状态） |
+| **ERDLFnRegistry** | `src/engine/fn-registry.ts` | 函数委派（注册制 + 沙箱 + 确定性豁免） |
+| **safeRegExp** | `src/engine/safe-regex.ts` | ReDoS 防护正则 |
 
-| Layer | File | Responsibility |
-|-------|------|---------------|
-| **SafeExprEvaluator** | `src/engine/safe-expr.ts` | Pure expression evaluation. Each operator is a private method. Used for compile-time expression evaluation. |
-| **RuntimeEvaluator** | `src/engine/runtime-evaluator.ts` | Per-condition operator evaluation at runtime. Resolves dot-notation fields, handles null propagation, uses `deepEquals`. |
-| **Evaluator** | `src/engine/evaluator.ts` | Orchestration: ring-sorts rules, applies AND/OR logic, delegates stateless conditions to StaticRuleTree and temporal conditions to GuardStateManager. |
-
-The three layers are deliberately **redundant** for safety — each implements operators independently. A bug in one layer cannot be masked by another.
-
-### Key Design Principles
-
-1. **Deterministic**: same input → same output. No `Date.now()` in evaluation path. No `Math.random()`. Use `VirtualClock` for time-dependent tests.
-2. **First-match-wins**: rules sorted by Ring (0 first) then priority (lower first). First rule whose conditions match wins.
-3. **Read-only temporal check**: `evaluate()` only reads within/rate counters — never writes. Counters are committed via `commitTemporal()` after ALLOW decisions.
-4. **Preimage rules for audit hash**: `audit.hash`, `signature`, and `signing_key_id` are excluded from the JCS preimage. All other fields — including `audit.previous_hash`, `audit.commitment`, and `extensions` — participate in the hash.
+> 内核显式排除：字符串拼接、正则替换、位运算、日期格式化、递归引用、用户自定义节点——以维持求值的封闭性与可验证性。
 
 ---
 
-## Project Structure
+## 关键设计原则
+
+1. **确定性**：同输入 → 同输出。求值路径无 `Date.now()`、无 `Math.random()`。时间用 `VirtualClock` 注入。
+2. **单一事实源**：运算符/决策/节点/分类枚举只在 `erdl-schema.ts` 一处，`SCHEMA_COUNTS` 用 `.length` 自证，杜绝手写数字漂移。
+3. **树即证据**：`canonical_tree`（树快照）进 DO 参与哈希；`eval_trace`/`gloss` 是可重算派生产物，不进 DO。
+4. **叶子折叠（E11）**：比较节点把 Missing 折叠为 `false`；布尔算子两值；`exists` 是唯一感知字段存在性的算子。
+5. **定点小数（E2）**：scale=14 + half-even，中间 128 位有理数，仅输出节点舍入。
+6. **first-match-wins**：规则按 Ring（0 优先）→ priority（小优先）排序，首个命中即止。
+7. **只读时序检查**：`evaluate()` 只读 within/rate 计数，计数经 `commitTemporal()` 在 ALLOW 后提交。
+8. **审计哈希原像**：`audit.hash` / `signature` / `signing_key_id` 排除在原像外；其余（含 `audit.previous_hash` / `audit.commitment` / `extensions`）参与哈希。
+
+---
+
+## 项目结构
 
 ```
 src/
-├── index.ts                    # Public API barrel export
-├── playground.ts               # CLI entry: npx @openoba/rulsynor-core
-├── runtime.ts                  # Minimal ReAct loop
-├── provenance.ts               # Build identity watermark
+├── index.ts                    # 公共 API barrel 导出
+├── playground.ts               # CLI：npx @openoba/rulsynor-core
+├── runtime.ts                  # 最小 ReAct 循环
+├── provenance.ts               # 构建身份水印
 ├── engine/
-│   ├── index.ts                # Engine barrel
-│   ├── evaluator.ts            # Rule evaluation engine
-│   ├── safe-expr.ts            # Safe expression evaluator
-│   ├── runtime-evaluator.ts    # Per-condition operator evaluator
-│   ├── static-rule-tree.ts     # Rule sorting + condition group evaluation
-│   ├── guard-state-manager.ts  # Temporal counter manager
-│   ├── rule-compiler.ts        # ERDL YAML → 4-product compiler
-│   ├── safe-regex.ts           # ReDoS-protected regex construction
-│   ├── clock.ts                # Clock abstraction (System/Virtual)
-│   ├── fn-registry.ts          # Function registry (fn extension)
-│   ├── evaluator-adapter.ts    # Legacy rulsynor integration bridge
-│   ├── op-sem-registry.ts      # Operation semantic classifier
-│   ├── plan-parser.ts          # Parse LLM natural-language execution plans
-│   ├── types.ts                # ATCF V2.0 interface definitions
-│   ├── rule-definition.ts      # ERDL rule type definitions
-│   └── rule-store.interface.ts # Rule store abstraction
-├── guard/
-│   └── index.ts                # buildDecisionObject + generateAID
-├── compliance/
-│   └── index.ts                # Jurisdiction-aware compliance profiles
-├── guidance/
-│   └── index.ts                # extractNavigationGuide
-├── preflight/
-│   ├── index.ts                # Barrel
-│   ├── guard-integration.ts    # CORRECT loop, REQUEST_HUMAN parser, A/B arm
-│   ├── rag-formatter.ts        # trustLabel (stub, v1.1)
-│   └── tool-engine.ts          # parseToolCalls (stub, v1.1)
+│   ├── index.ts                # 引擎 barrel
+│   ├── evaluator.ts            # 规则求值引擎（环排序 + override）
+│   ├── erdl-schema.ts          # 单一事实源（运算符/决策/节点/分类）
+│   ├── guard-state-manager.ts  # within/rate 计数器
+│   ├── fn-registry.ts          # 函数委派注册表
+│   ├── op-sem-registry.ts      # 操作语义分类器
+│   ├── plan-parser.ts          # LLM 计划解析器
+│   ├── rule-definition.ts      # 规则类型定义
+│   ├── rule-validator.ts       # 规则校验（命名/结构/值域）
+│   ├── rule-quality-gate.ts    # 规则质量门禁
+│   ├── rule-yaml-serializer.ts # 规则 YAML 序列化
+│   ├── template-engine.ts      # 规则模板引擎（LLM schema 注入）
+│   ├── rule-config.ts          # 规则配置
+│   ├── safe-regex.ts           # ReDoS 防护正则
+│   ├── clock.ts                # 时钟抽象（System/Virtual）
+│   ├── date-utils.ts           # 日期工具
+│   ├── logger.ts               # 日志
+│   └── expr-tree/
+│       ├── evaluator.ts        # 表达式树求值器（34 节点）
+│       ├── simple-compiler.ts  # Simple 30 运算符 → 树编译
+│       ├── s-expression.ts     # S-expression 解析
+│       ├── node-types.ts       # 20 判别式 type
+│       ├── fixed-point.ts      # 定点小数（scale=14 half-even）
+│       ├── gloss.ts            # 自然语言可读投影
+│       ├── grade.ts            # 规则分级（A/B/C）
+│       ├── limits.ts           # 资源上限（分级）
+│       ├── eval-trace.ts       # 求值追踪
+│       ├── eval-warning.ts     # 求值警告
+│       ├── canonical.ts        # 规范化（JCS）
+│       ├── normalize.ts        # NFC 规范化
+│       ├── rule-to-expr.ts     # when → 表达式树
+│       └── decision-table.ts   # 决策表投影
+├── guard/index.ts              # buildDecisionObject + generateAID
+├── compliance/index.ts         # 合规画像（6 框架三层激活）
+├── guidance/index.ts           # extractNavigationGuide
+├── preflight/                  # ReAct 辅助（纠偏环/人工裁决/A/B 臂/信任标签）
+├── knowledge/                  # 知识模块（类型/工具）
 └── rules/
-    ├── index.ts                # loadPresetRules, toCompiledRules
-    ├── security.erdl.yaml      # 20 security preset rules
-    ├── compliance.erdl.yaml    # 8 compliance preset rules
-    └── integrity.erdl.yaml     # 1 professional ethics preset rule
+    ├── index.ts                # loadPresetRules + to* 转换
+    ├── security.erdl.yaml      # 安全规则
+    ├── compliance.erdl.yaml    # 合规规则
+    └── integrity.erdl.yaml     # 职业道德规则
 
 test/
-├── core.test.ts                # Core API + Decision Object tests
-├── core-extended.test.ts       # SafeExpr/Evaluator boundary tests
-├── operators.test.ts           # All 30 operators via SafeExpr + Evaluator
-├── guard-state-manager.test.ts # Temporal counter tests
-└── evaluator-adapter.test.ts   # Adapter conversion tests
+├── *.spec.ts                   # 顶层模块测试（clock/core/fn-registry/...）
+└── engine/
+    ├── evaluator.spec.ts       # 规则求值器
+    ├── expr-tree-evaluator.spec.ts  # 表达式树求值器
+    ├── simple-compiler.spec.ts # Simple 编译映射
+    ├── erdl-schema.spec.ts     # 单一事实源一致性
+    ├── s-expression.spec.ts    # S-expression
+    └── ...                     # 其余模块测试
 ```
 
 ---
 
-## Local Development
+## 本地开发
 
-### Requirements
+### 环境要求
 
-- Node.js >= 20
-- npm (no pnpm needed — package.json uses npm scripts)
+- Node.js ≥ 20
+- pnpm（本项目用 pnpm，`pnpm-lock.yaml`）
 
-### Setup
+### 初始化
 
 ```bash
 git clone https://github.com/OpenOBA/rulsynor-core.git
 cd rulsynor-core
-npm install
-npm run build
-npm test
+pnpm install
+pnpm run build
+pnpm test
 ```
 
-### Development Commands
+### 开发命令
 
-| Command | Purpose |
-|---------|---------|
-| `npm run build` | TypeScript compile + copy rules YAML to dist/ |
-| `npm run typecheck` | Type-check only (no emit) |
-| `npm run test` | Run all 100 tests |
-| `npm run dev` | Watch mode (`tsc --watch`) |
-| `npm run lint` | ESLint (strict rules) |
-| `npm run format` | Prettier auto-fix |
-| `npm run format:check` | Prettier validation |
+| 命令 | 用途 |
+|------|------|
+| `pnpm run build` | tsc 编译 + 复制规则 YAML 到 dist/ |
+| `pnpm run typecheck` | 仅类型检查（`tsc --noEmit`） |
+| `pnpm test` | 跑全部 555 测试 |
+| `pnpm run dev` | 监听模式 |
+| `pnpm run lint` | ESLint（严格规则） |
+| `pnpm run format` | Prettier 自动修复 |
+| `pnpm run format:check` | Prettier 校验 |
+| `pnpm run release:check` | 全门禁（typecheck+lint+test+build） |
 
-### Debugging Tips
+### 调试技巧
 
-- **Clock injection**: Use `new GuardStateManager(new VirtualClock(t))` to control time in within/rate tests. Call `clock.advance(ms)` to simulate elapsed time.
-- **State reset**: Call `stateManager.reset()` between test cases to avoid cross-test contamination.
-- **Playground CLI**: `node dist/playground.js --tool=exec --cmd="rm -rf /"` for quick smoke tests.
+- **时钟注入**：`new GuardStateManager(new VirtualClock(t))` 控制 within/rate 测试；`clock.advance(ms)` 模拟时间流逝。
+- **状态重置**：`stateManager.reset()` 隔离测试用例。
+- **Playground**：`node dist/playground.js --tool=exec --cmd="rm -rf /"` 快速冒烟。
 
 ---
 
-## Extension Points
+## 扩展点
 
-### Adding a New Operator
+### 运算符与节点（FREEZE-2 冻结）
 
-Operators must be added to **three independent engines** plus tests:
+34 节点 / 30 运算符**已冻结**（Spec v2.0 §10.1 `[FREEZE-2]`）——已发布节点不改语义、不减配。新增节点走**版本升级 + 破坏性变更审批**，不在当前基线内随时增补。
 
-1. **`src/engine/safe-expr.ts`** — `SafeExprEvaluator`
-   - Add a `case` in the `evaluate()` switch
-   - Implement a private `evalXxx()` method
-   - Add to `safeExprFromCondition()` if value-less (like `exists`)
+若确需新增节点，路径为：
 
-2. **`src/engine/runtime-evaluator.ts`** — `evaluateCondition()`
-   - Add a `case` in the operator switch
-   - Handle null/undefined propagation
-   - Return `false` for type mismatches (safe default)
+1. `erdl-schema.ts` — 更新 `SEMANTIC_NODES` + `EXPR_NODE_TYPES`（同步 SPEC 母本）
+2. `expr-tree/evaluator.ts` — 加节点求值编码
+3. `expr-tree/simple-compiler.ts` — 若属 Simple 投影，加编译映射
+4. `test/engine/erdl-schema.spec.ts` — 更新一致性断言
+5. 同步 SPEC + 向量（跨仓：erdl-landing / erdl-vectors）
 
-3. **`src/engine/rule-compiler.ts`** — `RuleCompilerImpl.evaluateLeaf()`
-   - Add a `case` in the `evaluateLeaf()` switch
-   - Handle null/undefined propagation
-   - Return `false` for unknown operators
+> 内核无法完整表达的逻辑，优先走**函数委派**（`fn-registry.ts`）而非新增节点——注册制 + 沙箱 + 确定性豁免声明 + 审计可溯。
 
-4. **`test/operators.test.ts`** — Add tests for the new operator through both `SafeExprEvaluator` and `Evaluator`
+### 新增决策类型
 
-**Example**: Adding a `regex_replace` operator:
+1. `erdl-schema.ts` — 更新 `DO_DECISIONS`（进 DO 的 13 种）或 `ALL_DECISIONS`（引擎内部 21 种）
+2. `guard/index.ts` — 决策类型映射
+3. `runtime.ts` — 工具执行分发 switch
+4. README 决策表 + 测试用例
 
-```typescript
-// safe-expr.ts
-case 'regex_replace':
-  return this.evalRegexReplace(args, context);
+> 决策类型是「单一事实源」的一部分，改动必须同步 `SCHEMA_COUNTS` + SPEC §27.5。
 
-// runtime-evaluator.ts
-case 'regex_replace':
-  return typeof fieldValue === 'string' && typeof value === 'string'
-    ? value === fieldValue.replace(safeRegExp(args[1] as string), args[2] as string)
-    : false;
+### 新增合规法域
 
-// rule-compiler.ts evaluateLeaf
-case 'regex_replace':
-  // Not applicable for compile-time decision tree — return false
-  return false;
-```
+1. `compliance/index.ts` — 加 framework 注册（framework/version/jurisdiction）
+2. 更新环境变量 `RULSYNOR_JURISDICTIONS` 的法域码
+3. 同步 SPEC 14 框架清单（如属）
 
-Operators that are **not applicable at compile time** (like `regex_replace`) should return `false` in the decision tree evaluator — they cannot be pre-computed.
+> 合规画像原则（Human Sovereignty）：框架不替用户猜法域，「未配置即未选择」，由部署方显式声明。
 
-### Adding a New Decision Type
+### 修改 Decision Object 字段
 
-1. Add to `DeriveDecisionType` union in `src/guard/index.ts`
-2. Add handling in `Evaluator.evaluate()` return paths
-3. Add handling in `runtime.ts` tool-execution switch
-4. Add to decisions table in README
-5. Add test case using the new decision type
+**原像规则**（哪些字段参与审计哈希）：
 
-### Adding a New Compliance Jurisdiction
+| 动作 | 字段 |
+|------|------|
+| **排除在原像外** | `audit.hash`、`signature`、`signing_key_id` |
+| **包含在原像内** | 其余全部，含 `audit.previous_hash`、`audit.commitment`、`extensions` |
 
-1. Add entry to `REGULATORY_REFERENCES` in `src/compliance/index.ts`
-2. Add field mapping in `JURISDICTION_FIELD_MAP`
-3. The jurisdiction auto-activates via `RULSYNOR_JURISDICTIONS` env variable
-
-### Modifying Decision Object Fields
-
-**Preimage rules** (which fields participate in the audit hash):
-
-| Action | Fields |
-|--------|--------|
-| **EXCLUDED from preimage** | `audit.hash`, `signature`, `signing_key_id` |
-| **INCLUDED in preimage** | Everything else, including `audit.previous_hash`, `audit.commitment`, `extensions` |
-
-Rules:
-- Adding a new field: it IS included in the preimage by default. Update `buildDecisionObject()` in `src/guard/index.ts`.
-- Removing a field: it breaks existing audit chains. Only allowed in major version bumps with migration documentation.
-- The JCS preimage is computed in `buildDecisionObject()` lines 165-173. Do NOT alter the deletion logic without updating the audit verification test.
-
-**Chain integrity test** (`test/core-extended.test.ts`):
-```typescript
-it('chain link via previous_hash', () => {
-  const d1 = buildDecisionObject({...});
-  const d2 = buildDecisionObject({ input: { previousAuditHash: d1.audit.hash }, ... });
-  expect(d2.audit.previous_hash).toBe(d1.audit.hash);
-});
-```
+规则：
+- 新增字段：默认进原像，更新 `buildDecisionObject()`。
+- 删除字段：破坏既有审计链，仅允许 major 版本升级 + 迁移文档。
+- JCS 原像在 `buildDecisionObject()` 内计算，改动删除逻辑必须同步审计验证测试。
 
 ---
 
-## Testing Strategy
+## 测试策略
 
-### Test Pyramid
+| 层 | 内容 |
+|----|------|
+| **单元** | `engine/*.spec.ts`：每模块一测（求值器/编译/序列化/校验/模板…） |
+| **一致性** | `engine/erdl-schema.spec.ts`：单一事实源 24 条断言（运算符逐个真过编译器等） |
+| **集成** | `core.spec.ts`：Decision Object 全流程 + 审计链 |
+| **冒烟** | CI smoke：playground CLI DENY 断言 |
 
-```
-     ┌─────────────┐
-     │  Integration │  core.test.ts: full buildDecisionObject flow
-     │   + Smoke    │  core-extended.test.ts: Evaluator boundary
-     ├─────────────┤  CI smoke: playground CLI DENY assertion
-     │   Engine     │  operators.test.ts: all 30 operators
-     │              │  guard-state-manager.test.ts: temporal counters
-     ├─────────────┤
-     │    Unit      │  evaluator-adapter.test.ts: conversion functions
-     └─────────────┘
-```
-
-### Testing Temporal Rules
-
-Use `VirtualClock` and `commitTemporal()`:
+### 测试时序规则
 
 ```typescript
 const clock = new VirtualClock(1000);
 const sm = new GuardStateManager(clock);
 const ev = new Evaluator(sm);
 
-// Simulate 3 ALLOW decisions within a window
 for (let i = 0; i < 3; i++) {
   ev.evaluate(ctx, rules);
   ev.commitTemporal(ctx, rules);
 }
-
-// 4th call should trigger within/rate DENY
-const result = ev.evaluate(ctx, rules);
+const result = ev.evaluate(ctx, rules);  // 第 4 次触发 within/rate DENY
 expect(result.decision).toBe('DENY');
 ```
 
-### Test Naming Convention
-
-- `it('operator_name description')` — for operator tests
-- `it('scenario description')` — for evaluator boundary tests
-- `it('field/behavior description')` — for Decision Object tests
-
 ---
 
-## Build & Release
+## 构建与发布
 
-### Build Pipeline
+构建管线：`src/*.ts → tsc → dist/*.js + *.d.ts`；`src/rules/*.erdl.yaml → copy-rules.mjs → dist/rules/`。
 
-```
-src/*.ts  ──→  tsc  ──→  dist/*.js + dist/*.d.ts
-src/rules/*.erdl.yaml  ──→  copy-rules.mjs  ──→  dist/rules/*.erdl.yaml
-```
-
-The `copy-rules.mjs` script copies YAML rule files from `src/rules/` to `dist/rules/` so they're available at runtime alongside compiled JS. It preserves existing tsc-compiled `.js`/`.d.ts` files.
-
-### Release Process
-
-1. Update version in `package.json` and `src/provenance.ts`
-2. Update `CHANGELOG.md`
-3. Run `npm run build && npm test` — must pass
-4. Commit: `chore: release v1.x.x`
-5. Tag: `git tag v1.x.x`
-6. Push: `git push origin master --tags`
-7. GitHub Actions `release.yml` triggers: npm publish + GitHub Release
+发布流程见 [`../RELEASING.md`](../RELEASING.md)，版本策略见 [`../VERSIONING.md`](../VERSIONING.md)。当前版本线 `0.1.x`（alpha 阶段）。

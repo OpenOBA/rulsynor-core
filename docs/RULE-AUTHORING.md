@@ -1,7 +1,7 @@
 # ERDL Rule Authoring Guide
 
 > For engine internals, see [DEVELOPMENT.md](./DEVELOPMENT.md).
-> For the formal specification, see [ERDL Spec v1.1](./SPEC/erdl-spec-v1.1.md).
+> For the formal specification, see [ERDL Spec v2.0](./SPEC/erdl-spec.md).
 
 ---
 
@@ -52,7 +52,7 @@ The `context.` prefix is optional — the engine strips it and resolves at the t
 
 ## Operator Reference
 
-> **13 SPEC v1.1 operators** (eq—ends_with) are covered by cross-implementation test vectors.  \n> **7 rulsynor extensions** (exists, not_exists, length_*, within, rate) are engine-level only — no vector coverage yet.  \n> Temporal operators (within, rate) require evaluator.commitTemporal() after ALLOW decisions.
+> **30 operators** (28 condition operators + 2 modifiers `within`/`rate`, Spec v2.0 §11). The 28 condition operators are covered by V-ENGINE cross-implementation vectors. Temporal operators (`within`/`rate`) are stateful and require `evaluator.commitTemporal()` after ALLOW decisions.
 
 ### Equality & Comparison
 
@@ -149,7 +149,7 @@ First-match-wins: the first rule whose conditions match determines the outcome. 
 
 ### Quality Gate Alerts
 
-The `RuleCompilerImpl` runs 11 quality gates at compile time. These catch:
+The rule quality gate (`rule-quality-gate.ts`) runs 11 quality gates at compile time. These catch:
 
 - **ERROR**: security rules without conditions, guard rules with `unless`, `unless` with temporal operators
 - **WARNING**: empty message on blocking rules, non-standard names, missing tool constraints, ReDoS risk
@@ -165,7 +165,7 @@ All `match`/`matches` operators go through `safeRegExp()` which rejects:
 
 ### Verify Equivalence Fuzz
 
-The RuleCompiler can fuzz-test compiled decision trees against raw ERDL condition evaluation:
+The evaluator can fuzz-test compiled decision trees against raw ERDL condition evaluation:
 
 ```typescript
 const result = compiler.verifyEquivalence(ruleSet, compiled, 'fuzz');

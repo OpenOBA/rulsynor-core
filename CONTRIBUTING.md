@@ -34,7 +34,7 @@ npm test
 - TypeScript strict mode is enforced. No `@ts-ignore`, no `as any` without comment.
 - Run `npx tsc --noUnusedLocals --noUnusedParameters` before committing.
 - New public APIs must be exported from `src/index.ts` and added to `package.json` `exports` field.
-- New operators must be added to all three engines: `SafeExprEvaluator`, `RuntimeEvaluator`, and the RuleCompiler DFA evaluator.
+- New operators require a SPEC change: the 34-node / 30-operator set is frozen (`[FREEZE-2]`). Update `erdl-schema.ts` + `expr-tree/evaluator.ts` + `expr-tree/simple-compiler.ts` together.
 
 ## Testing
 

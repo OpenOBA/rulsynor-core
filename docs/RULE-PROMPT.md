@@ -264,7 +264,7 @@ and load it as described in [README → Train](../README.md#2-train--compile-and
 ```typescript
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/my-team.erdl.yaml', 'utf8');
-// Compile with RuleCompilerImpl (from @openoba/rulsynor-core/engine) — it validates
+// Convert via toRuleDefinitions()/toERDLRuleSet()/toCompiledRules() — it validates
 // ReDoS safety, operator whitelist, and required fields before loading.
 ```
 
@@ -277,7 +277,7 @@ npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 **Always review generated rules before deploying.** The LLM writes the draft;
 you own the rulebook. For the full language reference see
 [RULE-AUTHORING.md](./RULE-AUTHORING.md) and
-[ERDL Spec v1.1](./SPEC/erdl-spec-v1.1.en.md).
+[ERDL Spec v2.0](./SPEC/erdl-spec.en.md).
 
 ---
 
