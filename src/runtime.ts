@@ -16,6 +16,8 @@
 
 import { Evaluator } from './engine/evaluator.js';
 import type { RuleDefinition } from './engine/rule-definition.js';
+import { ruleWhenToExpr } from './engine/expr-tree/rule-to-expr.js';
+import { toSExpr } from './engine/expr-tree/s-expression.js';
 import { buildDecisionObject } from './guard/index.js';
 
 export interface RuntimeOptions {
@@ -63,6 +65,30 @@ export interface RuntimeResult {
   steps: number;
   auditHashes: string[];
   finalResponse: string;
+}
+
+/** Convert compiled engine rules to v1.5 policy shape (name/version/when/then/priority/ring).
+ *  when = toSExpr(ruleWhenToExpr(rule)) — pure conditions → S-expression (SPEC §12 external form);
+ *  non-pure conditions (within/rate/pattern/keywords) return null → when omitted. */
+function toPolicyRules(compiledRules: RuleDefinition[]): Array<{
+  name: string;
+  version?: number;
+  when?: unknown;
+  then?: unknown;
+  priority?: number;
+  ring?: number;
+}> {
+  return compiledRules.map(r => {
+    const whenExpr = ruleWhenToExpr(r);
+    return {
+      name: r.name,
+      ...(r.version !== undefined ? { version: r.version } : {}),
+      ...(whenExpr !== null ? { when: toSExpr(whenExpr) } : {}),
+      then: r.action.decision,
+      priority: r.priority,
+      ...(r.action.ring !== undefined ? { ring: r.action.ring } : {}),
+    };
+  });
 }
 
 export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult> {
@@ -155,7 +181,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         matchedRules: evalResult.matchedRules ?? [],
         totalEvaluated: evalResult.totalEvaluated ?? rules.length,
         totalMatched: evalResult.totalMatched ?? evalResult.matchedRules.length,
-        rules,
+        rules: toPolicyRules(opts.compiledRules),
         evaluationDurationMs: Math.round(performance.now() - evalStart),
       });
 
