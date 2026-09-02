@@ -24,28 +24,67 @@ npm install @openoba/rulsynor-core
 
 ## Installation & Quick Start
 
-**① 安装**（Node ≥ 20）：
+**rulsynor-core is a complete, download-and-go runtime** — not just a library:
+chat with the full 7-step method, author your own rules, integrate via MCP, and
+review a tamper-evident audit trail (read-only in CORE; export is a
+commercial-edition capability).
+
+**① Install** (Node ≥ 22.13.0 — uses the built-in `node:sqlite`, zero native deps):
 
 ```bash
-npm install @openoba/rulsynor-core    # 或 pnpm add @openoba/rulsynor-core
+npm install -g @openoba/rulsynor-core
 ```
 
-**② 零依赖试跑**（无需 API key，Guard 拦截演示）：
+**② Try the Guard with zero setup** (no API key needed):
 
 ```bash
-npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"   # → DENY
+rulsynor demo --tool=exec --cmd="rm -rf /"   # → DENY
 ```
 
-**③ 代码接入**（导入 → 构造 → 求值）：
+**③ Set your model + API key, then chat** (the key stays in your environment — CORE never stores it):
+
+```bash
+export RULSYNOR_API_KEY=***                     # any OpenAI-compatible provider
+rulsynor setup --model gpt-4o-mini --base-url https://api.openai.com/v1
+rulsynor chat                                    # 7-step: intent → plan → evidence → reason → guard → execute → audit
+```
+
+**④ Author your own rules** (guide: [`docs/RULE-AUTHORING.md`](docs/RULE-AUTHORING.md)):
+
+```bash
+mkdir -p ./rules            # or ~/.rulsynor/rules (or set RULSYNOR_RULES_DIR)
+# drop any *.erdl.yaml in — loaded at startup, quality-gated
+rulsynor rules list
+```
+
+**⑤ Review the audit trail** (read-only view; no export in CORE):
+
+```bash
+rulsynor audit list
+rulsynor audit show sha256:abc   # one full Decision Object
+```
+
+**⑥ Expose as MCP tools** for any MCP-capable host:
+
+```bash
+rulsynor mcp   # stdio: rulsynor_guard_evaluate / rulsynor_rules_list / rulsynor_audit_recent
+```
+
+**⑦ Library integration** (import → construct → evaluate):
 
 ```ts
 import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
 const evaluator = new Evaluator(new GuardStateManager());
-const rules = toCompiledRules(loadPresetRules());   // 30 条内置规则
+const rules = toCompiledRules(loadPresetRules());   // 30 bundled rules
+const result = evaluator.evaluate(rules, {
+  context: { tool: { name: 'exec', args: { command: 'rm -rf /' } } },
+  sessionId: 's1',
+  agentId: 'my-agent',
+});
 ```
 
-**④ 完整 ReAct Agent**（需 OpenAI 兼容 API）：[`examples/agent-demo.ts`](examples/agent-demo.ts)
+**Full ReAct Agent example** (OpenAI-compatible API): [`examples/agent-demo.ts`](examples/agent-demo.ts)
 
 ---
 
@@ -85,7 +124,7 @@ npx @openoba/rulsynor-core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
-📋 Trained:    29 rules loaded
+📋 Trained:    30 rules loaded
 🛡️  Decision:   DENY
 📝 Reason:     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
 🧾 Recorded:   sha256:8274b0... (tamper-evident)
@@ -103,7 +142,7 @@ npx @openoba/rulsynor-core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
-📋 Trained:    29 rules loaded
+📋 Trained:    30 rules loaded
 ✅ Decision:   ALLOW
 📝 Reason:     Read-only operation allowed.
 🧾 Recorded:   sha256:e71eb71... (tamper-evident)

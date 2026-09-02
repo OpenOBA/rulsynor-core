@@ -31,7 +31,7 @@
     "./playground": "./dist/playground.js"
   },
   "bin": {
-    "rulsynor": "./dist/playground.js"
+    "rulsynor": "./dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc && node scripts/copy-rules.mjs",

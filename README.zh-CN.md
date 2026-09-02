@@ -8,6 +8,34 @@
 npm install @openoba/rulsynor-core
 ```
 
+## 快速上手：下载 + API key = 开箱即用
+
+**rulsynor-core 是完整的开箱即用运行时**——不只是库：7 步工作法对话、自己写规则、MCP 接入、防篡改审计可查（CORE 只读查看，导出为商业版能力）。
+
+```bash
+# ① 安装（Node ≥ 22.13.0，内置 node:sqlite，零原生依赖）
+npm install -g @openoba/rulsynor-core
+
+# ② 零配置试跑（无需 API key）
+rulsynor demo --tool=exec --cmd="rm -rf /"   # → DENY
+
+# ③ 配置模型 + API key，然后对话（key 只进环境变量，从不落库）
+export RULSYNOR_API_KEY=***            # 任意 OpenAI 兼容服务\ rulsynor setup --model gpt-4o-mini --base-url https://api.openai.com/v1
+rulsynor chat                                # 7 步：理解意图→制定计划→组装依据→推理决策→规则把关→执行操作→审计落链
+
+# ④ 自己写规则（文档：docs/RULE-AUTHORING.md）
+mkdir -p ./rules        # 或 ~/.rulsynor/rules（或设 RULSYNOR_RULES_DIR）
+# 放入任意 *.erdl.yaml，启动即加载，过质量门禁
+rulsynor rules list
+
+# ⑤ 查看审计记录（只读，不提供导出）
+rulsynor audit list
+rulsynor audit show sha256:abc   # 单条完整 Decision Object
+
+# ⑥ 以 MCP 工具暴露给任意 MCP 宿主
+rulsynor mcp   # stdio：rulsynor_guard_evaluate / rulsynor_rules_list / rulsynor_audit_recent
+```
+
 [![立即体验](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40rulsynor%2Fcore-black)](#30-秒见证)  ·  [示例](examples/)  ·  [API 参考](#api-参考)  ·  [规范文档](docs/SPEC/)  ·  [参与贡献](CONTRIBUTING.md)
 
 > ⚡ **30 秒接入真实 LLM 体验：**
