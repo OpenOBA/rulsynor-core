@@ -65,7 +65,9 @@ export function enforceLimits(root: ExprNode): void {
     throw new ExprLimitError(`tree depth ${depth} exceeds the limit ${LIMITS.MAX_TREE_DEPTH}`);
   }
   if (arithDepth > LIMITS.MAX_ARITH_DEPTH) {
-    throw new ExprLimitError(`arithmetic depth ${arithDepth} exceeds the limit ${LIMITS.MAX_ARITH_DEPTH}`);
+    throw new ExprLimitError(
+      `arithmetic depth ${arithDepth} exceeds the limit ${LIMITS.MAX_ARITH_DEPTH}`,
+    );
   }
   // E4: array literal length ≤ 10000 (§10.2)
   const arrLen = maxArrayLength(root);
@@ -74,7 +76,9 @@ export function enforceLimits(root: ExprNode): void {
   }
   // E4: quantifier must not nest (§10.2)
   if (hasNestedQuantifier(root)) {
-    throw new ExprLimitError('quantifier must not nest: the quantifier predicate must not contain another quantifier');
+    throw new ExprLimitError(
+      'quantifier must not nest: the quantifier predicate must not contain another quantifier',
+    );
   }
 }
 

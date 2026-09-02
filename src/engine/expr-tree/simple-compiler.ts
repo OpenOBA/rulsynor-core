@@ -107,7 +107,9 @@ export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
     case 'between': {
       // value should be [min, max]
       if (!Array.isArray(value) || value.length !== 2) {
-        throw new SimpleCompileError(`between requires a [min, max] array, got ${JSON.stringify(value)}`);
+        throw new SimpleCompileError(
+          `between requires a [min, max] array, got ${JSON.stringify(value)}`,
+        );
       }
       return {
         type: 'between',

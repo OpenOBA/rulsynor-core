@@ -129,7 +129,11 @@ export class RuleValidator {
       return;
     }
     if (name.length > 255) {
-      errors.push({ field: 'ruleName', code: 'TOO_LONG', message: 'Rule name cannot exceed 255 characters' });
+      errors.push({
+        field: 'ruleName',
+        code: 'TOO_LONG',
+        message: 'Rule name cannot exceed 255 characters',
+      });
     }
     if (/[<>:"/\\|?*]/.test(name)) {
       errors.push({
@@ -139,13 +143,21 @@ export class RuleValidator {
       });
     }
     if (/^\d+$/.test(name)) {
-      errors.push({ field: 'ruleName', code: 'NUMERIC_ONLY', message: 'Rule name cannot be all digits' });
+      errors.push({
+        field: 'ruleName',
+        code: 'NUMERIC_ONLY',
+        message: 'Rule name cannot be all digits',
+      });
     }
   }
 
   private checkCategory(cat: string, errors: ValidationError[]): void {
     if (!VALID_CATEGORIES.includes(cat)) {
-      errors.push({ field: 'category', code: 'INVALID_CATEGORY', message: `Invalid category: ${cat}` });
+      errors.push({
+        field: 'category',
+        code: 'INVALID_CATEGORY',
+        message: `Invalid category: ${cat}`,
+      });
     }
   }
 
@@ -165,7 +177,11 @@ export class RuleValidator {
       return;
     }
     if (msg.length > 2000) {
-      errors.push({ field: 'message', code: 'TOO_LONG', message: 'Message cannot exceed 2000 characters' });
+      errors.push({
+        field: 'message',
+        code: 'TOO_LONG',
+        message: 'Message cannot exceed 2000 characters',
+      });
     }
   }
 
@@ -269,7 +285,11 @@ export class RuleValidator {
     if (expl === undefined || expl === null || expl === '') return;
     const s = String(expl);
     if (s.length > 5000) {
-      errors.push({ field: 'explanation', code: 'TOO_LONG', message: 'Explanation cannot exceed 5000 characters' });
+      errors.push({
+        field: 'explanation',
+        code: 'TOO_LONG',
+        message: 'Explanation cannot exceed 5000 characters',
+      });
     }
   }
 
@@ -337,7 +357,11 @@ export class RuleValidator {
       case 'fieldExists':
         this.checkField(params.field, 'field', errors);
         if (typeof params.exists !== 'boolean') {
-          errors.push({ field: 'exists', code: 'INVALID', message: 'Please choose exists or not exists' });
+          errors.push({
+            field: 'exists',
+            code: 'INVALID',
+            message: 'Please choose exists or not exists',
+          });
         }
         break;
       case 'fieldMatch':
@@ -357,7 +381,11 @@ export class RuleValidator {
 
   private checkToolNames(val: unknown, errors: ValidationError[]): void {
     if (!Array.isArray(val) || val.length === 0) {
-      errors.push({ field: 'toolNames', code: 'REQUIRED', message: 'Please select at least one tool' });
+      errors.push({
+        field: 'toolNames',
+        code: 'REQUIRED',
+        message: 'Please select at least one tool',
+      });
     }
   }
 
@@ -503,7 +531,8 @@ export class RuleValidator {
       return {
         field: 'conditions',
         code: 'WHEN_EXPR_EXCLUSIVE',
-        message: 'expr and field/operator/value are mutually exclusive, must not coexist (§10.2 E5)',
+        message:
+          'expr and field/operator/value are mutually exclusive, must not coexist (§10.2 E5)',
         level: 'error',
       };
     }

@@ -57,7 +57,8 @@ export class PlanParser {
         this.extractField(text, /(?:成功标准|Success|预期结果)[：:]\s*(.+)/i) ?? 'not specified',
       estimatedRounds: this.extractNumber(text, /(?:预计轮次|Rounds|预估)[：:]\s*(\d+)/i) ?? 4,
       riskLevel: this.extractRiskLevel(text),
-      alternatives: this.extractField(text, /(?:替代方案|Alternatives?)[：:]\s*(.+)/i) ?? 'not specified',
+      alternatives:
+        this.extractField(text, /(?:替代方案|Alternatives?)[：:]\s*(.+)/i) ?? 'not specified',
     };
   }
 

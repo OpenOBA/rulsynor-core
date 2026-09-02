@@ -162,7 +162,8 @@ export function fromSExpr(input: unknown): ExprNode {
     case 'not':
       return { type: 'not', arg: fromSExpr(val) };
     case 'in': {
-      if (!Array.isArray(val) || val.length !== 2) throw new SExprParseError('in must have two operands');
+      if (!Array.isArray(val) || val.length !== 2)
+        throw new SExprParseError('in must have two operands');
       return { type: 'in', left: fromSExpr(val[0]), right: fromSExpr(val[1]) };
     }
     case 'exists':
@@ -213,7 +214,8 @@ export function fromSExpr(input: unknown): ExprNode {
 
   // Parameterized nodes: compare / string / arith / quantifier / aggregate
   if (COMPARE_OPS.includes(key as CompareOp)) {
-    if (!Array.isArray(val) || val.length !== 2) throw new SExprParseError(`${key} must have two operands`);
+    if (!Array.isArray(val) || val.length !== 2)
+      throw new SExprParseError(`${key} must have two operands`);
     return {
       type: 'compare',
       op: key as CompareOp,
@@ -229,11 +231,13 @@ export function fromSExpr(input: unknown): ExprNode {
   // possibly an unintended allow; this semantics is defined by SPEC null propagation, must be consistent
   // cross-implementation (determinism caveat, do not change the semantics).
   if (key === 'not_in') {
-    if (!Array.isArray(val) || val.length !== 2) throw new SExprParseError('not_in must have two operands');
+    if (!Array.isArray(val) || val.length !== 2)
+      throw new SExprParseError('not_in must have two operands');
     return { type: 'not', arg: { type: 'in', left: fromSExpr(val[0]), right: fromSExpr(val[1]) } };
   }
   if (key === 'not_contains' || key === 'not_starts_with' || key === 'not_ends_with') {
-    if (!Array.isArray(val) || val.length !== 2) throw new SExprParseError(`${key} must have two operands`);
+    if (!Array.isArray(val) || val.length !== 2)
+      throw new SExprParseError(`${key} must have two operands`);
     const innerOp =
       key === 'not_contains' ? 'contains' : key === 'not_starts_with' ? 'starts_with' : 'ends_with';
     return {
@@ -264,7 +268,8 @@ export function fromSExpr(input: unknown): ExprNode {
   }
 
   if (STRING_OPS.includes(key as StringOp)) {
-    if (!Array.isArray(val) || val.length !== 2) throw new SExprParseError(`${key} must have two operands`);
+    if (!Array.isArray(val) || val.length !== 2)
+      throw new SExprParseError(`${key} must have two operands`);
     return {
       type: 'string',
       op: key as StringOp,

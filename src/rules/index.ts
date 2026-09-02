@@ -171,7 +171,9 @@ export function toCompiledRules(presetRules: PresetRule[]): RuleDefinition[] {
             .join(', ')}`,
       )
       .join('\n');
-    throw new Error(`Rule quality gate rejected load (${report.errors} error-level violation(s)):\n${errLines}`);
+    throw new Error(
+      `Rule quality gate rejected load (${report.errors} error-level violation(s)):\n${errLines}`,
+    );
   }
 
   return compiled;

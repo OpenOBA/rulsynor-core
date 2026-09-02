@@ -232,7 +232,11 @@ export function collectToolAnchors(tools: ToolAnchorInput[], certLevel = 'L1'): 
   return tools.map(t => {
     const need = t.requiredCertLevel ?? 'L0';
     const available = CERT_ORDER.indexOf(certLevel) >= CERT_ORDER.indexOf(need);
-    return { name: t.name, available, reason: available ? undefined : `requires ${need} certificate` };
+    return {
+      name: t.name,
+      available,
+      reason: available ? undefined : `requires ${need} certificate`,
+    };
   });
 }
 

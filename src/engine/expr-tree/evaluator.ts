@@ -217,7 +217,11 @@ export class ExprTreeEvaluator {
         const warnings = mergeWarnings(l, r);
         if (l.errored || r.errored) return err('in: operand evaluation error', warnings);
         if (!Array.isArray(r.value)) {
-          warnings.push({ kind: 'type_mismatch', message: 'in right side must be an array', nodeType: 'in' });
+          warnings.push({
+            kind: 'type_mismatch',
+            message: 'in right side must be an array',
+            nodeType: 'in',
+          });
           return ok(false, warnings);
         }
         // SPEC §11.2 list limit: in/not_in operands ≤ 256 items
@@ -310,7 +314,8 @@ export class ExprTreeEvaluator {
         const mn = this.evalNode(node.min, context, `${path}/min`);
         const mx = this.evalNode(node.max, context, `${path}/max`);
         const warnings = mergeWarnings(v, mn, mx);
-        if (v.errored || mn.errored || mx.errored) return err('between: operand evaluation error', warnings);
+        if (v.errored || mn.errored || mx.errored)
+          return err('between: operand evaluation error', warnings);
         const out = this.between(v.value, mn.value, mx.value);
         this.traceCollector?.record(
           node.type,
@@ -403,7 +408,8 @@ export class ExprTreeEvaluator {
         const from = this.evalNode(node.from, context, `${path}/from`);
         const to = this.evalNode(node.to, context, `${path}/to`);
         const warnings = mergeWarnings(from, to);
-        if (from.errored || to.errored) return err('days_between: operand evaluation error', warnings);
+        if (from.errored || to.errored)
+          return err('days_between: operand evaluation error', warnings);
         const result = this.daysBetween(from.value, to.value, warnings);
         this.traceCollector?.record(
           node.type,
@@ -435,7 +441,8 @@ export class ExprTreeEvaluator {
         const base = this.evalNode(node.base, context, `${path}/base`);
         const amount = this.evalNode(node.amount, context, `${path}/amount`);
         const warnings = mergeWarnings(base, amount);
-        if (base.errored || amount.errored) return err('date_add: operand evaluation error', warnings);
+        if (base.errored || amount.errored)
+          return err('date_add: operand evaluation error', warnings);
         const result = this.dateAdd(node.unit, base.value, amount.value, warnings);
         this.traceCollector?.record(
           node.type,
@@ -780,7 +787,11 @@ export class ExprTreeEvaluator {
           return ok(null, warnings);
         }
         if (rats[1].num === 0n) {
-          warnings.push({ kind: 'division_by_zero', message: 'division by zero', nodeType: 'arith' });
+          warnings.push({
+            kind: 'division_by_zero',
+            message: 'division by zero',
+            nodeType: 'arith',
+          });
           return ok(null, warnings);
         }
         return ok(div(rats[0], rats[1]), warnings);
@@ -808,7 +819,11 @@ export class ExprTreeEvaluator {
     const d1 = from instanceof Date ? from.getTime() : new Date(String(from)).getTime();
     const d2 = to instanceof Date ? to.getTime() : new Date(String(to)).getTime();
     if (Number.isNaN(d1) || Number.isNaN(d2)) {
-      warnings.push({ kind: 'invalid_date', message: 'date parsing failed', nodeType: 'days_between' });
+      warnings.push({
+        kind: 'invalid_date',
+        message: 'date parsing failed',
+        nodeType: 'days_between',
+      });
       return ok(null, warnings);
     }
     return ok(Math.floor((d2 - d1) / 86400000), warnings);
