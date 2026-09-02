@@ -64,6 +64,7 @@ const baseOpts = (toolName: string, decision: string, correction?: string) => {
       userMessage: 'do it',
       agentId: 'test-agent',
       sessionId: 'test-session',
+      planFirst: false,
     },
   };
 };
@@ -140,6 +141,7 @@ describe('runReActLoop — previous_hash 审计链（R3b）', () => {
       rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
       tools: { safe_tool: makeTool(executed) },
       userMessage: 'go',
+      planFirst: false,
     });
     expect(executed).toHaveLength(2);
     // 每次工具调用一条 DO，两步落链两条
@@ -195,5 +197,51 @@ describe('runReActLoop — previous_hash 审计链（R3b）', () => {
     expect(second.audit.commitment).toEqual(
       expect.objectContaining({ agent_id: expect.any(String), tool_name: 't', decision: 'ALLOW' }),
     );
+  });
+});
+
+describe('runReActLoop — 7 步工作法编排（①②③④）', () => {
+  it('planFirst 时依次触发 ①理解意图 ②制定计划 ③组装依据 ④推理决策', async () => {
+    const steps: string[] = [];
+    await runReActLoop({
+      llm: async () => ({ content: 'done' }),
+      evaluator: new Evaluator(),
+      compiledRules: [],
+      rules: [],
+      tools: {},
+      userMessage: 'do it',
+      planFirst: true,
+      onStep: s => steps.push(String(s)),
+    });
+    for (const n of ['1', '2', '3', '4']) {
+      expect(steps).toContain(n);
+    }
+  });
+
+  it('knowledge 组装注入系统消息（③ 组装依据）', async () => {
+    let systemContent = '';
+    await runReActLoop({
+      llm: async (msgs: Array<{ role: string; content: string }>) => {
+        systemContent = msgs[0].content;
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules: [],
+      rules: [],
+      tools: {},
+      userMessage: 'do it',
+      planFirst: false,
+      knowledge: [
+        {
+          fragmentId: 'f1',
+          knowledgeId: 'kb-1',
+          contentType: 'markdown',
+          text: 'SOP: use list before exec',
+          score: 0.9,
+          knowledgeVersion: 'v1',
+        },
+      ],
+    });
+    expect(systemContent).toContain('SOP: use list before exec');
   });
 });

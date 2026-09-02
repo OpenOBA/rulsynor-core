@@ -19,6 +19,10 @@ import type { RuleDefinition } from './engine/rule-definition.js';
 import { ruleWhenToExpr } from './engine/expr-tree/rule-to-expr.js';
 import { toSExpr } from './engine/expr-tree/s-expression.js';
 import { buildDecisionObject } from './guard/index.js';
+import { PlanParser } from './engine/plan-parser.js';
+import { resolveDomain, formatRagContext } from './knowledge/index.js';
+import type { ScoredFragment } from './knowledge/types.js';
+import { parseRequestHumanSignal, buildDoPayload } from './preflight/index.js';
 
 export interface RuntimeOptions {
   /** LLM function: takes messages, returns assistant response with possible tool calls */
@@ -42,7 +46,14 @@ export interface RuntimeOptions {
   onThought?: (thought: string, step: number) => void;
   onToolCall?: (toolName: string, args: Record<string, unknown>, step: number) => void;
   onGuardEval?: (decision: string, auditHash: string, step: number) => void;
+  /** Tool result callback */
   onToolResult?: (result: string, step: number) => void;
+  /** Knowledge fragments for evidence assembly (③ 组装依据) */
+  knowledge?: ScoredFragment[];
+  /** Do a separate planning LLM call (② 制定计划); default true */
+  planFirst?: boolean;
+  /** 7-step progress callback (①理解意图 → ⑦审计落链) */
+  onStep?: (step: number, detail: string) => void;
 }
 
 export interface LLMMessage {
@@ -105,10 +116,47 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
     onToolCall,
     onGuardEval,
     onToolResult,
+    knowledge = [],
+    planFirst = true,
+    onStep,
   } = opts;
 
+  // ── ① 理解意图 ──
+  const intentDomain = resolveDomain(userMessage);
+  onStep?.(1, `intent domain: ${intentDomain ?? 'general'}`);
+
+  // ── ② 制定计划 ──
+  let plan: ReturnType<PlanParser['parse']> | null = null;
+  if (planFirst) {
+    const planResp = await llm([
+      {
+        role: 'system',
+        content:
+          'You are a planning assistant. Break the user task into a concise step-by-step PLAN. ' +
+          'Use the format: "PLAN:\nStep 1: <description> | tools: <tool1, tool2> | op: <READ|WRITE|DELETE|EXEC|NETWORK|MEMORY> | purpose: <why>\nStep 2: ...". ' +
+          'Keep steps minimal and safe.',
+      },
+      { role: 'user', content: userMessage },
+    ]);
+    plan = new PlanParser().parse(planResp.content);
+    onStep?.(
+      2,
+      plan.hasPlan
+        ? `plan: ${plan.steps.length} steps, risk ${plan.riskLevel}`
+        : 'no plan recognized',
+    );
+  }
+
+  // ── ③ 组装依据 ──
+  const ragContext = formatRagContext(knowledge);
+  onStep?.(3, `assembled ${knowledge.length} knowledge fragment(s)`);
+
+  const systemContent =
+    'You are an AI assistant with tool access. Use tools when needed.' +
+    (plan?.hasPlan ? `\n\nExecution plan:\n${plan.planText}` : '') +
+    (ragContext ? `\n\nAvailable knowledge (assemble evidence):\n${ragContext}` : '');
   const messages: LLMMessage[] = [
-    { role: 'system', content: 'You are an AI assistant with tool access. Use tools when needed.' },
+    { role: 'system', content: systemContent },
     { role: 'user', content: userMessage },
   ];
 
@@ -119,6 +167,8 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
   let step = 0;
 
   for (step = 0; step < maxSteps; step++) {
+    // ── ④ 推理决策 ──
+    onStep?.(4, `reasoning (ReAct round ${step + 1})`);
     const response = await llm(messages);
 
     if (!response.toolCalls || response.toolCalls.length === 0) {
@@ -137,12 +187,13 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         agentId,
       };
 
-      // Guard evaluation — uses compiled rules for actual enforcement
+      // ── ⑤ 规则把关 ──
       const evalStart = performance.now();
       const evalResult = evaluator.evaluate(opts.compiledRules, ctx);
       const reason = evalResult.primaryReason || 'guard rule matched';
+      onStep?.(5, `guard: ${evalResult.decision}`);
 
-      // R3 fix: CORRECT decision first applies the correction before deciding whether to allow (no correction content → fail-close, not executed)
+      // CORRECT single-pass: apply correction then execute (no correction content → fail-close)
       let effectiveArgs = tc.arguments;
       const canApplyCorrection =
         evalResult.decision === 'CORRECT' &&
@@ -152,12 +203,14 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         effectiveArgs = { ...tc.arguments, __correction: evalResult.primaryCorrection };
       }
 
-      // Whether to execute: only ALLOW/NOTIFY/GUIDE (advisory) and CORRECT with correction are allowed; all others not executed
+      // Agent-initiated REQUEST_HUMAN (explicit markers in the reply) — overrides execute
+      const rhDetected = parseRequestHumanSignal(response.content).detected;
       const shouldExecute =
-        evalResult.decision === 'ALLOW' ||
-        evalResult.decision === 'NOTIFY' ||
-        evalResult.decision === 'GUIDE' ||
-        canApplyCorrection;
+        (evalResult.decision === 'ALLOW' ||
+          evalResult.decision === 'NOTIFY' ||
+          evalResult.decision === 'GUIDE' ||
+          canApplyCorrection) &&
+        !rhDetected;
 
       // Build DO
       const do1 = buildDecisionObject({
@@ -189,10 +242,26 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       auditHashes.push(auditHash);
       prevHash = auditHash;
       onGuardEval?.(evalResult.decision, auditHash, step);
+      // ⑦ 审计落链：DO 载荷记录组装的知识版本（RAG provenance）
+      const doPayload = buildDoPayload(
+        knowledge.length > 0
+          ? {
+              dataRefs: knowledge.map(f => ({
+                dataRefId: f.knowledgeId,
+                version: f.knowledgeVersion ?? '',
+              })),
+            }
+          : {},
+      );
+      onStep?.(
+        7,
+        `audit: ${auditHash.slice(0, 16)}…${doPayload.dataRefs?.length ? ` (${doPayload.dataRefs.length} knowledge refs)` : ''}`,
+      );
 
       // R3 fix: exhaustive decision dispatch — any non-allow decision does not execute the tool (incl. ESCALATE/DEFER/DELEGATE/WORKFLOW and unknown decisions)
       if (!shouldExecute) {
-        switch (evalResult.decision) {
+        const dispatchDecision = rhDetected ? 'REQUEST_HUMAN' : evalResult.decision;
+        switch (dispatchDecision) {
           case 'DENY':
           case 'EMERGENCY_HALT':
             finalResponse = `Action blocked: ${reason}`;
@@ -228,7 +297,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
             break;
         }
         return {
-          decision: evalResult.decision,
+          decision: dispatchDecision,
           thought: response.content,
           steps: step + 1,
           auditHashes,
@@ -236,7 +305,8 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         };
       }
 
-      // Execute tool
+      // ── ⑥ 执行操作 ──
+      onStep?.(6, `execute: ${tc.name}`);
       const executor = tools[tc.name];
       if (!executor) {
         messages.push({ role: 'assistant', content: response.content });
