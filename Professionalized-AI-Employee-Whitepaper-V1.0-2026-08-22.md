@@ -539,11 +539,11 @@ Independent verification is not empty words — the first independent implemente
 
 **Erik Newton (Concordia)'s verification results**: building an independent verification engine from scratch in a completely different programming language (Python), he recomputed 13 audit vectors byte-for-byte — **12 byte-identical, AV-013 canary correctly failing** (this canary deliberately makes a defective implementation that "deletes the entire audit object" mismatch, and it was successfully caught).
 
-**Version lineage (please read carefully)**: the above independent verification was completed on the v1.3 audit vectors (AV-001–AV-013), proving the feasibility of the methodology; the current 78 v1.5 vectors in §7.1 have **not yet been independently recomputed** — the reference implementation has passed self-verification, and independent verification is in progress, awaiting the 2nd and 3rd Runners. The v1.5 system inherits the same JCS + SHA-256 mechanism and canary design, and the Runner recruitment below is issued precisely for this. We do not use old-version verification results to endorse the new version: the new version must be re-measured.
+**Version lineage (please read carefully)**: Erik Newton's independent verification above was completed on the v1.3 audit vectors (AV-001–AV-013), proving the feasibility of the methodology. The current 78 v1.5 vectors in §7.1 have now been independently recomputed by a second Runner — Santosh Kumar Puppala's **`norviq-go`**, a clean-room Go implementation with zero dependencies (self-built JCS RFC 8785 + crypto/sha256), built from the public spec and RUNNER_CONTRACT R1–R6 alone: **107/107 canonical bytes byte-for-byte**, merged 2026-09-01, K01 canary correctly discriminating. A third Runner is being recruited below. We do not use old-version verification results to endorse the new version — and we no longer need to: the new version has now been re-measured by an independent implementer.
 
 This means: someone who has never seen any of our code, relying only on the public specification, independently recomputed hashes byte-identical to ours — **neutrality is not claimed, it is independently measured.**
 
-**Runner recruitment**: we now openly seek the 2nd and 3rd independent implementers (Runners). Verifiers will receive:
+**Runner recruitment**: the 2nd independent Runner (norviq-go, Go) has landed; we now openly seek the 3rd. Verifiers will receive:
 
 - **Community reputation** — listed in the IMPLEMENTATIONS registry as an independent verifier, visible to the whole community;
 - **Early governance points** — weighted credentials for participating in category governance;
