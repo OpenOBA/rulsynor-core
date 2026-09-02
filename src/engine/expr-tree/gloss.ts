@@ -15,7 +15,7 @@
  * then-decision suffix (e.g. "require human approval") is appended by the
  * caller (see renderGloss, which accepts a decision parameter).
  *
- * @license MIT
+ * @license BSL 1.1
  */
 
 import type { ExprNode } from './node-types.js';

@@ -7,7 +7,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-21 (M2 stripped rulsynor-logger dependency)
- * @license MIT
+ * @license BSL 1.1
  */
 
 type LogLevel = 'debug' | 'verbose' | 'log' | 'warn' | 'error';

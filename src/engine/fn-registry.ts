@@ -11,7 +11,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-02 · updated 2026-08-10 (sandbox + quotas + degradation)
- * @license MIT
+ * @license BSL 1.1
  */
 
 export interface FnSignature {

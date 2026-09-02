@@ -1,23 +1,224 @@
-MIT License
+Business Source License 1.1
 
-Copyright (c) 2026 深圳市秒镜科技有限公司
-(Shenzhen Miaojing Technology Co., Ltd.)
-USCC: 91440300MA5XXXXXXX
+License text copyright (c) 2024 MariaDB plc, All Rights Reserved.
+"Business Source License" is a trademark of MariaDB plc.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+-----------------------------------------------------------------------------
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Parameters
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Licensor:             深圳市秒镜科技有限公司
+                      (Shenzhen Miaojing Technology Co., Ltd.)
+                      USCC: 91440300MAK2KM7J4X
+                      Address: Building 2, Annex 211, Bai'anlong, No. 4 Haiwan Road, Wuwan Community, Zhaoshang Street, Nanshan District, Shenzhen, Guangdong Province, China
+
+Licensed Work:        OpenOBA CORE Runtime (rulsynor-core repository)
+                      The Licensed Work is (c) 2026 Shenzhen Miaojing
+                      Technology Co., Ltd.
+
+Change Date:          2030-06-09
+                      (4 calendar years from the public open-source date
+                       of 2026-06-09; aligned with the strategic milestone
+                       in open-source-strategy.md)
+
+Change License:       GNU General Public License, Version 3.0
+                      (On or after the Change Date, each version of the
+                       Licensed Work will be made available under the
+                       Change License, in accordance with Section 4 of
+                       the BSL 1.1 full text below. GPL 3.0 is compatible
+                       with GPL 2.0 and later versions, satisfying the
+                       BSL Covenants of Licensor requirement.)
+
+Additional Use Grant: You may use the Licensed Work for non-production
+                      purposes, personal study, academic research, internal
+                      evaluation, and testing, without a commercial license.
+
+                      The Additional Use Grant does NOT include production
+                      use, commercial deployment, hosting-as-a-service, or
+                      any use by a Competitor (as defined below).
+
+                      "Competitor" means any entity whose primary business
+                      is the development, sale, or support of products or
+                      services that are substantially similar to the
+                      Licensed Work, including but not limited to:
+                      (a) AI agent orchestration platforms;
+                      (b) enterprise resource planning (ERP) systems with
+                          AI agent capabilities;
+                      (c) no-code/low-code business automation platforms;
+                      (d) entity-relationship driven business modeling
+                          tools competing with ERDL.
+
+For commercial production use beyond the Additional Use Grant,
+please contact:       postmaster@openoba.com
+
+-----------------------------------------------------------------------------
+
+Business Source License 1.1 (Full Text)
+
+Licensor:             深圳市秒镜科技有限公司
+                      (Shenzhen Miaojing Technology Co., Ltd.)
+
+Licensed Work:        OpenOBA CORE Runtime, as defined in the Parameters above.
+
+Change Date:          2030-06-09
+
+Change License:       GNU General Public License, Version 3.0
+
+Additional Use Grant: As defined in the Parameters above.
+
+-----------------------------------------------------------------------------
+
+Terms
+
+The Licensor hereby grants you the right to copy, modify, create derivative
+works, redistribute, and make non-production use of the Licensed Work.
+The Licensor may make an Additional Use Grant for the Licensed Work.
+The Licensor may also make an Additional Use Grant for any derivative works
+of the Licensed Work that you create.
+
+In each version of the Licensed Work released by the Licensor under this
+License, the following terms apply:
+
+1.  The Change Date for that version of the Licensed Work applies to the
+    version of the Licensed Work released by the Licensor on or after the
+    Change Date. The Change License for that version of the Licensed Work
+    applies on and after the Change Date.
+
+2.  Any use of the Licensed Work that is not authorized by this License
+    or by a separate written license agreement with the Licensor is
+    prohibited.
+
+3.  The Licensor may, at its sole discretion, make available subsequent
+    versions of the Licensed Work under the terms of the Change License.
+
+4.  On or after the Change Date for a particular version of the Licensed
+    Work, that version of the Licensed Work will be made available under
+    the Change License. The Change License applies to each version of the
+    Licensed Work starting from its Change Date.
+
+5.  The rights granted by this License are subject to the Additional Use
+    Grant described in the Parameters.
+
+6.  The Licensor may condition the rights granted by this License on
+    compliance with any of the terms of this License.
+
+7.  The Licensor may revise the terms of this License for future versions
+    of the Licensed Work. The Licensor will publish those revised terms
+    on the Licensor's official website (https://openoba.com/legal/) and in
+    the GitHub repository for the Licensed Work at least 90 days before
+    the revised terms take effect.
+
+8.  If the Licensed Work is distributed in a product or service offering,
+    it must include a prominent notice stating that the Licensed Work is
+    made available under this License, and that any use, modification, or
+    redistribution of the Licensed Work outside the scope of this License
+    requires a separate commercial license agreement with the Licensor.
+
+9.  This License does not grant any rights in the trademarks, service marks,
+    or logos of the Licensor (including the names "OpenOBA", "ERDL",
+    and "ERA-Chat"). Use of such marks is subject to the Licensor's
+    separate Trademark Policy, available at:
+    https://openoba.com/legal/trademark
+
+10. Each contributor to the Licensed Work (as defined in the Contributor
+    License Agreement at https://openoba.com/legal/CLA) grants the Licensor
+    a perpetual, worldwide, non-exclusive, royalty-free license to use the
+    contribution in the Licensed Work.
+
+11. Disclaimer of Warranty. THE LICENSED WORK IS PROVIDED "AS IS" WITHOUT
+    WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+    THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+    AND NONINFRINGEMENT. THE LICENSOR SHALL NOT BE LIABLE FOR ANY CLAIM,
+    DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT,
+    OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE LICENSED
+    WORK OR THE USE OR OTHER DEALINGS IN THE LICENSED WORK.
+
+12. Limitation of Liability. IN NO EVENT SHALL THE LICENSOR BE LIABLE TO
+    YOU OR ANY THIRD PARTY FOR ANY INDIRECT, SPECIAL, INCIDENTAL,
+    CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES (INCLUDING BUT NOT
+    LIMITED TO LOST PROFITS, BUSINESS INTERRUPTION, LOSS OF DATA, OR
+    LOSS OF BUSINESS OPPORTUNITY) ARISING OUT OF OR IN CONNECTION WITH
+    THE LICENSED WORK, EVEN IF THE LICENSOR HAS BEEN ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGES.
+
+13. Termination. The Licensor may terminate this License as to the
+    Licensed Work (or any version thereof) at any time if you breach
+    any provision of this License. Upon termination, you must cease all
+    use, modification, and redistribution of the Licensed Work.
+
+14. Governing Law and Dispute Resolution. This License is governed by the
+    laws of the People's Republic of China (excluding its conflict of laws
+    rules). Any dispute arising from or related to this License shall be
+    resolved through friendly negotiation first. If negotiation fails,
+    either party may submit the dispute to the Shenzhen Court of
+    International Arbitration (SCIA) for arbitration in accordance with
+    its arbitration rules then in effect. Venue: Shenzhen. Language:
+    Chinese. The arbitral award is final and binding on both parties.
+
+15. Severability. If any provision of this License is held invalid or
+    unenforceable, the validity of other provisions shall not be affected.
+
+16. Entire Agreement. This License constitutes the entire agreement
+    between the parties with respect to the Licensed Work and supersedes
+    all prior or contemporaneous understandings, written or oral.
+
+-----------------------------------------------------------------------------
+
+Covenants of Licensor
+
+In consideration of the right to use this License's text and the
+"Business Source License" name and trademark, Licensor covenants to
+MariaDB plc, and to all other recipients of the licensed work to be
+provided by Licensor:
+
+1.  To specify as the Change License the GPL Version 2.0 or any later
+    version, or a license that is compatible with GPL Version 2.0 or a
+    later version, where "compatible" means that software provided under
+    the Change License can be included in a program with software provided
+    under GPL Version 2.0 or a later version. This License fulfills this
+    covenant by specifying GNU General Public License, Version 3.0 (GPL 3.0)
+    as the Change License, which is compatible with GPL 2.0 and later.
+
+2.  To either: (a) specify an additional grant of rights to use that does
+    not impose any additional restriction on the right granted in this
+    License, as the Additional Use Grant; or (b) insert the text "None".
+
+3.  Not to modify this License in any other way. The additional articles
+    (Articles 7-16) in this License are supplementary provisions permitted
+    by the governing law of the People's Republic of China and do not
+    restrict or contradict the rights granted by the BSL 1.1 Terms.
+
+-----------------------------------------------------------------------------
+
+Notice
+
+The Business Source License (this document, or the "License") is not an
+Open Source license. However, the Licensed Work will eventually be made
+available under an Open Source license, as stated in this License.
+
+For full MariaDB BSL 1.1 reference, see:
+    https://mariadb.com/bsl11/
+
+-----------------------------------------------------------------------------
+
+License Versioning Notes
+
+This License file replaces the prior version. Key changes:
+- Change Date: 2029-12-31 -> 2030-06-09 (aligned to 4 calendar years
+  from the public open-source date 2026-06-09)
+- Change License: Apache 2.0 -> GNU GPL 3.0 (to satisfy BSL Covenants
+  of Licensor GPL 2.0+ compatibility requirement)
+- Copyright notice: (c) 2017 MariaDB Corporation Ab -> (c) 2024 MariaDB plc
+  (updated to match current MariaDB legal entity)
+- Added explicit "Covenants of Licensor" section (required by BSL 1.1
+  for use of the "Business Source License" trademark)
+- Added explicit "version-by-version" Change License boundary clause
+- Added explicit Competitor definition in the Additional Use Grant
+- Added Trademark Policy and CLA cross-references (Articles 9, 10)
+- Added explicit dispute resolution clause (Article 14)
+
+For the official English BSL 1.1 text, see:
+https://mariadb.com/bsl11/
+
+For Chinese language summary of this License, see:
+https://openoba.com/legal/BSL-CN

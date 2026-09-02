@@ -6,7 +6,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-21 (M2 stripped rule-config.entity dependency)
- * @license MIT
+ * @license BSL 1.1
  */
 
 export interface RuleConfig {

@@ -633,7 +633,7 @@ The cross-implementation test vector set lives in its own authoritative reposito
 
 ## License
 
-MIT © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))
+BUSL-1.1 © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))
 
 > "LLM vendors deliver exceptional intelligence. We deliver accountability."
 >

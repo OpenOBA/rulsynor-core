@@ -7,7 +7,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
- * @license MIT
+ * @license BSL 1.1
  */
 
 /** NFC-normalize a string (JS built-in normalize('NFC')) */

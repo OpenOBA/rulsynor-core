@@ -76,4 +76,4 @@ Open an issue on GitHub: https://github.com/OpenOBA/rulsynor-core/issues
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under BSL 1.1.

@@ -603,7 +603,7 @@ human_oversight · audit { previous_hash, commitment, hash }
 
 ## 许可证
 
-MIT © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
+BUSL-1.1 © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
 
 > "大模型厂商交付的是卓越智力，我们交付的是可问责的执行。"
 >

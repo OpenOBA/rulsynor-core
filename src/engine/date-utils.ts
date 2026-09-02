@@ -13,7 +13,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-21 (M1 ported from an in-house implementation; then unified to UTC semantics aligned with SPEC §10.5)
- * @license MIT
+ * @license BSL 1.1
  */
 
 /** Days in a given year/month (month: 0-11) (UTC calendar) */

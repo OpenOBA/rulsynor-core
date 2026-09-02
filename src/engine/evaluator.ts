@@ -13,7 +13,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-07 · updated 2026-07-09 (override + rings)
- * @license MIT
+ * @license BSL 1.1
  */
 
 import type {

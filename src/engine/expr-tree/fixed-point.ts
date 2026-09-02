@@ -13,7 +13,7 @@
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
- * @license MIT
+ * @license BSL 1.1
  */
 
 export const DECIMAL_SCALE = 14;
