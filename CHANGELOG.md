@@ -12,6 +12,9 @@
 - `VERSIONING.md`：软件版本全生命周期规范（SemVer + 阶段 + 兼容承诺 + 废弃政策）
 - `RELEASING.md`：发布流程与门禁清单
 
+### Changed
+- 许可证：运行时 MIT → BSL 1.1（Change Date 2030-06-09，Change License GPL 3.0；非生产使用免费，见 LICENSE）
+
 ## [0.1.0-alpha] - 2026-09-01
 
 > 版本线由 `1.0.0` 重启为 `0.1.0-alpha`：引擎已对齐 Spec v2.0，但 Decision Object 仍为 v1.3 口径、待迁移 v1.5，属早期 alpha，非稳定发布。

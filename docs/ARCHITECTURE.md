@@ -29,16 +29,16 @@ CORE（完整 runtime，一个包）
 
 | 层 | 内容 | 许可证 |
 |---|---|---|
-| **确定性内核** | 34 节点表达式树 + 30 运算符 + gloss + decision-table + ExprTreeEvaluator + 定点小数 + 安全正则 + 223 向量 | MIT |
-| **验证工具** | `audit-verify` CLI + DO 规范 + 78 条冻结向量 | MIT |
-| **运行时框架** | ReAct + 工具引擎 + Guard 集成 + CORRECT 状态机 + 知识/引导 | MIT |
+| **确定性内核** | 34 节点表达式树 + 30 运算符 + gloss + decision-table + ExprTreeEvaluator + 定点小数 + 安全正则 + 223 向量 | BSL 1.1 |
+| **验证工具** | `audit-verify` CLI + DO 规范 + 78 条冻结向量 | MIT（audit-verify）/ Apache-2.0（erdl-vectors） |
+| **运行时框架** | ReAct + 工具引擎 + Guard 集成 + CORRECT 状态机 + 知识/引导 | BSL 1.1 |
 | **前端（基本能力，全量开源）** | era-chat / 规则 / 工具 / 审计 / MCP / 侧边栏 / 侧边栏底部折叠栏 / chat 文件解析 / 产物交付 | MIT |
 | **DO 生成**（buildDecisionObject v1.5） | 字段组装 + 合规画像 + JUR 裁剪 + 法域映射 | **私有**（License Key） |
 | **合规画像**（14 框架） | 完整法域合规映射 | **私有**（Enterprise） |
 | **行业蓝图**（ERP/OA/CRM） | 预置业务规则 | **私有**（Rule Store） |
 | **前端（合规/企业）** | 合规设置、团队管理、报告导出、rule store 写端后台 | **私有**（Enterprise） |
 
-**关键解耦**：运行时框架（MIT）不硬编码 DO 生成，注入审计钩子接口：
+**关键解耦**：运行时框架（BSL 1.1）不硬编码 DO 生成，注入审计钩子接口：
 
 ```ts
 interface AuditRecorder {
@@ -105,7 +105,7 @@ npm run dev                       # 同时起 runtime + 前端 + 30 预设规则
 ### 4.1 三层架构
 
 ```
-开源 runtime（MIT，无密钥）
+开源 runtime（BSL 1.1，无密钥）
    │ ① 登录 cloud.openoba.com 拿 account token（opaque，绑定 device）
    │ ② 带 token 调 RuleSource 拉规则
    ▼
@@ -159,7 +159,7 @@ cloud.openoba.com（云端中台，写端 + 账户/订阅单一事实源）
 
 | 层 | 价格 | 包含 | 授权 |
 |---|---|---|---|
-| **L0 开源** | $0 | 确定性内核 + 验证工具 + 运行时框架 + 30 预设规则 | MIT 无需授权 |
+| **L0 开源** | $0 | 确定性内核 + 验证工具 + 运行时框架 + 30 预设规则 | BSL 1.1（非生产免费） |
 | **L1 Free** | $0 永久 | L0 + 无限个人本地规则 | 免费注册 |
 | **L2 Pro** | $9.99/月 | + 行业蓝图 + 团队规则共享 + 完整 DO 生成 + 审计导出 | License Key |
 | **L3 Enterprise** | 合同 | + 合规包（14 框架）+ 私有 Rule Store + SLA + SSO | 合同 |
