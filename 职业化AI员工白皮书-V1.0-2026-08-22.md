@@ -52,11 +52,13 @@
 |---|---|---|---|
 | ERDL 规则语言规范 | [OpenOBA/erdl-landing](https://github.com/OpenOBA/erdl-landing)（SPEC v2.0） | MIT | 独立实现交叉验证 |
 | 确定性内核形式化验证 | [OpenOBA/erdl-formal](https://github.com/OpenOBA/erdl-formal) | Apache-2.0 | SMT 证明（34 节点全覆盖） |
-| 决策证据防篡改机制 | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | Apache-2.0 | 301 条验证向量（78 条密码学验证 + 223 条语义验证），独立 Runner 逐字节重算 |
+| 决策证据防篡改机制 | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | Apache-2.0 | 301 条验证向量（78 条密码学验证 + 223 条语义验证）；已有 1 个独立 Runner 落地（norviq-go，Go，107/107，2026-09-01） |
 | 七步工作法运行时（Alpha） | [OpenOBA/rulsynor-core](https://github.com/OpenOBA/rulsynor-core) | BSL1.1 | 本地构建运行 |
 | 社区版全栈职业化AI员工运行时框架 | [openoba.com](https://openoba.com) | 内测中（未开源） | 内测邀请制 |
 
 其中，ERDL 规则语言规范的标准化源于 A2A Discussion #2031——独立验证者 Erik Newton（Concordia）在此确立「三个独立实现、一个开放规范、没有单一所有者」的标准化方法论，本白皮书「中立性是被测出来的」原则正源于此。
+
+**验证注册表**：每个通过验证的独立实现均登记于 [IMPLEMENTATIONS 注册表](https://github.com/OpenOBA/erdl-vectors/blob/master/IMPLEMENTATIONS.md)——「谁在什么日期通过了多少条向量」，是测量而非背书。
 
 ---
 
@@ -747,7 +749,7 @@ docker run openoba/runtime-alpha --scenario=credit-assistant
 
 ## 社区鸣谢
 
-本白皮书的发布，得益于以下人员的帮助。两人均为无偿的社区贡献者，与 OpenOBA 无任何商业关系（无付费、无股权）——其贡献的独立性，正是「中立性是被测出来的」原则的基石：
+本白皮书的发布，得益于以下人员的帮助。三人均为无偿的社区贡献者，与 OpenOBA 无任何商业关系（无付费、无股权）——其贡献的独立性，正是「中立性是被测出来的」原则的基石：
 
 ### Christopher Hopley（chopmob-cloud / AlgoVoi）
 
@@ -765,6 +767,14 @@ docker run openoba/runtime-alpha --scenario=credit-assistant
 - **标准化方法论**：在 A2A Discussion #2031 确立「三个独立实现、一个开放规范、没有单一所有者」的标准化路径；
 - **跨实现逐字节验证**：用 Python 独立构建 Decision Object 验证引擎，逐字节验证 13 条审计向量（12 逐字节一致 + AV-013 金丝雀正确失败），以实践证明 JCS + SHA-256 跨实现验证的技术可行性；
 - **链完整性金丝雀**：推动链完整性金丝雀（AV-013）设计与答案文件分离架构。
+
+### Santosh Kumar Puppala（norviq-go）
+
+首个第三方 v1.5 Runner，也是记录-执行保真度（P-05）残余风险的提出者：
+
+- **首个第三方 v1.5 独立实现**：以 Go 从零构建 `norviq-go`（零依赖、自建 JCS RFC 8785 + crypto/sha256），仅凭公开规范与 RUNNER_CONTRACT R1–R6 实现，未读任何参考代码——107/107 规范字节逐字节一致；
+- **记录-执行保真度（P-05）**：以真实的 PEP / 缓存命中 bug 案例提出 P-05 残余风险，推动 §1.4（生产侧不变量）、§1.5（决策推导语义）、§1.6（Producer Contract + V-PRODUCER）；
+- **P6 可解析集澄清**：指出可解析集语义歧义，推动「无信息 ≠ 空集」的收窄。
 
 ### OpenOBA 参考实现团队
 

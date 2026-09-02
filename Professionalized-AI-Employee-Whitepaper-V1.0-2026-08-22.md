@@ -52,11 +52,13 @@ Every capability claimed in this whitepaper has a corresponding open-source impl
 |---|---|---|---|
 | ERDL rule language specification | [OpenOBA/erdl-landing](https://github.com/OpenOBA/erdl-landing) (SPEC v2.0) | MIT | Independent implementation cross-verification |
 | Formal verification of the deterministic kernel | [OpenOBA/erdl-formal](https://github.com/OpenOBA/erdl-formal) | Apache-2.0 | SMT proofs (34 nodes, full coverage) |
-| Decision-evidence tamper-proof mechanism | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | Apache-2.0 | 301 verification vectors (78 cryptographic + 223 semantic), independent runner byte-for-byte recompute |
+| Decision-evidence tamper-proof mechanism | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | Apache-2.0 | 301 verification vectors (78 cryptographic + 223 semantic); 1 independent Runner landed (norviq-go, Go, 107/107, 2026-09-01) |
 | Seven-step method runtime (Alpha) | [OpenOBA/rulsynor-core](https://github.com/OpenOBA/rulsynor-core) | BSL 1.1 | Local build & run |
 | Community-edition full-stack Professionalized AI Employee runtime framework | [openoba.com](https://openoba.com) | In beta (not open-sourced) | Invitation-only beta |
 
 Notably, the standardization of the ERDL rule language specification originates from A2A Discussion #2031 — where the independent verifier Erik Newton (Concordia) established the methodology of "three independent implementations, one open specification, no single owner," the very source of this whitepaper's principle that neutrality is tested, not claimed.
+
+**Verification registry**: every verified independent implementation is recorded in the [IMPLEMENTATIONS registry](https://github.com/OpenOBA/erdl-vectors/blob/master/IMPLEMENTATIONS.md) — "who passed how many vectors on what date," measurements, not endorsements.
 
 ---
 
@@ -753,7 +755,7 @@ The deterministic governance cost of a single action is about **1ms (p50) to 2.2
 
 ## Community Acknowledgments
 
-The publication of this whitepaper benefited from the help of the following people. Both are unpaid community contributors with no commercial relationship with OpenOBA (no payment, no equity) — the independence of their contributions is precisely the foundation of the principle that "neutrality is measured":
+The publication of this whitepaper benefited from the help of the following people. All three are unpaid community contributors with no commercial relationship with OpenOBA (no payment, no equity) — the independence of their contributions is precisely the foundation of the principle that "neutrality is measured":
 
 ### Christopher Hopley (chopmob-cloud / AlgoVoi)
 
@@ -771,6 +773,14 @@ The first independent Runner implementer, and the proposer of the principle that
 - **Standardization methodology**: established in A2A Discussion #2031 the path of "three independent implementations, one open specification, no single owner";
 - **Cross-implementation byte-for-byte verification**: independently built a Decision Object verification engine in Python, verifying 13 audit vectors byte-for-byte (12 byte-identical + AV-013 canary correctly failing), demonstrating the technical feasibility of JCS + SHA-256 cross-implementation verification;
 - **Chain-integrity canary**: drove the chain-integrity canary (AV-013) design and the answer-file separation architecture.
+
+### Santosh Kumar Puppala (norviq-go)
+
+The first third-party v1.5 Runner, and the proposer of the record-emission fidelity (P-05) residual risk:
+
+- **First third-party v1.5 independent implementation**: built `norviq-go` from scratch in Go with zero dependencies (self-built JCS RFC 8785 + crypto/sha256), from the public spec and RUNNER_CONTRACT R1–R6 alone, reading no reference code — 107/107 canonical bytes byte-for-byte;
+- **Record-emission fidelity (P-05)**: raised the P-05 residual risk with a real-world PEP / cache-hit bug example, driving §1.4 (production-side invariant), §1.5 (decision-derivation semantics), and §1.6 (Producer Contract + V-PRODUCER);
+- **P6 resolvable-set clarification**: identified the resolvable-set semantic ambiguity, driving the "no information ≠ empty set" narrowing.
 
 ### OpenOBA Reference Implementation Team
 
