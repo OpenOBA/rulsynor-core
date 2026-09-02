@@ -161,9 +161,9 @@ For an AI Employee to enter this category, six elements must all be present. Mis
 
 A one-line contrast of the two paradigms: **the tool-management paradigm manages Agent instances — no subject of responsibility, usable on procurement, binary governance; the employee-management paradigm (this category) manages AI Employees — responsibility with the human, assessment before onboarding, tiered authorization, evidence-based tenure, with incidents traceable, correctable, and inheritable.** The difference between the two is not product form, but whether "responsibility" has an owner.
 
-### 3.4 The Category's Dual Identity
+### 3.4 The Category's Threefold Identity
 
-This definition has two meanings:
+This definition has three meanings:
 
 - **For enterprises**, it is a **procurement criterion** — what you buy is not "an Agent" but "an accountable AI Employee: an AI + Human combination";
 - **For the industry**, it is an **evaluation yardstick** — the Three Pillars of Chapter 4 and the Six Elements of this chapter constitute an operable framework for evaluating any "AI employee".
