@@ -44,4 +44,20 @@ describe('createMcpDeps — wired to CORE (rules + audit persistence)', () => {
       deps.close();
     }
   });
+
+  it('threads business context into context.* rule evaluation', () => {
+    const deps = createMcpDeps();
+    try {
+      const halt = deps.evaluate('exec', { command: 'ls' }, { event_type: 'credential_leak' });
+      expect(halt.decision).toBe('EMERGENCY_HALT');
+
+      const maintenance = deps.evaluate('exec', { command: 'ls' }, { maintenance_mode: true });
+      expect(maintenance.decision).toBe('DENY');
+
+      const silent = deps.evaluate('exec', { command: 'ls' });
+      expect(silent.decision).toBe('ALLOW');
+    } finally {
+      deps.close();
+    }
+  });
 });

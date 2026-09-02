@@ -58,6 +58,13 @@ export interface RuntimeOptions {
   onToolResult?: (result: string, step: number) => void;
   /** Knowledge fragments for evidence assembly (③ 组装依据) */
   knowledge?: ScoredFragment[];
+  /**
+   * Business context injected into Guard evaluation (`context.*` rule fields).
+   * Deterministic input supplied by the host (maintenance mode, GDPR relevance,
+   * transaction amount/type, event type, etc.) — NOT guessed by the LLM.
+   * Rules referencing `context.*` fire only when the host supplies the matching value.
+   */
+  context?: Record<string, unknown>;
   /** Do a separate planning LLM call (② 制定计划); default true */
   planFirst?: boolean;
   /** 7-step progress callback (①理解意图 → ⑦审计落链) */
@@ -135,6 +142,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
     onGuardEval,
     onToolResult,
     knowledge = [],
+    context = {},
     planFirst = true,
     onStep,
   } = opts;
@@ -218,6 +226,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         // `tool.name`/`tool.args.*` for the tool call (ERDL SPEC §3/§4/§7),
         // `context.*` for business context. NOT `{context:{tool:...}}`.
         tool: { name: tc.name, args: tc.arguments },
+        context,
         sessionId,
         agentId,
       };
@@ -254,7 +263,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
           step,
           toolName: tc.name,
           toolArgs: effectiveArgs,
-          context: {},
+          context,
           agentId,
           sessionId,
           previousAuditHash: prevHash,

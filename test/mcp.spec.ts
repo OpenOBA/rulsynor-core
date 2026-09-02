@@ -81,6 +81,37 @@ describe('MCP stdio server — handleRequest', () => {
     expect((res?.result as { isError?: boolean }).isError).toBe(true);
   });
 
+  it('threads context from tool-call arguments into evaluation', () => {
+    let receivedContext: Record<string, unknown> | undefined;
+    const ctxDeps: McpDeps = {
+      evaluate: (_toolName, _toolArgs, context) => {
+        receivedContext = context;
+        return {
+          decision: 'EMERGENCY_HALT',
+          reason: null,
+          hash: 'sha256:fake',
+          matchedRules: [],
+          rulesEvaluated: 34,
+        };
+      },
+      listRules: () => [],
+      recentAudit: () => [],
+      close: () => undefined,
+    };
+    handleRequest(
+      req('tools/call', {
+        name: 'rulsynor_guard_evaluate',
+        arguments: {
+          tool_name: 'exec',
+          tool_args: { command: 'ls' },
+          context: { event_type: 'credential_leak' },
+        },
+      }),
+      ctxDeps,
+    );
+    expect(receivedContext).toEqual({ event_type: 'credential_leak' });
+  });
+
   it('lists rules and recent audit read-only', () => {
     const rules = handleRequest(req('tools/call', { name: 'rulsynor_rules_list' }), deps);
     expect(JSON.parse((rules?.result as { content: Array<{ text: string }> }).content[0].text))

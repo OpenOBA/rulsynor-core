@@ -11,9 +11,14 @@ import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '
 const rules = toCompiledRules(loadPresetRules());
 const evaluator = new Evaluator(new GuardStateManager());
 
-function decide(toolName: string, toolArgs: Record<string, unknown>): string {
+function decide(
+  toolName: string,
+  toolArgs: Record<string, unknown>,
+  context?: Record<string, unknown>,
+): string {
   const result = evaluator.evaluate(rules, {
     tool: { name: toolName, args: toolArgs },
+    ...(context ? { context } : {}),
     sessionId: 'preset-regression',
     agentId: 'preset-regression',
   });
@@ -45,5 +50,27 @@ describe('preset rules under canonical context shape', () => {
 
   it('ALLOW safe read', () => {
     expect(decide('read_file', { path: 'README.md' })).toBe('ALLOW');
+  });
+});
+
+describe('preset context.* rules (business-context injection)', () => {
+  it('EMERGENCY_HALT on context.event_type=credential_leak (SEC-023)', () => {
+    expect(decide('exec', { command: 'ls' }, { event_type: 'credential_leak' })).toBe(
+      'EMERGENCY_HALT',
+    );
+  });
+
+  it('DENY exec during maintenance window (CMP-001)', () => {
+    expect(decide('exec', { command: 'ls' }, { maintenance_mode: true })).toBe('DENY');
+  });
+
+  it('REQUEST_HUMAN large financial transaction (CMP-003)', () => {
+    expect(
+      decide('exec', { command: 'ls' }, { amount: 9000, transaction_type: 'financial' }),
+    ).toBe('REQUEST_HUMAN');
+  });
+
+  it('context.* rules stay silent without context (ALLOW)', () => {
+    expect(decide('exec', { command: 'ls' })).toBe('ALLOW');
   });
 });

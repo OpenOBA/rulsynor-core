@@ -8,6 +8,7 @@ import { runReActLoop, type LLMResponse } from '../src/runtime.js';
 import { Evaluator } from '../src/engine/evaluator.js';
 import type { RuleDefinition } from '../src/engine/rule-definition.js';
 import { buildDecisionObject } from '../src/guard/index.js';
+import { loadPresetRules, toCompiledRules } from '../src/index.js';
 
 function makeRule(decision: string, toolName: string, correction?: string): RuleDefinition {
   return {
@@ -251,5 +252,48 @@ describe('runReActLoop — 7 步工作法编排（①②③④）', () => {
       ],
     });
     expect(systemContent).toContain('SOP: use list before exec');
+  });
+});
+
+describe('runReActLoop — business context 注入（context.* 规则）', () => {
+  it('context.event_type=credential_leak → EMERGENCY_HALT 且不执行工具', async () => {
+    const preset = toCompiledRules(loadPresetRules());
+    const executed: unknown[][] = [];
+    const result = await runReActLoop({
+      llm: async () => ({
+        content: 'call',
+        toolCalls: [{ name: 'exec', arguments: { command: 'ls' } }],
+      }),
+      evaluator: new Evaluator(),
+      compiledRules: preset,
+      rules: preset.map(r => ({ name: r.name, version: 1 })),
+      tools: { exec: makeTool(executed) },
+      userMessage: 'do it',
+      planFirst: false,
+      context: { event_type: 'credential_leak' },
+    });
+    expect(executed).toHaveLength(0);
+    expect(result.decision).toBe('EMERGENCY_HALT');
+  });
+
+  it('无 context → exec ls ALLOW（context.* 规则静默）', async () => {
+    const preset = toCompiledRules(loadPresetRules());
+    const executed: unknown[][] = [];
+    let calls = 0;
+    const result = await runReActLoop({
+      llm: async () => {
+        calls++;
+        if (calls === 1)
+          return { content: 'call', toolCalls: [{ name: 'exec', arguments: { command: 'ls' } }] };
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules: preset,
+      rules: preset.map(r => ({ name: r.name, version: 1 })),
+      tools: { exec: makeTool(executed) },
+      userMessage: 'do it',
+      planFirst: false,
+    });
+    expect(result.decision).toBe('ALLOW');
   });
 });

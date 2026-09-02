@@ -2,7 +2,7 @@
 
 > For engine internals, see [DEVELOPMENT.md](./DEVELOPMENT.md).
 > For the formal specification, see [ERDL Spec v2.0](./SPEC/erdl-spec.md).
-> **Last updated**: 2026-09-03 — field path corrected to canonical `tool.name` / `tool.args.*` (Entity namespace; `context.tool.name` is DO-relative, not a rule field path).
+> **Last updated**: 2026-09-03 — field path corrected to canonical `tool.name` / `tool.args.*` (Entity namespace; `context.tool.name` is DO-relative, not a rule field path); business context injection documented (`context.*` via runtime `context` option / MCP `context` param).
 
 ---
 
@@ -63,6 +63,25 @@ evaluator.evaluate(rules, {
 > ⚠️ The canonical path is `tool.name` / `tool.args.*`. The non-canonical
 > `context.tool.name` form is NOT used — `context.*` is reserved for business
 > context fields (amount, maintenance_mode, etc.).
+
+### Business Context Injection (`context.*`)
+
+Rules matching `context.*` (`context.event_type`, `context.maintenance_mode`,
+`context.operation`, `context.gdpr_relevant`, `context.amount`,
+`context.transaction_type`, `context.previous_promise`, …) fire **only when the host
+supplies a `context` object**. It is deterministic host input — never LLM-guessed.
+
+```ts
+// runtime API
+await runReActLoop({ ..., context: { event_type: 'credential_leak' } });
+```
+
+```jsonc
+// MCP `rulsynor_guard_evaluate`
+{ "tool_name": "exec", "tool_args": { "command": "ls" }, "context": { "maintenance_mode": true } }
+```
+
+Without a `context` object, `context.*` rules stay silent (no match → default ALLOW).
 
 ---
 

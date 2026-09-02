@@ -70,7 +70,11 @@ export interface McpAuditInfo {
 }
 
 export interface McpDeps {
-  evaluate(toolName: string, toolArgs: Record<string, unknown>): McpEvalResult;
+  evaluate(
+    toolName: string,
+    toolArgs: Record<string, unknown>,
+    context?: Record<string, unknown>,
+  ): McpEvalResult;
   listRules(): McpRuleInfo[];
   recentAudit(limit: number): McpAuditInfo[];
   close(): void;
@@ -89,10 +93,15 @@ export function createMcpDeps(): McpDeps {
   let prevHash: string | null = null;
 
   return {
-    evaluate(toolName: string, toolArgs: Record<string, unknown>): McpEvalResult {
+    evaluate(
+      toolName: string,
+      toolArgs: Record<string, unknown>,
+      context: Record<string, unknown> = {},
+    ): McpEvalResult {
       const startMs = Date.now();
       const result = evaluator.evaluate(compiled, {
         tool: { name: toolName, args: toolArgs },
+        context,
         sessionId: 'mcp',
         agentId: 'rulsynor-mcp',
       });
@@ -102,7 +111,7 @@ export function createMcpDeps(): McpDeps {
           step: 0,
           toolName,
           toolArgs,
-          context: {},
+          context,
           agentId: 'rulsynor-mcp',
           sessionId: 'mcp',
           previousAuditHash: prevHash,
@@ -186,6 +195,12 @@ const TOOL_DEFS = [
           description: 'Arguments of the tool call',
           additionalProperties: true,
         },
+        context: {
+          type: 'object',
+          description:
+            'Optional business context for context.* rules (e.g. maintenance_mode, event_type, amount, transaction_type). Deterministic host-supplied input, not LLM-guessed.',
+          additionalProperties: true,
+        },
       },
       required: ['tool_name'],
     },
@@ -249,7 +264,11 @@ export function handleRequest(req: JsonRpcRequest, deps: McpDeps): JsonRpcRespon
           callArgs.tool_args && typeof callArgs.tool_args === 'object'
             ? (callArgs.tool_args as Record<string, unknown>)
             : {};
-        const r = deps.evaluate(toolName, toolArgs);
+        const context =
+          callArgs.context && typeof callArgs.context === 'object'
+            ? (callArgs.context as Record<string, unknown>)
+            : {};
+        const r = deps.evaluate(toolName, toolArgs, context);
         return toolText(
           id,
           JSON.stringify(
