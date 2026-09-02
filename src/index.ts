@@ -113,6 +113,8 @@ export type {
 // ── Engine advanced APIs ──
 export { SystemClock, VirtualClock } from './engine/clock.js';
 export type { Clock } from './engine/clock.js';
+export { Store } from './storage/index.js';
+export type { StoredRule, ModelConfig, CreateRuleInput } from './storage/index.js';
 export { OpSemRegistry } from './engine/op-sem-registry.js';
 export { PlanParser } from './engine/plan-parser.js';
 export type { ParsedPlan, ParsedPlanStep } from './engine/plan-parser.js';
