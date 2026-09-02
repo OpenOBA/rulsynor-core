@@ -19,7 +19,7 @@ priority: 900                   # Lower number = higher priority (1-1000)
 
 when:                           # "Under what conditions does this rule trigger?"
   conditions:
-    - field: "context.tool.name"  # Field path in the evaluation context
+    - field: "tool.name"       # Field path — Entity namespace (see below)
       operator: eq              # Comparison operator
       value: "exec"             # Expected value
   conditionLogic: AND           # AND = all conditions must match, OR = any
@@ -36,30 +36,32 @@ then:                           # "What should happen when conditions match?"
 ### Field Path Resolution
 
 Fields follow dot-notation and resolve against the **evaluation context object**.
-The canonical context shape (SPEC v2.0, Decision Object field 8) wraps the tool
-call under `context.tool` — all built-in rules are written this way:
+Field references use **Entity namespaces** (ERDL SPEC §3): `tool.*` for the tool
+call, `context.*` for business context, plus `agent`/`task`/`workflow`/`human`/`guardian`.
+The tool call sits at the top level of the evaluation context (NOT under a `context` key):
 
 | Field in Rule | Resolves To |
 |---------------|-------------|
-| `context.tool.name` | The name of the tool being called |
-| `context.tool.args.command` | `exec` command argument |
-| `context.tool.args.path` | `read_file` / `write_file` path argument |
-| `context.tool.args.content` | `write_file` content argument |
-| `context.maintenance_mode` | Custom context field injected by runtime |
+| `tool.name` | The name of the tool being called |
+| `tool.args.command` | `exec` command argument |
+| `tool.args.path` | `read_file` / `write_file` path argument |
+| `tool.args.content` | `write_file` content argument |
+| `context.maintenance_mode` | Business context field injected by runtime |
 | `context.previous_promise` | Promise-keeping context (integrity rules) |
 
-When evaluating programmatically, pass the context **wrapped**:
+When evaluating programmatically, pass the tool call at the top level:
 
 ```ts
 evaluator.evaluate(rules, {
-  context: { tool: { name: 'exec', args: { command: 'ls -la' } } },
+  tool: { name: 'exec', args: { command: 'ls -la' } },
   sessionId: 's1',
   agentId: 'my-agent',
 });
 ```
 
-> ⚠️ The engine does NOT strip the `context.` prefix — an unwrapped context
-> (`{ tool: {…} }`) silently matches no `context.*` rule. Keep the wrapper.
+> ⚠️ The canonical path is `tool.name` / `tool.args.*`. The non-canonical
+> `context.tool.name` form is NOT used — `context.*` is reserved for business
+> context fields (amount, maintenance_mode, etc.).
 
 ---
 

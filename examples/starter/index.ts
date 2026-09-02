@@ -60,7 +60,7 @@ async function guardedExecute(
   agentId: string,
 ) {
   const ctx = {
-    context: { tool: { name: tool.name, args } },
+    tool: { name: tool.name, args },
     sessionId,
     agentId,
   };

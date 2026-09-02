@@ -92,7 +92,7 @@ export function createMcpDeps(): McpDeps {
     evaluate(toolName: string, toolArgs: Record<string, unknown>): McpEvalResult {
       const startMs = Date.now();
       const result = evaluator.evaluate(compiled, {
-        context: { tool: { name: toolName, args: toolArgs } },
+        tool: { name: toolName, args: toolArgs },
         sessionId: 'mcp',
         agentId: 'rulsynor-mcp',
       });

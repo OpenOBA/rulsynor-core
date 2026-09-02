@@ -71,13 +71,17 @@ export interface RuntimeOptions {
 }
 
 export interface LLMMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  /** Tool result (role='tool'): the id of the tool_call this message answers. */
+  tool_call_id?: string;
+  /** Assistant tool calls replayed to the model (structured round-trip). */
+  tool_calls?: Array<{ id: string; name: string; arguments: Record<string, unknown> }>;
 }
 
 export interface LLMResponse {
   content: string;
-  toolCalls?: Array<{ name: string; arguments: Record<string, unknown> }>;
+  toolCalls?: Array<{ id?: string; name: string; arguments: Record<string, unknown> }>;
 }
 
 export interface ToolExecutor {
@@ -191,13 +195,29 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       break;
     }
 
-    for (const tc of response.toolCalls) {
+    // Normalize tool calls with a guaranteed id and replay them to the model so the
+    // structured tool_calls survive the round-trip (function-calling requires the assistant
+    // tool_calls to be echoed back before the tool-result messages).
+    const calls = response.toolCalls.map((tc, i) => ({
+      id: tc.id ?? `call-${step}-${i}`,
+      name: tc.name,
+      arguments: tc.arguments,
+    }));
+    messages.push({
+      role: 'assistant',
+      content: response.content,
+      tool_calls: calls,
+    });
+
+    for (const tc of calls) {
       onThought?.(response.content, step);
       onToolCall?.(tc.name, tc.arguments, step);
 
       const ctx = {
-        // Canonical evaluation context shape (SPEC v2.0 DO field 8): rule fields resolve under `context.*`.
-        context: { tool: { name: tc.name, args: tc.arguments } },
+        // Canonical evaluation context: Entity namespaces at the top level —
+        // `tool.name`/`tool.args.*` for the tool call (ERDL SPEC §3/§4/§7),
+        // `context.*` for business context. NOT `{context:{tool:...}}`.
+        tool: { name: tc.name, args: tc.arguments },
         sessionId,
         agentId,
       };
@@ -330,8 +350,11 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       onStep?.(6, `execute: ${tc.name}`);
       const executor = tools[tc.name];
       if (!executor) {
-        messages.push({ role: 'assistant', content: response.content });
-        messages.push({ role: 'user', content: `Tool "${tc.name}" not found.` });
+        messages.push({
+          role: 'tool',
+          tool_call_id: tc.id,
+          content: `Tool "${tc.name}" not found.`,
+        });
         continue;
       }
 
@@ -339,8 +362,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
 
       onToolResult?.(toolResult, step);
 
-      messages.push({ role: 'assistant', content: response.content });
-      messages.push({ role: 'user', content: `Tool result: ${toolResult}` });
+      messages.push({ role: 'tool', tool_call_id: tc.id, content: toolResult });
     }
   }
 

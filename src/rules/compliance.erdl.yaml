@@ -9,10 +9,10 @@ priority: 200
 description: "Ensure exec commands have required arguments before execution"
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: "tool.name"
       operator: eq
       value: "exec"
-    - field: "context.tool.args.command"
+    - field: "tool.args.command"
       operator: not_exists
 then:
   decision: DENY
@@ -29,10 +29,10 @@ priority: 700
 description: "Detect and block credential patterns in file write content"
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: "tool.name"
       operator: eq
       value: "write_file"
-    - field: "context.tool.args.content"
+    - field: "tool.args.content"
       operator: match
       value: "(DATABASE_URL|PASSWORD|SECRET|API_KEY|TOKEN|password)\\s*[=:]"
 then:
@@ -52,7 +52,7 @@ when:
     - field: "context.maintenance_mode"
       operator: eq
       value: true
-    - field: "context.tool.name"
+    - field: "tool.name"
       operator: eq
       value: "exec"
 then:
@@ -126,10 +126,10 @@ priority: 800
 description: "Quarantine tool calls matching suspicious reconnaissance patterns"
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: "tool.name"
       operator: eq
       value: "exec"
-    - field: "context.tool.args.command"
+    - field: "tool.args.command"
       operator: match
       value: "(whoami|id|uname\\s+-a|cat\\s+/etc/passwd|netstat|ss\\s+-tlnp|ps\\s+aux|env|printenv)"
 then:
@@ -146,7 +146,7 @@ priority: 100
 description: "Always allow read-only tool operations (read, search, list)"
 when:
   conditions:
-    - field: "context.tool.name"
+    - field: "tool.name"
       operator: in
       value: ["read", "search", "list", "get", "find", "query", "ls"]
 then:

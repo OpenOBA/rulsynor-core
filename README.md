@@ -78,7 +78,7 @@ import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '
 const evaluator = new Evaluator(new GuardStateManager());
 const rules = toCompiledRules(loadPresetRules());   // 30 bundled rules
 const result = evaluator.evaluate(rules, {
-  context: { tool: { name: 'exec', args: { command: 'rm -rf /' } } },
+  tool: { name: 'exec', args: { command: 'rm -rf /' } },
   sessionId: 's1',
   agentId: 'my-agent',
 });

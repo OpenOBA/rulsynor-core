@@ -1,6 +1,7 @@
 /**
  * Regression guard: preset rules MUST actually fire under the canonical
- * evaluation context shape (SPEC v2.0 DO field 8 — fields resolve under `context.*`).
+ * evaluation context shape (ERDL SPEC §3/§4 — Entity namespaces at top level:
+ * `tool.name` / `tool.args.*`).
  *
  * This suite exists because the demo/runtime/example callers once passed the wrong
  * context shape, silently turning every preset rule into ALLOW. Keep it green.
@@ -12,7 +13,7 @@ const evaluator = new Evaluator(new GuardStateManager());
 
 function decide(toolName: string, toolArgs: Record<string, unknown>): string {
   const result = evaluator.evaluate(rules, {
-    context: { tool: { name: toolName, args: toolArgs } },
+    tool: { name: toolName, args: toolArgs },
     sessionId: 'preset-regression',
     agentId: 'preset-regression',
   });

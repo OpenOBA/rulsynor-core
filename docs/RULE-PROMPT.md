@@ -37,7 +37,7 @@ description: "One line about why this rule exists."
 when:                             # "Under what conditions does this fire?"
   conditionLogic: AND             # AND = all conditions match; OR = any matches
   conditions:
-    - field: "toolName"           # Field path in the tool-call context
+    - field: "tool.name"           # Field path in the tool-call context
       operator: eq                # One of the 30 operators (§2)
       value: "exec"               # Expected value (type depends on operator)
 
@@ -49,17 +49,18 @@ then:                             # "What happens when conditions match?"
   correction: "..."               # Required only for decision: CORRECT
 
 Field paths available in `when.conditions[].field`:
-  toolName               → name of the tool being called (e.g. "exec",
+  tool.name               → name of the tool being called (e.g. "exec",
                            "write_file", "read", "http_request")
-  toolArgs.<arg>         → any tool argument, dot-notation
-                           (toolArgs.command, toolArgs.path, toolArgs.url,
-                            toolArgs.content, ...)
+  tool.args.<arg>         → any tool argument, dot-notation
+                           (tool.args.command, tool.args.path, tool.args.url,
+                            tool.args.content, ...)
   context.<key>          → custom runtime context (context.amount,
                            context.maintenance_mode, context.previous_promise)
   fn:<name>              → registered custom function result (advanced)
 
-Note: `context.tool.name` / `context.tool.args.<arg>` are accepted aliases for
-`toolName` / `toolArgs.<arg>`.
+Note: field paths use Entity namespaces (ERDL SPEC §3) — `tool.*` for the tool call,
+`context.*` for business context. Legacy forms (`toolName`, `context.tool.*`) are
+NOT canonical and are not auto-normalized.
 
 ═══════════════════════════════════════════════════════
 2. THE 30 operators
@@ -170,10 +171,10 @@ Example A
     when:
       conditionLogic: AND
       conditions:
-        - field: "toolName"
+        - field: "tool.name"
           operator: eq
           value: "exec"
-        - field: "toolArgs.command"
+        - field: "tool.args.command"
           operator: contains
           value: "rm -rf"
     then:
@@ -196,10 +197,10 @@ Example B
     when:
       conditionLogic: AND
       conditions:
-        - field: "toolName"
+        - field: "tool.name"
           operator: eq
           value: "write_file"
-        - field: "toolArgs.content"
+        - field: "tool.args.content"
           operator: length_gt
           value: 5242880
     then:
@@ -220,10 +221,10 @@ Example C
     when:
       conditionLogic: AND
       conditions:
-        - field: "toolName"
+        - field: "tool.name"
           operator: eq
           value: "exec"
-        - field: "toolArgs.command"
+        - field: "tool.args.command"
           operator: contains
           value: "PRODUCTION_DATABASE"
     then:

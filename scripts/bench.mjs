@@ -18,9 +18,7 @@ const rules = toCompiledRules(loadPresetRules());
 
 // 危险命令场景（命中 SEC-001 DENY，含正则 match 运算符，属最重路径）
 const makeCtx = () => ({
-  context: {
-    tool: { name: 'exec', args: { command: 'rm -rf /' } },
-  },
+  tool: { name: 'exec', args: { command: 'rm -rf /' } },
 });
 
 const evaluator = new Evaluator(new GuardStateManager());

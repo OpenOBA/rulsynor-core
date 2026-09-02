@@ -13,11 +13,15 @@
 export interface LlmMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  /** Tool result (role='tool'): the id of the tool_call this message answers. */
+  tool_call_id?: string;
+  /** Assistant tool calls replayed back (structured function-calling round-trip). */
+  tool_calls?: Array<{ id: string; name: string; arguments: Record<string, unknown> }>;
 }
 
 export interface LlmResponse {
   content: string;
-  toolCalls?: Array<{ name: string; arguments: Record<string, unknown> }>;
+  toolCalls?: Array<{ id?: string; name: string; arguments: Record<string, unknown> }>;
 }
 
 export interface LlmConfig {
@@ -57,7 +61,24 @@ export function createOpenAiCompatibleLlm(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ model, messages, ...(toolDefs ? { tools: toolDefs } : {}) }),
+      body: JSON.stringify({
+        model,
+        messages: messages.map(m => {
+          const wire: Record<string, unknown> = { role: m.role, content: m.content };
+          if (m.tool_call_id !== undefined) wire.tool_call_id = m.tool_call_id;
+          if (m.tool_calls !== undefined && m.tool_calls.length > 0) {
+            // OpenAI convention: assistant content is null when tool_calls are present.
+            wire.content = m.content || null;
+            wire.tool_calls = m.tool_calls.map(tc => ({
+              id: tc.id,
+              type: 'function',
+              function: { name: tc.name, arguments: JSON.stringify(tc.arguments) },
+            }));
+          }
+          return wire;
+        }),
+        ...(toolDefs ? { tools: toolDefs } : {}),
+      }),
     });
 
     if (!resp.ok) {
@@ -69,7 +90,7 @@ export function createOpenAiCompatibleLlm(
       choices?: Array<{
         message?: {
           content?: string;
-          tool_calls?: Array<{ function: { name: string; arguments: string } }>;
+          tool_calls?: Array<{ id?: string; function: { name: string; arguments: string } }>;
         };
       }>;
     };
@@ -84,7 +105,7 @@ export function createOpenAiCompatibleLlm(
         } catch {
           args = {};
         }
-        return { name: tc.function.name, arguments: args };
+        return { id: tc.id, name: tc.function.name, arguments: args };
       }),
     };
   };

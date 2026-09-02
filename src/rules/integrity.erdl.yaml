@@ -18,7 +18,7 @@ when:
     - field: "context.previous_promise"
       operator: eq
       value: "read_only"
-    - field: "context.tool.name"
+    - field: "tool.name"
       operator: in
       value: ["write_file", "exec", "apply_patch", "delete"]
   logic: AND

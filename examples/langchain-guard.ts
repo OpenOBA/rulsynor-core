@@ -32,7 +32,7 @@ async function guardedToolExecutor(
 ): Promise<string> {
   const evalStart = performance.now();
   const result = evaluator.evaluate(rules, {
-    context: { tool: { name: toolName, args: toolArgs } },
+    tool: { name: toolName, args: toolArgs },
     sessionId,
     agentId,
   });

@@ -18,8 +18,8 @@ function makeRule(decision: string, toolName: string, correction?: string): Rule
     conditions: [
       {
         kind: 'context_matches',
-        // Canonical field path (SPEC v2.0 DO field 8): runtime wraps the tool call in `context.tool`.
-        field: 'context.tool.name',
+        // Canonical field path (ERDL SPEC §3/§4): `tool.name` — NOT `context.tool.name`.
+        field: 'tool.name',
         operator: 'eq',
         value: toolName,
       },

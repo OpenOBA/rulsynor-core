@@ -7,10 +7,10 @@ priority: 900
 description: 'Block destructive commands: rm -rf, format, shutdown, dd, redirect to /dev/sda, etc.'
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: exec
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: (rm\s+-rf|shutdown|reboot|mkfs\.|dd\s+if=|>\s*/dev/sda|:(){ :\|:& };:)
 then:
@@ -27,10 +27,10 @@ priority: 890
 description: Block fork bomb and process explosion patterns
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: exec
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: (:\()|fork\s*bomb|while\s*:\s*;\s*do
 then:
@@ -46,10 +46,10 @@ priority: 850
 description: Block file writes to system directories and configuration paths
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: write_file
-    - field: context.tool.args.path
+    - field: tool.args.path
       operator: match
       value: ^(/etc/|/sys/|/proc/|/boot/|/dev/|C:\\Windows|C:\\Program Files)
 then:
@@ -66,10 +66,10 @@ priority: 700
 description: Block writes to dot-files and dot-directories (SSH keys, env files, git config)
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: write_file
-    - field: context.tool.args.path
+    - field: tool.args.path
       operator: match
       value: (/\.ssh/|/\.git/config|/\.env|\.bashrc|\.zshrc|\.profile|authorized_keys)
 then:
@@ -86,10 +86,10 @@ priority: 850
 description: 'SSRF prevention: block HTTP requests to internal/private IPs and metadata endpoints'
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: http_request
-    - field: context.tool.args.url
+    - field: tool.args.url
       operator: match
       value: (10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata|169\.254\.)
 then:
@@ -108,10 +108,10 @@ priority: 855
 description: 'SSRF prevention: block curl/wget to internal/private IPs and metadata endpoints'
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: exec
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: (curl|wget).*(169\.254\.|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata)
 then:
@@ -129,10 +129,10 @@ priority: 600
 description: Block HTTP requests to unusual ports (common exploit targets)
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: http_request
-    - field: context.tool.args.url
+    - field: tool.args.url
       operator: match
       value: ':(22|25|53|3389|6379|27017|11211|5432|3306)'
 then:
@@ -148,10 +148,10 @@ priority: 400
 description: Block exec calls with empty or whitespace-only command
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: exec
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: ^\s*$
 then:
@@ -167,13 +167,13 @@ priority: 880
 description: Block SQL injection and XSS patterns in any tool argument
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: contains
       value: '''; DROP TABLE'
-    - field: context.tool.args.url
+    - field: tool.args.url
       operator: contains
       value: '''; DROP TABLE'
-    - field: context.tool.args.content
+    - field: tool.args.content
       operator: contains
       value: <script>
   logic: OR
@@ -190,10 +190,10 @@ priority: 650
 description: Block file writes exceeding 10MB to prevent resource exhaustion
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: write_file
-    - field: context.tool.args.content
+    - field: tool.args.content
       operator: length_gt
       value: 10485760
 then:
@@ -209,10 +209,10 @@ priority: 550
 description: Block writes to /tmp if content contains passwords or tokens
 when:
   conditions:
-    - field: context.tool.args.path
+    - field: tool.args.path
       operator: starts_with
       value: /tmp/
-    - field: context.tool.args.content
+    - field: tool.args.content
       operator: match
       value: (password|secret|token|api_key|private_key|-----BEGIN)
   logic: OR
@@ -229,10 +229,10 @@ priority: 750
 description: Block commands containing shell meta-characters (command chaining, backticks, eval)
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: exec
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: '[;&|`$(){}]'
 then:
@@ -248,10 +248,10 @@ priority: 500
 description: Block HTTP URLs that appear to be open redirect targets
 when:
   conditions:
-    - field: context.tool.name
+    - field: tool.name
       operator: eq
       value: http_request
-    - field: context.tool.args.url
+    - field: tool.args.url
       operator: contains
       value: redirect
 then:
@@ -267,7 +267,7 @@ priority: 840
 description: When write targets a restricted path, suggest correction to allowed app directory
 when:
   conditions:
-    - field: context.tool.args.path
+    - field: tool.args.path
       operator: starts_with
       value: /etc/
 then:
@@ -284,7 +284,7 @@ priority: 870
 description: Block commands containing newline characters (injection via multi-line)
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: contains
       value: |+
 
@@ -301,7 +301,7 @@ priority: 400
 description: Block commands containing base64-encoded data (common obfuscation technique)
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: echo\s+[A-Za-z0-9+/]{20,}=*\s*\|\s*(base64|sh|bash)
 then:
@@ -317,7 +317,7 @@ priority: 600
 description: Block wget/curl that saves output to filesystem without inspection
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: (wget|curl).*(-o|-O)\s+
 then:
@@ -333,7 +333,7 @@ priority: 700
 description: Block chmod 777 and other overly permissive permission changes
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: chmod.*777
 then:
@@ -349,19 +349,19 @@ priority: 885
 description: Block DROP TABLE / DROP DATABASE statements in any tool argument
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: contains
       value: DROP TABLE
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: contains
       value: DROP DATABASE
-    - field: context.tool.args.url
+    - field: tool.args.url
       operator: contains
       value: DROP TABLE
-    - field: context.tool.args.content
+    - field: tool.args.content
       operator: contains
       value: DROP TABLE
-    - field: context.tool.args.content
+    - field: tool.args.content
       operator: contains
       value: DROP DATABASE
   logic: OR
@@ -378,10 +378,10 @@ priority: 860
 description: Block docker run with --privileged (host-level escalation)
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: contains
       value: docker run
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: contains
       value: '--privileged'
 then:
@@ -397,7 +397,7 @@ priority: 680
 description: Block piping a remote download straight into a shell (curl|sh, wget|bash)
 when:
   conditions:
-    - field: context.tool.args.command
+    - field: tool.args.command
       operator: match
       value: (curl|wget).*\|.*(sh|bash)
 then:

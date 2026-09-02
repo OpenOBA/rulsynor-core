@@ -13,7 +13,7 @@ let failures = 0;
 
 function test(name, toolName, toolArgs, expected) {
   const ctx = {
-    context: { tool: { name: toolName, args: toolArgs } },
+    tool: { name: toolName, args: toolArgs },
     sessionId: 'ci-smoke',
     agentId: 'ci',
   };

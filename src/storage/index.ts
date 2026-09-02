@@ -305,6 +305,9 @@ export class Store {
   /** Prefix lookup (short hash from CLI output). Ambiguous prefix → undefined. */
   getAuditByHashPrefix(prefix: string): AuditRecord | undefined {
     if (prefix.length === 0) return undefined;
+    // `%` and `_` are LIKE wildcards and can never appear in a valid hash prefix
+    // (sha256:<hex>). Reject them so a viewer can't wildcard-match arbitrary records.
+    if (/[%_]/.test(prefix)) return undefined;
     const rows = this.db
       .prepare('SELECT * FROM audit_records WHERE hash LIKE ? || \'%\' LIMIT 2')
       .all(prefix) as unknown[];
