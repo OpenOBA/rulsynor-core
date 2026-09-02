@@ -1,6 +1,7 @@
 # @openoba/rulsynor-core
 
 > **LLM vendors deliver exceptional intelligence. We deliver accountability.**
+> **Last updated**: 2026-09-03 — quickstart field path aligned to canonical `tool.name`; Node requirement corrected to ≥22.13.0.
 
 **rulsynor-core** is ethics-first Harness Engineering: rules as the reins, accountability as the baseline — safely channeling AI Agent capabilities while ensuring every autonomous action is traceable, auditable, and verifiable.
 

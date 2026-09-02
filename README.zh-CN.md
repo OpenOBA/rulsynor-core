@@ -1,6 +1,7 @@
 # @openoba/rulsynor-core
 
 > **大模型厂商交付的是卓越智力，我们交付的是可问责的执行。**
+> **Last updated**: 2026-09-03 — 快速上手字段路径对齐规范 `tool.name`；Node 要求修正为 ≥22.13.0。
 
 **rulsynor-core** 恪守职业道德的 Harness Engineering，用规则驾驭行为，让 AI Agent 的能力安全释放，而每一次行动的执行路径记录清晰、有据可查、可独立验证。
 

@@ -1,5 +1,7 @@
 # RULE-PROMPT.md — Generate ERDL Rules from Natural Language
 
+> **Last updated**: 2026-09-03 — field path corrected to canonical `tool.name` / `tool.args.*` (Entity namespace; `context.tool.*` is not a rule field path).
+
 You don't need to know YAML to write rules for rulsynor-core. Copy the prompt template
 below, paste it into any LLM (ChatGPT, Claude, Gemini, …), replace the
 `{{DESCRIBE YOUR RULES HERE}}` placeholder with what you want — in plain English or

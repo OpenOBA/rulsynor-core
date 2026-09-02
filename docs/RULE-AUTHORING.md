@@ -2,6 +2,7 @@
 
 > For engine internals, see [DEVELOPMENT.md](./DEVELOPMENT.md).
 > For the formal specification, see [ERDL Spec v2.0](./SPEC/erdl-spec.md).
+> **Last updated**: 2026-09-03 — field path corrected to canonical `tool.name` / `tool.args.*` (Entity namespace; `context.tool.name` is DO-relative, not a rule field path).
 
 ---
 
