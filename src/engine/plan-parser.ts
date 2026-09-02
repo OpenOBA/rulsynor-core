@@ -102,20 +102,22 @@ export class PlanParser {
       const idxMatch = trimmed.match(/(?:步骤|Step)\s*(\d+)[：:.]\s*|^(\d+)[.)]\s+/i);
       const index = idxMatch ? parseInt(idxMatch[1] ?? idxMatch[2] ?? '0', 10) : steps.length + 1;
 
-      // Extract fields using the pipe-delimited format
+      // Extract fields using the pipe-delimited format.
+      // The operation label accepts `op:` / `Operation:` / `OpSem:` / `操作:` —
+      // `\bop\b` uses word boundaries so `op` inside `loop`/`stop`/`develop` is not a false match.
       const desc = this.extractStepField(
         trimmed,
         /描述[：:]?\s*|^(?:步骤\d+[：:.]\s*)?/i,
-        /\s*\|\s*工具/i,
+        /\s*\|\s*(?:工具|Tools?)/i,
       );
       const tools = this.extractStepField(
         trimmed,
         /(?:工具|Tools?)[：:=]\s*/i,
-        /\s*\|\s*(?:操作|Operation|OpSem)/i,
+        /\s*\|\s*(?:\bop\b|Operation|OpSem|操作)/i,
       );
       const opSem = this.extractStepField(
         trimmed,
-        /(?:操作|Operation|OpSem)[：:=\s]*/i,
+        /(?:\bop\b|Operation|OpSem|操作)[：:=\s]*/i,
         /\s*\|\s*(?:目的|Purpose|Reason)/i,
       );
       const purpose = this.extractStepField(trimmed, /(?:目的|Purpose|Reason)[：:=\s]*/i, /$/i);

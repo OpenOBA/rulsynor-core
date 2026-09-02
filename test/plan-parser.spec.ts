@@ -92,6 +92,23 @@ describe('PlanParser', () => {
       expect(result.steps[0].opSem).toBe('OP_READ');
     });
 
+    it('parses the runtime prompt format (op: / tools: / purpose:)', () => {
+      const result = p.parse(
+        'PLAN:\nStep 1: read the file | tools: read_file | op: READ | purpose: inspect',
+      );
+      expect(result.steps[0].tools).toEqual(['read_file']);
+      expect(result.steps[0].opSem).toBe('OP_READ');
+      expect(result.steps[0].purpose).toBe('inspect');
+    });
+
+    it('matches the op: label with word boundaries (no false match inside loop/stop)', () => {
+      const result = p.parse(
+        'PLAN:\nStep 1: loop over files | tools: glob | op: READ | purpose: inspect',
+      );
+      expect(result.steps[0].tools).toEqual(['glob']);
+      expect(result.steps[0].opSem).toBe('OP_READ');
+    });
+
     it('handles numbered format', () => {
       const result = p.parse('PLAN:\n1. write file\n2. test\n3. deploy');
       expect(result.steps).toHaveLength(3);

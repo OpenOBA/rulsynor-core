@@ -127,6 +127,17 @@ function toPolicyRules(compiledRules: RuleDefinition[]): Array<{
   });
 }
 
+/**
+ * Derive the agent's declared promise from its plan (ETH-001 言行一致).
+ * A plan whose every step is a read operation (OP_READ) declares a read-only
+ * intent — if the agent then attempts a write tool, ETH-001 requests human
+ * approval. Deterministic derivation from the structured plan; never LLM-guessed.
+ */
+function derivePreviousPromise(plan: ReturnType<PlanParser['parse']> | null): string | undefined {
+  if (!plan?.hasPlan || plan.steps.length === 0) return undefined;
+  return plan.steps.every(s => s.opSem === 'OP_READ') ? 'read_only' : undefined;
+}
+
 export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult> {
   const {
     llm,
@@ -172,6 +183,12 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         : 'no plan recognized',
     );
   }
+
+  // Derive the agent's declared promise from the plan (deterministic, see derivePreviousPromise).
+  // Merged into the evaluation context as `context.previous_promise` for ETH-001 (言行一致).
+  const previousPromise = derivePreviousPromise(plan);
+  const evalContext: Record<string, unknown> =
+    previousPromise !== undefined ? { ...context, previous_promise: previousPromise } : context;
 
   // ── ③ 组装依据 ──
   const ragContext = formatRagContext(knowledge);
@@ -226,7 +243,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         // `tool.name`/`tool.args.*` for the tool call (ERDL SPEC §3/§4/§7),
         // `context.*` for business context. NOT `{context:{tool:...}}`.
         tool: { name: tc.name, args: tc.arguments },
-        context,
+        context: evalContext,
         sessionId,
         agentId,
       };
@@ -263,7 +280,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
           step,
           toolName: tc.name,
           toolArgs: effectiveArgs,
-          context,
+          context: evalContext,
           agentId,
           sessionId,
           previousAuditHash: prevHash,

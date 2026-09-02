@@ -297,3 +297,41 @@ describe('runReActLoop — business context 注入（context.* 规则）', () =>
     expect(result.decision).toBe('ALLOW');
   });
 });
+
+describe('runReActLoop — previous_promise 派生（ETH-001 言行一致）', () => {
+  it('计划声明 read-only 后写工具 → REQUEST_HUMAN 且不执行', async () => {
+    const preset = toCompiledRules(loadPresetRules());
+    const executed: unknown[][] = [];
+    let call = 0;
+    const result = await runReActLoop({
+      llm: async () => {
+        call++;
+        if (call === 1) {
+          // ② 制定计划：只读计划（所有步骤 OP_READ）
+          return {
+            content:
+              'PLAN:\nStep 1: read the file | tools: read_file | op: READ | purpose: inspect',
+          };
+        }
+        if (call === 2) {
+          // ④ 推理：违背只读承诺，尝试写
+          return {
+            content: 'writing now',
+            toolCalls: [
+              { name: 'write_file', arguments: { path: '/app/x.txt', content: 'hello' } },
+            ],
+          };
+        }
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules: preset,
+      rules: preset.map(r => ({ name: r.name, version: 1 })),
+      tools: { write_file: makeTool(executed) },
+      userMessage: 'read the file',
+      planFirst: true,
+    });
+    expect(executed).toHaveLength(0);
+    expect(result.decision).toBe('REQUEST_HUMAN');
+  });
+});
