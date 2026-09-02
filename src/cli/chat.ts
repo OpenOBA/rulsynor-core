@@ -100,7 +100,8 @@ function runShell(command: string): Promise<string> {
   });
 }
 
-function buildTools(): Record<string, ToolExecutor> {
+/** Build the built-in tool executors (exec / read_file / list_dir). Exported for tests. */
+export function buildTools(): Record<string, ToolExecutor> {
   return {
     exec: createToolExecutor(async args => {
       const command = typeof args.command === 'string' ? args.command : '';
