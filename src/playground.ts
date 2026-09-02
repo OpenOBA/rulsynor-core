@@ -36,10 +36,11 @@ const presetRules = loadPresetRules();
 const evalRules = toCompiledRules(presetRules);
 
 // Evaluate the tool call before it runs.
+// Canonical evaluation context shape (SPEC v2.0 DO field 8): fields resolve under `context.*`.
 const evaluator = new Evaluator(new GuardStateManager());
 const startMs = Date.now();
 const result = evaluator.evaluate(evalRules, {
-  tool: { name: tool, args: toolArgs },
+  context: { tool: { name: tool, args: toolArgs } },
   sessionId: 'playground',
   agentId: 'demo',
 });

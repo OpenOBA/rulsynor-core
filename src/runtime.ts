@@ -19,10 +19,18 @@ import type { RuleDefinition } from './engine/rule-definition.js';
 import { ruleWhenToExpr } from './engine/expr-tree/rule-to-expr.js';
 import { toSExpr } from './engine/expr-tree/s-expression.js';
 import { buildDecisionObject } from './guard/index.js';
+import type { DecisionObject } from './guard/index.js';
 import { PlanParser } from './engine/plan-parser.js';
 import { resolveDomain, formatRagContext } from './knowledge/index.js';
 import type { ScoredFragment } from './knowledge/types.js';
 import { parseRequestHumanSignal, buildDoPayload } from './preflight/index.js';
+
+export interface DecisionObjectMeta {
+  sessionId: string;
+  agentId: string;
+  step: number;
+  toolName: string;
+}
 
 export interface RuntimeOptions {
   /** LLM function: takes messages, returns assistant response with possible tool calls */
@@ -54,6 +62,12 @@ export interface RuntimeOptions {
   planFirst?: boolean;
   /** 7-step progress callback (①理解意图 → ⑦审计落链) */
   onStep?: (step: number, detail: string) => void;
+  /**
+   * Decision Object hook (⑦ 审计落链): called for every guarded tool call with the
+   * fully-built, tamper-evident DO plus loop metadata. CORE uses it for
+   * persistence/read-only viewing; export/download is deliberately NOT a CORE capability.
+   */
+  onDecisionObject?: (decisionObject: DecisionObject, meta: DecisionObjectMeta) => void;
 }
 
 export interface LLMMessage {
@@ -182,7 +196,8 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       onToolCall?.(tc.name, tc.arguments, step);
 
       const ctx = {
-        tool: { name: tc.name, args: tc.arguments },
+        // Canonical evaluation context shape (SPEC v2.0 DO field 8): rule fields resolve under `context.*`.
+        context: { tool: { name: tc.name, args: tc.arguments } },
         sessionId,
         agentId,
       };
@@ -242,6 +257,12 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       auditHashes.push(auditHash);
       prevHash = auditHash;
       onGuardEval?.(evalResult.decision, auditHash, step);
+      opts.onDecisionObject?.(do1, {
+        sessionId,
+        agentId,
+        step,
+        toolName: tc.name,
+      });
       // ⑦ 审计落链：DO 载荷记录组装的知识版本（RAG provenance）
       const doPayload = buildDoPayload(
         knowledge.length > 0

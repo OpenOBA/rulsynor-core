@@ -19,7 +19,7 @@ priority: 900                   # Lower number = higher priority (1-1000)
 
 when:                           # "Under what conditions does this rule trigger?"
   conditions:
-    - field: "toolName"         # Field path in the tool call context
+    - field: "context.tool.name"  # Field path in the evaluation context
       operator: eq              # Comparison operator
       value: "exec"             # Expected value
   conditionLogic: AND           # AND = all conditions must match, OR = any
@@ -35,18 +35,31 @@ then:                           # "What should happen when conditions match?"
 
 ### Field Path Resolution
 
-Fields follow dot-notation. The engine resolves them against the tool call context:
+Fields follow dot-notation and resolve against the **evaluation context object**.
+The canonical context shape (SPEC v2.0, Decision Object field 8) wraps the tool
+call under `context.tool` — all built-in rules are written this way:
 
 | Field in Rule | Resolves To |
 |---------------|-------------|
-| `toolName` | The name of the tool being called |
-| `toolArgs.command` | `tool_call.arguments.command` |
-| `toolArgs.path` | `tool_call.arguments.path` |
-| `toolArgs.content` | `tool_call.arguments.content` |
+| `context.tool.name` | The name of the tool being called |
+| `context.tool.args.command` | `exec` command argument |
+| `context.tool.args.path` | `read_file` / `write_file` path argument |
+| `context.tool.args.content` | `write_file` content argument |
 | `context.maintenance_mode` | Custom context field injected by runtime |
 | `context.previous_promise` | Promise-keeping context (integrity rules) |
 
-The `context.` prefix is optional — the engine strips it and resolves at the top level.
+When evaluating programmatically, pass the context **wrapped**:
+
+```ts
+evaluator.evaluate(rules, {
+  context: { tool: { name: 'exec', args: { command: 'ls -la' } } },
+  sessionId: 's1',
+  agentId: 'my-agent',
+});
+```
+
+> ⚠️ The engine does NOT strip the `context.` prefix — an unwrapped context
+> (`{ tool: {…} }`) silently matches no `context.*` rule. Keep the wrapper.
 
 ---
 

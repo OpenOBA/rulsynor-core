@@ -15,7 +15,15 @@ function makeRule(decision: string, toolName: string, correction?: string): Rule
     name: `Rule ${decision}`,
     description: 'runtime dispatch test',
     category: 'custom',
-    conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: toolName }],
+    conditions: [
+      {
+        kind: 'context_matches',
+        // Canonical field path (SPEC v2.0 DO field 8): runtime wraps the tool call in `context.tool`.
+        field: 'context.tool.name',
+        operator: 'eq',
+        value: toolName,
+      },
+    ],
     conditionLogic: 'AND',
     action: {
       decision: decision as RuleDefinition['action']['decision'],

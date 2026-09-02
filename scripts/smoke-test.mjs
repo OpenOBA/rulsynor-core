@@ -1,6 +1,8 @@
 /**
  * Smoke test — verifies Guard engine directly (no CLI argument parsing)
  * Called in CI after build. Exits 0 on pass, 1 on fail.
+ *
+ * Context shape is canonical per SPEC v2.0 (DO field 8): rule fields resolve under `context.*`.
  */
 import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '../dist/index.js';
 
@@ -10,13 +12,17 @@ const evaluator = new Evaluator(new GuardStateManager());
 let failures = 0;
 
 function test(name, toolName, toolArgs, expected) {
-  const ctx = { toolName, toolArgs, sessionId: 'ci-smoke', agentId: 'ci' };
-  const result = evaluator.evaluate(ctx, rules);
+  const ctx = {
+    context: { tool: { name: toolName, args: toolArgs } },
+    sessionId: 'ci-smoke',
+    agentId: 'ci',
+  };
+  const result = evaluator.evaluate(rules, ctx);
 
   if (result.decision !== expected) {
     console.error(`FAIL: ${name}`);
     console.error(`  expected: ${expected}, got: ${result.decision}`);
-    console.error(`  reason: ${result.reason}`);
+    console.error(`  reason: ${result.primaryReason ?? 'none'}`);
     console.error(`  matched: ${result.matchedRules?.map(r => r.ruleId).join(',') || 'none'}`);
     failures++;
   } else {

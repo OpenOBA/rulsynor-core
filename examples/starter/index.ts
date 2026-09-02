@@ -59,10 +59,14 @@ async function guardedExecute(
   sessionId: string,
   agentId: string,
 ) {
-  const ctx = { toolName: tool.name, toolArgs: args, sessionId, agentId };
+  const ctx = {
+    context: { tool: { name: tool.name, args } },
+    sessionId,
+    agentId,
+  };
 
   const evalStart = performance.now();
-  const result = evaluator.evaluate(ctx, rules);
+  const result = evaluator.evaluate(rules, ctx);
   const duration = Math.round(performance.now() - evalStart);
 
   // Guard decision

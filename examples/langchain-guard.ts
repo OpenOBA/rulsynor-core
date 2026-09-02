@@ -31,10 +31,11 @@ async function guardedToolExecutor(
   executeTool: () => Promise<string>,
 ): Promise<string> {
   const evalStart = performance.now();
-  const result = evaluator.evaluate(
-    { toolName, toolArgs, sessionId, agentId },
-    rules,
-  );
+  const result = evaluator.evaluate(rules, {
+    context: { tool: { name: toolName, args: toolArgs } },
+    sessionId,
+    agentId,
+  });
   const duration = Math.round(performance.now() - evalStart);
 
   // Block dangerous calls

@@ -23,10 +23,11 @@ async function guardedToolCall(
   agentId: string,
 ) {
   const evalStart = performance.now();
-  const result = evaluator.evaluate(
-    { toolName, toolArgs, sessionId, agentId },
-    rules,
-  );
+  const result = evaluator.evaluate(rules, {
+    context: { tool: { name: toolName, args: toolArgs } },
+    sessionId,
+    agentId,
+  });
   const duration = Math.round(performance.now() - evalStart);
 
   if (result.decision === 'DENY' || result.decision === 'EMERGENCY_HALT') {
