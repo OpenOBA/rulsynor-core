@@ -38,6 +38,7 @@
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests",
+    "bench": "node scripts/bench.mjs",
     "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
