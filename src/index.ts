@@ -77,6 +77,7 @@ export type { ComplianceProfile, RegulatoryReference } from './compliance/index.
 export { PROVENANCE } from './provenance.js';
 export {
   loadPresetRules,
+  loadRulesFromDir,
   toRuleDefinitions,
   toERDLRuleSet,
   toCompiledRules,
@@ -108,15 +109,22 @@ export type {
   LLMMessage,
   LLMResponse,
   ToolExecutor,
+  DecisionObjectMeta,
 } from './runtime.js';
 
 // ── Engine advanced APIs ──
 export { SystemClock, VirtualClock } from './engine/clock.js';
 export type { Clock } from './engine/clock.js';
 export { Store } from './storage/index.js';
-export type { StoredRule, ModelConfig, CreateRuleInput } from './storage/index.js';
+export type {
+  StoredRule,
+  ModelConfig,
+  CreateRuleInput,
+  AuditRecord,
+  AuditEntryInput,
+} from './storage/index.js';
 export { createOpenAiCompatibleLlm } from './llm.js';
-export type { LlmConfig, LlmMessage, LlmResponse } from './llm.js';
+export type { LlmConfig, LlmMessage, LlmResponse, LlmToolSchema } from './llm.js';
 export { OpSemRegistry } from './engine/op-sem-registry.js';
 export { PlanParser } from './engine/plan-parser.js';
 export type { ParsedPlan, ParsedPlanStep } from './engine/plan-parser.js';

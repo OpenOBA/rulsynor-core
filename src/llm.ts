@@ -25,16 +25,30 @@ export interface LlmConfig {
   baseUrl?: string;
 }
 
+/** JSON-schema tool definition advertised to the model (OpenAI function-calling shape). */
+export interface LlmToolSchema {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
 /**
  * Build an OpenAI-compatible `llm` function.
  * `apiKey` is passed in (from the caller / environment) — CORE never persists it.
+ * Optional `tools` are advertised via the standard function-calling schema so the
+ * runtime's ReAct loop receives real tool calls.
  */
 export function createOpenAiCompatibleLlm(
   cfg: LlmConfig,
   apiKey: string,
+  tools?: LlmToolSchema[],
 ): (messages: LlmMessage[]) => Promise<LlmResponse> {
   const base = (cfg.baseUrl ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
   const model = cfg.modelName ?? 'gpt-4o-mini';
+  const toolDefs =
+    tools && tools.length > 0
+      ? tools.map(t => ({ type: 'function', function: t }))
+      : undefined;
 
   return async (messages: LlmMessage[]) => {
     const resp = await fetch(`${base}/chat/completions`, {
@@ -43,7 +57,7 @@ export function createOpenAiCompatibleLlm(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ model, messages }),
+      body: JSON.stringify({ model, messages, ...(toolDefs ? { tools: toolDefs } : {}) }),
     });
 
     if (!resp.ok) {

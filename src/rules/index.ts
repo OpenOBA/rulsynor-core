@@ -28,11 +28,16 @@ export interface PresetRule {
 
 let rulesCache: PresetRule[] | null = null;
 
-export function loadPresetRules(): PresetRule[] {
-  if (rulesCache) return rulesCache;
-  const dir = join(_dirname);
-  const files = readdirSync(dir).filter(f => f.endsWith('.erdl.yaml') || f.endsWith('.erdl.yml'));
-  rulesCache = [];
+/**
+ * Load ERDL rule documents (*.erdl.yaml / *.erdl.yml, multi-doc supported) from any
+ * directory. This is the user-facing loader behind "write your own rules, drop them
+ * in a folder, they take effect" — see docs/RULE-AUTHORING.md.
+ */
+export function loadRulesFromDir(dir: string): PresetRule[] {
+  const rules: PresetRule[] = [];
+  const files = readdirSync(dir)
+    .filter(f => f.endsWith('.erdl.yaml') || f.endsWith('.erdl.yml'))
+    .sort();
   for (const f of files) {
     const content = readFileSync(join(dir, f), 'utf-8');
     // Support YAML multi-document files (--- separator)
@@ -40,10 +45,16 @@ export function loadPresetRules(): PresetRule[] {
     for (const doc of docs) {
       if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
         const name = (doc.name as string) || f;
-        rulesCache.push({ name: `${f}#${name}`, content, parsed: doc });
+        rules.push({ name: `${f}#${name}`, content, parsed: doc });
       }
     }
   }
+  return rules;
+}
+
+export function loadPresetRules(): PresetRule[] {
+  if (rulesCache) return rulesCache;
+  rulesCache = loadRulesFromDir(join(_dirname));
   return rulesCache;
 }
 
@@ -127,10 +138,11 @@ export function toERDLRuleSet(rules: PresetRule[]): {
  *
  * const evaluator = new Evaluator(new GuardStateManager());
  * const rules = toCompiledRules(loadPresetRules());
- * const decision = evaluator.evaluate(
- *   { toolName: 'exec', toolArgs: { command: 'rm -rf /' }, sessionId: 's1', agentId: 'my-agent' },
- *   rules,
- * );
+ * const decision = evaluator.evaluate(rules, {
+ *   context: { tool: { name: 'exec', args: { command: 'rm -rf /' } } },
+ *   sessionId: 's1',
+ *   agentId: 'my-agent',
+ * });
  * ```
  */
 export function toCompiledRules(presetRules: PresetRule[]): RuleDefinition[] {

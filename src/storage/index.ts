@@ -39,6 +39,32 @@ export interface ModelConfig {
   baseUrl?: string;
 }
 
+/** A persisted audit record — one tamper-evident Decision Object per row. */
+export interface AuditRecord {
+  id: number;
+  createdAt: string;
+  sessionId: string;
+  agentId: string;
+  step: number;
+  toolName: string;
+  decision: string;
+  hash: string;
+  previousHash: string | null;
+  doJson: string;
+}
+
+/** Input for persisting one Decision Object (built by the runtime). */
+export interface AuditEntryInput {
+  sessionId: string;
+  agentId: string;
+  step: number;
+  toolName: string;
+  decision: string;
+  hash: string;
+  previousHash?: string | null;
+  decisionObject: unknown;
+}
+
 export interface CreateRuleInput {
   id: string;
   name: string;
@@ -71,6 +97,19 @@ CREATE TABLE IF NOT EXISTS model_config (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS audit_records (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  agent_id TEXT NOT NULL,
+  step INTEGER NOT NULL DEFAULT 0,
+  tool_name TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  hash TEXT NOT NULL UNIQUE,
+  previous_hash TEXT,
+  do_json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_records (created_at);
 `;
 
 /** A single open SQLite database. Pass a path (file) or ':memory:' (tests). */
@@ -204,11 +243,100 @@ export class Store {
     return cfg;
   }
 
+  // ── Audit records (write + read-only view; CORE never exports) ──
+
+  /** Persist one Decision Object. Duplicate hashes are rejected (idempotent write). */
+  recordAudit(input: AuditEntryInput): AuditRecord {
+    const createdAt = new Date().toISOString();
+    const r = this.db
+      .prepare(
+        `INSERT OR IGNORE INTO audit_records
+         (created_at, session_id, agent_id, step, tool_name, decision, hash, previous_hash, do_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        createdAt,
+        input.sessionId,
+        input.agentId,
+        input.step,
+        input.toolName,
+        input.decision,
+        input.hash,
+        input.previousHash ?? null,
+        JSON.stringify(input.decisionObject),
+      );
+    if (Number(r.changes) === 0) {
+      const existing = this.getAuditByHash(input.hash);
+      if (existing) return existing;
+    }
+    return {
+      id: Number(r.lastInsertRowid),
+      createdAt,
+      sessionId: input.sessionId,
+      agentId: input.agentId,
+      step: input.step,
+      toolName: input.toolName,
+      decision: input.decision,
+      hash: input.hash,
+      previousHash: input.previousHash ?? null,
+      doJson: JSON.stringify(input.decisionObject),
+    };
+  }
+
+  /** Most recent audit records, newest first. Read-only view. */
+  listAudit(limit = 20): AuditRecord[] {
+    const safeLimit = Math.max(1, Math.min(1000, Math.trunc(limit)));
+    const rows = this.db
+      .prepare(
+        'SELECT * FROM audit_records ORDER BY id DESC LIMIT ?',
+      )
+      .all(safeLimit) as unknown[];
+    return rows.map(row => this.mapAudit(row as Record<string, unknown>));
+  }
+
+  /** Exact-hash lookup. */
+  getAuditByHash(hash: string): AuditRecord | undefined {
+    const row = this.db.prepare('SELECT * FROM audit_records WHERE hash = ?').get(hash) as
+      | Record<string, unknown>
+      | undefined;
+    return row ? this.mapAudit(row) : undefined;
+  }
+
+  /** Prefix lookup (short hash from CLI output). Ambiguous prefix → undefined. */
+  getAuditByHashPrefix(prefix: string): AuditRecord | undefined {
+    if (prefix.length === 0) return undefined;
+    const rows = this.db
+      .prepare('SELECT * FROM audit_records WHERE hash LIKE ? || \'%\' LIMIT 2')
+      .all(prefix) as unknown[];
+    if (rows.length !== 1) return undefined;
+    return this.mapAudit(rows[0] as Record<string, unknown>);
+  }
+
+  countAudit(): number {
+    const row = this.db.prepare('SELECT COUNT(*) AS n FROM audit_records').get() as { n: number };
+    return row.n;
+  }
+
   close(): void {
     this.db.close();
   }
 
   // ── Helpers ──
+
+  private mapAudit(row: Record<string, unknown>): AuditRecord {
+    return {
+      id: Number(row.id),
+      createdAt: String(row.created_at),
+      sessionId: String(row.session_id),
+      agentId: String(row.agent_id),
+      step: Number(row.step),
+      toolName: String(row.tool_name),
+      decision: String(row.decision),
+      hash: String(row.hash),
+      previousHash: row.previous_hash == null ? null : String(row.previous_hash),
+      doJson: String(row.do_json),
+    };
+  }
 
   private mapRule(row: Record<string, unknown>): StoredRule {
     return {
