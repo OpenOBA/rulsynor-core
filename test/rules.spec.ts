@@ -7,11 +7,12 @@ import {
   toRuleDefinitions,
   toERDLRuleSet,
 } from '../src/rules/index.js';
+import { ruleQualityGate } from '../src/engine/rule-quality-gate.js';
 
 describe('loadPresetRules', () => {
-  it('loads all 30 preset rules', () => {
+  it('loads all 34 preset rules', () => {
     const rules = loadPresetRules();
-    expect(rules).toHaveLength(30);
+    expect(rules).toHaveLength(34);
   });
 
   it('cache returns same instance', () => {
@@ -32,8 +33,9 @@ describe('loadPresetRules', () => {
   it('security rules exist (category=security)', () => {
     const rules = loadPresetRules();
     const securityRules = rules.filter(r => r.parsed.category === 'security');
-    // 20 from security.erdl.yaml + 1 from compliance.erdl.yaml (halt-credential-leak is security)
-    expect(securityRules.length).toBeGreaterThanOrEqual(20);
+    // 25 from security.erdl.yaml (SEC-009/SEC-019 split into per-tool rules)
+    // + 3 from compliance.erdl.yaml (SEC-022/023/024) = 28 security rules
+    expect(securityRules.length).toBe(28);
   });
 
   it('non-security rules exist', () => {
@@ -53,8 +55,8 @@ describe('loadPresetRules', () => {
 describe('toCompiledRules', () => {
   const rules = toCompiledRules(loadPresetRules());
 
-  it('returns 30 compiled rules', () => {
-    expect(rules).toHaveLength(30);
+  it('returns 34 compiled rules', () => {
+    expect(rules).toHaveLength(34);
   });
 
   it('every compiled rule has required CompiledRule fields', () => {
@@ -127,8 +129,8 @@ describe('toCompiledRules', () => {
 });
 
 describe('toRuleDefinitions', () => {
-  it('returns 30 definitions', () => {
-    expect(toRuleDefinitions(loadPresetRules())).toHaveLength(30);
+  it('returns 34 definitions', () => {
+    expect(toRuleDefinitions(loadPresetRules())).toHaveLength(34);
   });
 
   it('each def has name, when, then, version', () => {
@@ -150,8 +152,8 @@ describe('toERDLRuleSet', () => {
     expect(set.metadata.source).toBe('rulsynor-core-preset');
   });
 
-  it('has 30 rules', () => {
-    expect(set.rules).toHaveLength(30);
+  it('has 34 rules', () => {
+    expect(set.rules).toHaveLength(34);
   });
 
   it('every rule has id and then', () => {
@@ -159,6 +161,11 @@ describe('toERDLRuleSet', () => {
       expect(typeof r.id).toBe('string');
       expect(typeof r.then).toBe('string');
     }
+  });
+  it('preset rules pass quality gate with 0 errors and 0 warnings', () => {
+    const report = ruleQualityGate.check(toCompiledRules(loadPresetRules()));
+    expect(report.errors).toBe(0);
+    expect(report.warnings).toBe(0);
   });
 });
 

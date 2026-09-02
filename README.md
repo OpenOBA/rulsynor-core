@@ -1,7 +1,7 @@
 # @openoba/rulsynor-core
 
 > **LLM vendors deliver exceptional intelligence. We deliver accountability.**
-> **Last updated**: 2026-09-03 — quickstart field path aligned to canonical `tool.name`; Node requirement corrected to ≥22.13.0.
+> **Last updated**: 2026-09-03 — quickstart field path aligned to canonical `tool.name`; Node requirement corrected to ≥22.13.0; preset rule count 30 → 34 (cross-tool security rules split per tool + `tool.name` constraint).
 
 **rulsynor-core** is ethics-first Harness Engineering: rules as the reins, accountability as the baseline — safely channeling AI Agent capabilities while ensuring every autonomous action is traceable, auditable, and verifiable.
 
@@ -125,7 +125,7 @@ npx @openoba/rulsynor-core --tool=exec --cmd="wget bad.sh | bash"
 ```
 
 ```
-📋 Trained:    30 rules loaded
+📋 Trained:    34 rules loaded
 🛡️  Decision:   DENY
 📝 Reason:     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
 🧾 Recorded:   sha256:8274b0... (tamper-evident)
@@ -143,7 +143,7 @@ npx @openoba/rulsynor-core --tool=read --path="docs/api-spec.md"
 ```
 
 ```
-📋 Trained:    30 rules loaded
+📋 Trained:    34 rules loaded
 ✅ Decision:   ALLOW
 📝 Reason:     Read-only operation allowed.
 🧾 Recorded:   sha256:e71eb71... (tamper-evident)
@@ -358,7 +358,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 **LangChain**: wrap tools with `guardedToolExecutor`. **MCP Server**: intercept `CallToolRequest`. **Custom ReAct loop**: call `evaluator.evaluate()` before each tool execution. Same pattern. Same API.
 
-> 📦 **Ready-to-run demo**: [`examples/agent-demo.ts`](examples/agent-demo.ts) — a complete ReAct Agent with Guard, 30 preset rules, and audit chain. `export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "Your task"`
+> 📦 **Ready-to-run demo**: [`examples/agent-demo.ts`](examples/agent-demo.ts) — a complete ReAct Agent with Guard, 34 preset rules, and audit chain. `export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "Your task"`
 
 ---
 
@@ -553,7 +553,7 @@ registry.register({
 │  │         GUARD             │           │
 │  │                          │           │
 │  │  Ring 0 → Ring 3         │           │
-│  │  30 preset + your rules  │           │
+│  │  34 preset + your rules  │           │
 │  │  30 operators / 34 nodes │           │
 │  │  within / rate trackers  │           │
 │  │  CORRECT auto-retry      │           │

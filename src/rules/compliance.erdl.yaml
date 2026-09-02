@@ -100,6 +100,9 @@ then:
   instruction: "Transaction exceeds $5,000 threshold. Human approval required."
 ---
 # ERDL Rule: EMERGENCY_HALT on credential leak (Ring 0)
+# NOTE: this is a context-event rule (context.event_type), not a tool-call rule — it is
+# intentionally tool-scope-free (no tool.name condition). It fires on a business-context
+# signal, not on a specific tool's arguments.
 name: SEC-023-halt-credential-leak
 version: 1
 category: security

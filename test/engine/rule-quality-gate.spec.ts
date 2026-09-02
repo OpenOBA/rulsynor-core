@@ -110,6 +110,37 @@ describe('RuleQualityGate', () => {
     });
   });
 
+  describe('§16 no-tool-constraint gate', () => {
+    it('tool.args rule without tool.name → warning', () => {
+      const rules = [
+        makeRule({
+          conditions: [{ field: 'tool.args.command', operator: 'match', value: 'chmod.*777' }],
+        }),
+      ];
+      const report = gate.check(rules);
+      expect(report.errors).toBe(0);
+      expect(report.warnings).toBe(1);
+      expect(report.details[0].issues.some(i => i.code === 'NO_TOOL_CONSTRAINT')).toBe(true);
+    });
+
+    it('context-only rule (no tool.* field) → no warning (exempt)', () => {
+      const rules = [
+        makeRule({
+          conditions: [{ field: 'context.event_type', operator: 'eq', value: 'credential_leak' }],
+        }),
+      ];
+      const report = gate.check(rules);
+      expect(report.errors).toBe(0);
+      expect(report.warnings).toBe(0);
+    });
+
+    it('rule with tool.name → no warning', () => {
+      const rules = [makeRule()];
+      const report = gate.check(rules);
+      expect(report.warnings).toBe(0);
+    });
+  });
+
   describe('§3.2.1 when completeness on quality gate', () => {
     it('when:true + DENY → error', () => {
       const rule = makeRule({

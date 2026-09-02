@@ -1,7 +1,7 @@
 # @openoba/rulsynor-core
 
 > **大模型厂商交付的是卓越智力，我们交付的是可问责的执行。**
-> **Last updated**: 2026-09-03 — 快速上手字段路径对齐规范 `tool.name`；Node 要求修正为 ≥22.13.0。
+> **Last updated**: 2026-09-03 — 快速上手字段路径对齐规范 `tool.name`；Node 要求修正为 ≥22.13.0；预设规则数 30→34（跨工具安全规则按工具拆分 + 补 `tool.name` 约束）。
 
 **rulsynor-core** 恪守职业道德的 Harness Engineering，用规则驾驭行为，让 AI Agent 的能力安全释放，而每一次行动的执行路径记录清晰、有据可查、可独立验证。
 
@@ -267,7 +267,7 @@ then:
 ```typescript
 import { loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
-// 30 条内置安全规则 + 你的业务规则
+// 34 条内置安全规则 + 你的业务规则
 const presetRules = loadPresetRules();           // PresetRule[]
 const rules = toCompiledRules(presetRules);       // CompiledRule[] — 引擎直接消费
 
@@ -323,7 +323,7 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
 **LangChain**：wrap 工具。**MCP Server**：拦截 `CallToolRequest`。**自定义 ReAct 循环**：每次工具执行前调 `evaluator.evaluate()`。相同的模式，相同的 API。
 
-> 📦 **开箱即用的完整示例**：[`examples/agent-demo.ts`](examples/agent-demo.ts) — 包含 ReAct Agent + 30 条预设规则 + 审计链的完整实现。`export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "你的任务"`
+> 📦 **开箱即用的完整示例**：[`examples/agent-demo.ts`](examples/agent-demo.ts) — 包含 ReAct Agent + 34 条预设规则 + 审计链的完整实现。`export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "你的任务"`
 
 ---
 
@@ -518,7 +518,7 @@ registry.register({
 │  │         GUARD             │           │
 │  │                          │           │
 │  │  环 0 → 环 3             │           │
-│  │  30 条预设 + 你的规则    │           │
+│  │  34 条预设 + 你的规则    │           │
 │  │  30 运算符 / 34 节点     │           │
 │  │  within / rate 追踪      │           │
 │  │  CORRECT 自动重试        │           │
@@ -559,7 +559,7 @@ registry.register({
 | `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象（返回类型：`DecisionObject`） |
 | `generateAID()` | 生成 Agent 身份标识码（OID 1.2.156.3088） |
 | `getComplianceProfile()` | 辖区感知的合规自动配置 |
-| `loadPresetRules()` | 加载 30 条内置 ERDL YAML 规则 |
+| `loadPresetRules()` | 加载 34 条内置 ERDL YAML 规则 |
 | `toCompiledRules(rules)` | 预设规则 → `CompiledRule[]` |
 | `toERDLRuleSet(rules)` | 预设规则 → ERDLRuleSet 格式 |
 | `extractNavigationGuide(opts)` | Guard 决策 → 结构化 LLM 引导 |

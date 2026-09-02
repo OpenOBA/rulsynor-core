@@ -604,7 +604,12 @@ export class RuleValidator {
 
   /**
    * §16 no-tool-constraint (warning):
-   * coding/security rules SHOULD specify a tool.name condition to avoid indiscriminate matching.
+   * coding/security rules that match tool arguments (tool.* fields) SHOULD specify a
+   * tool.name condition to avoid indiscriminate matching across every tool call.
+   *
+   * Rules that only reference business/event context (context.* etc.) are NOT tool-scoped
+   * by design (e.g. context.event_type = credential_leak) — they are exempt from this gate,
+   * because they do not match "every tool call" at all.
    */
   checkToolConstraint(rule: RuleDefinition): ValidationError | null {
     if (rule.category !== 'coding' && rule.category !== 'security') return null;
@@ -613,15 +618,17 @@ export class RuleValidator {
     const hasToolConstraint = rule.conditions.some(
       c => c.field === 'tool.name' || c.field === 'tool_name',
     );
-    if (!hasToolConstraint) {
-      return {
-        field: 'conditions',
-        code: 'NO_TOOL_CONSTRAINT',
-        message: `${rule.category} rule "${rule.name}" should specify a tool.name condition to avoid matching every tool call (§16)`,
-        level: 'warning',
-      };
-    }
-    return null;
+    if (hasToolConstraint) return null;
+    // Only flag rules that reference tool.* fields (tool.args.*) without scoping to a tool.
+    // A rule matching only context.* (business/event context) legitimately has no tool scope.
+    const referencesToolField = rule.conditions.some(c => c.field?.startsWith('tool.') === true);
+    if (!referencesToolField) return null;
+    return {
+      field: 'conditions',
+      code: 'NO_TOOL_CONSTRAINT',
+      message: `${rule.category} rule "${rule.name}" should specify a tool.name condition to avoid matching every tool call (§16)`,
+      level: 'warning',
+    };
   }
 
   /**

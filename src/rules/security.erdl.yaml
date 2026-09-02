@@ -164,22 +164,56 @@ category: security
 severity: critical
 ring: 0
 priority: 880
-description: Block SQL injection and XSS patterns in any tool argument
+description: Block SQL injection patterns in exec commands
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: contains
       value: '''; DROP TABLE'
+then:
+  decision: DENY
+  instruction: SQL injection pattern detected in exec command and blocked.
+---
+name: SEC-025-block-sql-injection-url
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 880
+description: Block SQL injection patterns in HTTP request URLs
+when:
+  conditions:
+    - field: tool.name
+      operator: eq
+      value: http_request
     - field: tool.args.url
       operator: contains
       value: '''; DROP TABLE'
+then:
+  decision: DENY
+  instruction: SQL injection pattern detected in HTTP URL and blocked.
+---
+name: SEC-026-block-xss-content
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 880
+description: Block XSS script patterns in file write content
+when:
+  conditions:
+    - field: tool.name
+      operator: eq
+      value: write_file
     - field: tool.args.content
       operator: contains
       value: <script>
-  logic: OR
 then:
   decision: DENY
-  instruction: SQL injection / XSS pattern detected and blocked.
+  instruction: XSS script pattern detected in file content and blocked.
 ---
 name: SEC-010-block-large-writes
 version: 1
@@ -206,16 +240,18 @@ category: security
 severity: medium
 ring: 1
 priority: 550
-description: Block writes to /tmp if content contains passwords or tokens
+description: Block writes to /tmp when the content contains passwords or tokens
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: write_file
     - field: tool.args.path
       operator: starts_with
       value: /tmp/
     - field: tool.args.content
       operator: match
       value: (password|secret|token|api_key|private_key|-----BEGIN)
-  logic: OR
 then:
   decision: DENY
   instruction: Sensitive data in /tmp blocked. Use encrypted storage.
@@ -267,6 +303,9 @@ priority: 840
 description: When write targets a restricted path, suggest correction to allowed app directory
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: write_file
     - field: tool.args.path
       operator: starts_with
       value: /etc/
@@ -284,6 +323,9 @@ priority: 870
 description: Block commands containing newline characters (injection via multi-line)
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: contains
       value: |+
@@ -301,6 +343,9 @@ priority: 400
 description: Block commands containing base64-encoded data (common obfuscation technique)
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: match
       value: echo\s+[A-Za-z0-9+/]{20,}=*\s*\|\s*(base64|sh|bash)
@@ -317,6 +362,9 @@ priority: 600
 description: Block wget/curl that saves output to filesystem without inspection
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: match
       value: (wget|curl).*(-o|-O)\s+
@@ -333,6 +381,9 @@ priority: 700
 description: Block chmod 777 and other overly permissive permission changes
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: match
       value: chmod.*777
@@ -346,25 +397,53 @@ category: security
 severity: critical
 ring: 0
 priority: 885
-description: Block DROP TABLE / DROP DATABASE statements in any tool argument
+description: Block DROP TABLE / DROP DATABASE statements in exec commands
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
-      operator: contains
-      value: DROP TABLE
-    - field: tool.args.command
-      operator: contains
-      value: DROP DATABASE
+      operator: match
+      value: DROP\s+(TABLE|DATABASE)
+then:
+  decision: DENY
+  instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
+---
+name: SEC-027-block-sql-drop-url
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 885
+description: Block DROP TABLE statements in HTTP request URLs
+when:
+  conditions:
+    - field: tool.name
+      operator: eq
+      value: http_request
     - field: tool.args.url
       operator: contains
       value: DROP TABLE
+then:
+  decision: DENY
+  instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
+---
+name: SEC-028-block-sql-drop-content
+version: 1
+category: security
+severity: critical
+ring: 0
+priority: 885
+description: Block DROP TABLE / DROP DATABASE statements in file write content
+when:
+  conditions:
+    - field: tool.name
+      operator: eq
+      value: write_file
     - field: tool.args.content
-      operator: contains
-      value: DROP TABLE
-    - field: tool.args.content
-      operator: contains
-      value: DROP DATABASE
-  logic: OR
+      operator: match
+      value: DROP\s+(TABLE|DATABASE)
 then:
   decision: DENY
   instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
@@ -378,6 +457,9 @@ priority: 860
 description: Block docker run with --privileged (host-level escalation)
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: contains
       value: docker run
@@ -397,6 +479,9 @@ priority: 680
 description: Block piping a remote download straight into a shell (curl|sh, wget|bash)
 when:
   conditions:
+    - field: tool.name
+      operator: eq
+      value: exec
     - field: tool.args.command
       operator: match
       value: (curl|wget).*\|.*(sh|bash)
