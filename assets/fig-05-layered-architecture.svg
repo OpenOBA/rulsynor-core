@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arw4" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1240" height="560" fill="#FFFFFF"/>
+
+  <!-- connectors -->
+  <path d="M330 118 V158" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw4)"/>
+  <path d="M910 118 V158" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw4)"/>
+  <path d="M560 280 H678" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw4)"/>
+
+  <!-- top band: human interface -->
+  <rect x="100" y="44" width="1040" height="74" rx="10" fill="#FFF7ED" stroke="#C77414" stroke-width="1.5"/>
+  <text x="130" y="74" font-size="18" font-weight="700" fill="#C77414">人机界面 —— 任务的入口与出口</text>
+  <text x="130" y="100" font-size="13" fill="#5B6475">人的指令定义任务的起点与目标；人的裁决守住任务的终点与底线</text>
+  <rect x="920" y="62" width="180" height="38" rx="19" fill="#C77414"/>
+  <text x="1010" y="87" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">授权 · 归于人</text>
+
+  <!-- intelligence layer -->
+  <rect x="100" y="160" width="460" height="240" rx="10" fill="#EFF6FF" stroke="#1E56A0" stroke-width="1.5"/>
+  <text x="130" y="196" font-size="18" font-weight="700" fill="#1E56A0">智能层 —— 任务完成的主体</text>
+  <text x="130" y="234" font-size="14" fill="#334155">· 推理与规划：任务分解、方案设计</text>
+  <text x="130" y="262" font-size="14" fill="#334155">· 知识检索：基于企业私有依据推理</text>
+  <text x="130" y="290" font-size="14" fill="#334155">· 记忆召回：历史经验持续复用</text>
+  <text x="130" y="318" font-size="14" fill="#334155">· 工具生态：标准协议接入外部能力</text>
+  <rect x="130" y="344" width="180" height="38" rx="19" fill="#1E56A0"/>
+  <text x="220" y="369" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">能力 · 交智能层</text>
+
+  <!-- deterministic layer -->
+  <rect x="680" y="160" width="460" height="240" rx="10" fill="#F0FDF9" stroke="#0E7C66" stroke-width="1.5"/>
+  <text x="710" y="196" font-size="18" font-weight="700" fill="#0E7C66">确定性层 —— 行为边界，不可绕过</text>
+  <text x="710" y="234" font-size="14" fill="#334155">· 意图转译：毫秒级结构化，不耗模型</text>
+  <text x="710" y="262" font-size="14" fill="#334155">· 计划审查：高危步骤执行前识别</text>
+  <text x="710" y="290" font-size="14" fill="#334155">· 行动裁决：协议层拦截，不靠提示词</text>
+  <text x="710" y="318" font-size="14" fill="#334155">· 审计链：每一步决策可独立重算</text>
+  <rect x="710" y="344" width="200" height="38" rx="19" fill="#0E7C66"/>
+  <text x="810" y="369" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">边界 · 交确定性层</text>
+
+  <!-- middle arrow label -->
+  <text x="619" y="264" text-anchor="middle" font-size="12" fill="#8A94A6">每一次行动</text>
+  <text x="619" y="302" text-anchor="middle" font-size="12" fill="#8A94A6">经边界裁决</text>
+
+  <!-- caption -->
+  <rect x="100" y="436" width="1040" height="56" rx="10" fill="#172033"/>
+  <text x="620" y="471" text-anchor="middle" font-size="16" font-weight="600" fill="#FFFFFF">能力交给智能层，边界交给确定性层，授权归于人 —— 能力与治理不再彼此消耗</text>
+</svg>

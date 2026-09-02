@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 660" font-family="'PingFang SC','Microsoft YaHei','Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="arw3" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1240" height="660" fill="#FFFFFF"/>
+
+  <path d="M620 112 V152" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+  <path d="M620 222 V262" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+  <path d="M620 332 V372" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+  <path d="M620 442 V482" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+
+  <text x="640" y="138" font-size="12" fill="#8A94A6">Precondition for lawful existence</text>
+  <text x="640" y="248" font-size="12" fill="#8A94A6">Behavioral determinism</text>
+  <text x="640" y="358" font-size="12" fill="#8A94A6">Task completability</text>
+  <text x="640" y="468" font-size="12" fill="#8A94A6">Verifiable, accountable</text>
+
+  <!-- ring 1 -->
+  <rect x="270" y="44" width="700" height="68" rx="10" fill="#FFF7ED" stroke="#C77414" stroke-width="1.5"/>
+  <text x="300" y="78" font-size="22" font-weight="700" fill="#C77414">①</text>
+  <text x="346" y="72" font-size="17" font-weight="700" fill="#172033">Professional Ethics as Foundation</text>
+  <text x="346" y="96" font-size="12.5" fill="#5B6475">Compliance first — no qualification without compliance</text>
+
+  <!-- ring 2 -->
+  <rect x="270" y="154" width="700" height="68" rx="10" fill="#EFF6FF" stroke="#1E56A0" stroke-width="1.5"/>
+  <text x="300" y="188" font-size="22" font-weight="700" fill="#1E56A0">②</text>
+  <text x="346" y="182" font-size="17" font-weight="700" fill="#172033">Persistent Rule-Boundary Constraint</text>
+  <text x="346" y="206" font-size="12.5" fill="#5B6475">Boundaries written into the mechanism, not left to good intentions</text>
+
+  <!-- ring 3 -->
+  <rect x="270" y="264" width="700" height="68" rx="10" fill="#F0FDF9" stroke="#0E7C66" stroke-width="1.5"/>
+  <text x="300" y="298" font-size="22" font-weight="700" fill="#0E7C66">③</text>
+  <text x="346" y="292" font-size="17" font-weight="700" fill="#172033">Five-in-one Capability</text>
+  <text x="346" y="316" font-size="12.5" fill="#5B6475">Knowledge · tools · rules · memory · conversation, jointly completing the task</text>
+
+  <!-- ring 4 -->
+  <rect x="270" y="374" width="700" height="68" rx="10" fill="#EEF2FF" stroke="#43549E" stroke-width="1.5"/>
+  <text x="300" y="408" font-size="22" font-weight="700" fill="#43549E">④</text>
+  <text x="346" y="402" font-size="17" font-weight="700" fill="#172033">End-to-end Cryptographic Audit Ledger</text>
+  <text x="346" y="426" font-size="12.5" fill="#5B6475">Every step of tenure leaves independently recomputable evidence</text>
+
+  <!-- ring 5 -->
+  <rect x="270" y="484" width="700" height="68" rx="10" fill="#F5F3FF" stroke="#6D5AA8" stroke-width="1.5"/>
+  <text x="300" y="518" font-size="22" font-weight="700" fill="#6D5AA8">⑤</text>
+  <text x="346" y="512" font-size="17" font-weight="700" fill="#172033">Digital-asset Sedimentation &amp; Distillation</text>
+  <text x="346" y="536" font-size="12.5" fill="#5B6475">Experience becomes organizational asset — capability persists after departure</text>
+
+  <text x="620" y="612" text-anchor="middle" font-size="13" fill="#5B6475">Practice Loop: a five-ring progressive causal chain — the operational definition of "trustworthy"; missing one ring means it does not hold.</text>
+</svg>

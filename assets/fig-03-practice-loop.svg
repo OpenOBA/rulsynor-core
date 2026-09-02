@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 660" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arw3" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#64748B"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1240" height="660" fill="#FFFFFF"/>
+
+  <!-- arrows -->
+  <path d="M620 112 V152" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+  <path d="M620 222 V262" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+  <path d="M620 332 V372" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+  <path d="M620 442 V482" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arw3)"/>
+
+  <!-- outcome labels beside arrows -->
+  <text x="640" y="138" font-size="13" fill="#8A94A6">合法存在前提</text>
+  <text x="640" y="248" font-size="13" fill="#8A94A6">行为确定性</text>
+  <text x="640" y="358" font-size="13" fill="#8A94A6">任务可完成性</text>
+  <text x="640" y="468" font-size="13" fill="#8A94A6">可验证、可追责</text>
+
+  <!-- ring 1 -->
+  <rect x="270" y="44" width="700" height="68" rx="10" fill="#FFF7ED" stroke="#C77414" stroke-width="1.5"/>
+  <text x="300" y="78" font-size="22" font-weight="700" fill="#C77414">①</text>
+  <text x="346" y="72" font-size="18" font-weight="700" fill="#172033">职业道德打底</text>
+  <text x="346" y="96" font-size="13" fill="#5B6475">先合规，再上岗 —— 不合规，无上岗资格</text>
+
+  <!-- ring 2 -->
+  <rect x="270" y="154" width="700" height="68" rx="10" fill="#EFF6FF" stroke="#1E56A0" stroke-width="1.5"/>
+  <text x="300" y="188" font-size="22" font-weight="700" fill="#1E56A0">②</text>
+  <text x="346" y="182" font-size="18" font-weight="700" fill="#172033">规则边界持久约束</text>
+  <text x="346" y="206" font-size="13" fill="#5B6475">行为边界写进机制，不寄望于自觉</text>
+
+  <!-- ring 3 -->
+  <rect x="270" y="264" width="700" height="68" rx="10" fill="#F0FDF9" stroke="#0E7C66" stroke-width="1.5"/>
+  <text x="300" y="298" font-size="22" font-weight="700" fill="#0E7C66">③</text>
+  <text x="346" y="292" font-size="18" font-weight="700" fill="#172033">五位一体能力加持</text>
+  <text x="346" y="316" font-size="13" fill="#5B6475">知识 · 工具 · 规则 · 记忆 · 会话，协同完成任务</text>
+
+  <!-- ring 4 -->
+  <rect x="270" y="374" width="700" height="68" rx="10" fill="#EEF2FF" stroke="#43549E" stroke-width="1.5"/>
+  <text x="300" y="408" font-size="22" font-weight="700" fill="#43549E">④</text>
+  <text x="346" y="402" font-size="18" font-weight="700" fill="#172033">全链路密码学审计账本</text>
+  <text x="346" y="426" font-size="13" fill="#5B6475">每一步履职，留下可独立重算的证据</text>
+
+  <!-- ring 5 -->
+  <rect x="270" y="484" width="700" height="68" rx="10" fill="#F5F3FF" stroke="#6D5AA8" stroke-width="1.5"/>
+  <text x="300" y="518" font-size="22" font-weight="700" fill="#6D5AA8">⑤</text>
+  <text x="346" y="512" font-size="18" font-weight="700" fill="#172033">数字资产沉淀蒸馏</text>
+  <text x="346" y="536" font-size="13" fill="#5B6475">经验成为组织资产 —— 个体离岗，能力留存</text>
+
+  <!-- caption -->
+  <text x="620" y="606" text-anchor="middle" font-size="14" fill="#5B6475">执业闭环：五环递进因果链 —— 这是“可信”的操作性定义，缺一环则可信不成立。</text>
+</svg>
