@@ -35,7 +35,7 @@ export const PROVENANCE = {
   repository: 'https://github.com/OpenOBA/rulsynor-core',
 
   /** License under which this build is distributed */
-  license: 'MIT',
+  license: 'BSL 1.1',
 
   /** Copyright notice — year range covers first publication to build date */
   copyright: 'Copyright © 2026 OpenOBA. All rights reserved.',

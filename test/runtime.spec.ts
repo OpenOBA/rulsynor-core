@@ -192,6 +192,8 @@ describe('runReActLoop — previous_hash 审计链（R3b）', () => {
       evaluationDurationMs: 1,
     });
     expect(second.audit.previous_hash).toBe(first.audit.hash);
-    expect(second.audit.commitment).toContain(first.audit.hash);
+    expect(second.audit.commitment).toEqual(
+      expect.objectContaining({ agent_id: expect.any(String), tool_name: 't', decision: 'ALLOW' }),
+    );
   });
 });

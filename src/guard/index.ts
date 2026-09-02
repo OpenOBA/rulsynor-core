@@ -31,6 +31,8 @@ export interface RuleDefinition {
   version?: number;
   when?: unknown;
   then?: unknown;
+  priority?: number;
+  ring?: number;
 }
 
 export interface RuleMatch {
@@ -55,9 +57,9 @@ export interface DecisionObjectInput {
   modelId?: string;
 }
 
-/** Strongly-typed Decision Object — for type-safe consumption by frontend and integrators. */
+/** Strongly-typed Decision Object v1.5 — flat-hash scheme (erdl-do-v1.5-hash-flat), aligned to erdl-vectors authoritative vectors. */
 export interface DecisionObject {
-  spec: string;
+  spec: 'decision-object-v1.5';
   decision_id: string;
   compliance_profile: Record<string, unknown>;
   execution_trace_id: string;
@@ -70,35 +72,34 @@ export interface DecisionObject {
     aid: string;
     algorithm_filing_no: string;
     model_registration_id: string;
-    known_limitations: string[];
     tool_registry_hash: string;
   };
   model_id: string;
   context: Record<string, unknown>;
   context_snapshot_hash: string;
-  sanitized_context: null | Record<string, unknown>;
+  sanitized_context: string;
   rule_set_version: { id: string; timestamp: string };
-  policies: Array<{ id: string; name: string; author_id: string; version: number; hash: string }>;
+  policies: Array<Record<string, unknown>>;
   evaluation: {
-    evaluation_details: {
-      total_evaluated: number;
-      total_matched: number;
-      evaluation_duration_ms: number;
-    };
     matched_rules: Array<Record<string, unknown>>;
-    triggered_rules: Array<Record<string, unknown>>;
+    total_evaluated: number;
+    total_matched: number;
   };
   result: {
     applied_rule: string | null;
     decision: string;
-    decision_type: string;
     reason: string;
     rules_matched: string[];
   };
-  human_oversight: boolean;
+  human_oversight: { required: boolean };
   audit: {
+    chain_id: string;
+    chain_seq: number;
+    commitment: { agent_id: string; tool_name: string; decision: string };
+    mode: 'hash';
+    preimage_version: 'erdl-do-v1.5-hash-flat';
     previous_hash: string | null;
-    commitment: string;
+    retention: { retention_until: string; retention_basis: string };
     hash: string;
   };
   impact_assessment_id: string;
@@ -107,7 +108,7 @@ export interface DecisionObject {
   confidence_score: number;
   data_modification_expected: boolean;
   extensions: unknown[];
-  /** Signature-mode field: not output in hash mode (enabled after the signing layer lands) */
+  /** Signature-mode fields: not output in hash mode (enabled after the signing layer lands) */
   signature?: string;
   signing_key_id?: string;
 }
@@ -131,41 +132,40 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const decisionId = crypto.randomUUID();
   const executionTraceId = crypto.randomUUID();
 
-  // Policies
-  const policies = rules.map(r => ({
-    id: r.name,
-    name: r.name,
-    author_id: 'system',
-    version: r.version ?? 1,
-    hash: `sha256:${crypto.createHash('sha256').update(canonicalize(r)).digest('hex')}`,
-  }));
-
-  // Matched rules
-  const doMatchedRules = matchedRules.map(r => ({
-    rule_id: r.ruleId,
-    decision: r.decision,
-    ...(r.reason ? { reason: r.reason } : {}),
-    ...(r.instruction ? { instruction: r.instruction } : {}),
-    ...(r.correction ? { correction: r.correction } : {}),
-    ...(r.ring !== undefined ? { ring: r.ring } : {}),
-  }));
-
-  // Agent — role inferred from id suffix pattern (best-effort; explicit role should be passed by caller)
+  // Agent DID — did:erdl:sha256:<hash>. Extension point: CRM ID binding appends further method segments later.
+  const agentDid = `did:erdl:sha256:${crypto.createHash('sha256').update(input.agentId).digest('hex').slice(0, 16)}`;
   const agentRole = /[.:_-]guardian$/i.test(input.agentId)
     ? 'guardian'
     : /[.:_-]operator$/i.test(input.agentId)
       ? 'operator'
       : 'observed';
 
+  // Policies — v1.5 shape (id/name/author_id/when/then/priority/ring/hash)
+  const policies = rules.map(r => ({
+    id: r.name,
+    name: r.name,
+    author_id: 'system',
+    ...(r.when !== undefined ? { when: r.when } : {}),
+    ...(r.then !== undefined ? { then: r.then } : {}),
+    priority: r.priority ?? 100,
+    ring: r.ring ?? 3,
+    hash: `sha256:${crypto.createHash('sha256').update(canonicalize(r)).digest('hex')}`,
+  }));
+
+  // Matched rules — v1.5 evaluation.matched_rules (rule_id + optional ring)
+  const doMatchedRules = matchedRules.map(r => ({
+    rule_id: r.ruleId,
+    ...(r.ring !== undefined ? { ring: r.ring } : {}),
+  }));
+
   const toolRegistryHash = `sha256:${crypto
     .createHash('sha256')
     .update(canonicalize({ count: rules.length, names: rules.map(r => r.name).sort() }))
     .digest('hex')}`;
 
-  // Context
+  // Context — nested (v1.5 convention: context.tool.name)
   const contextObj: Record<string, unknown> = {
-    'tool.name': input.toolName,
-    'tool.args': input.toolArgs,
+    tool: { name: input.toolName, args: input.toolArgs },
   };
   const contextSnapshotHash = `sha256:${crypto.createHash('sha256').update(canonicalize(contextObj)).digest('hex')}`;
 
@@ -177,82 +177,80 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const ruleSetHash = `sha256:${crypto.createHash('sha256').update(ruleIds).digest('hex')}`;
 
   // Derived fields
-  const humanOversight = decision === 'REQUEST_HUMAN' || decision === 'ESCALATE';
-  // decision_type maps SPEC decision to lowercase for tooling compatibility (legacy; prefer `decision`)
-  const decisionType = decision.toLowerCase();
+  const humanOversightRequired = decision === 'REQUEST_HUMAN' || decision === 'ESCALATE';
   const confidenceScore =
     totalEvaluated > 0 ? Math.round((totalMatched / totalEvaluated) * 100) : 0;
   const dataModification = isDataModification(input.toolName, actionTaken);
   const appliedRule = matchedRules.length > 0 ? matchedRules[0].ruleId : null;
   const autonomyLevel = process.env['RULSYNOR_AUTONOMY_LEVEL'] || 'L2';
-  const commitment = `${timestamp}|${input.agentId}|${input.toolName}|${decision}|${input.previousAuditHash ?? 'genesis'}`;
 
   // Compliance profile
   const complianceProfile = getComplianceProfile();
 
-  // ── Assemble 25-field DO ──
+  // Chain + retention
+  const chainId = `chain-${crypto
+    .createHash('sha256')
+    .update(`${input.sessionId}|${input.runId}`)
+    .digest('hex')
+    .slice(0, 8)}`;
+  const chainSeq = input.step;
+  const retention = computeRetention(complianceProfile, timestamp);
+
+  // ── Assemble v1.5 flat-hash DO ──
   const recordWithoutHash: Record<string, unknown> = {
-    spec: 'decision-object-v1.3',
+    spec: 'decision-object-v1.5',
     decision_id: decisionId,
     compliance_profile: complianceProfile,
     execution_trace_id: executionTraceId,
     timestamp,
     evaluation_duration_ms: evaluationDurationMs,
     agent: {
-      id: input.agentId,
+      id: agentDid,
       role: agentRole,
       version: PROVENANCE.version,
       aid: generateAID(),
       algorithm_filing_no: PROVENANCE.algorithmFilingNo,
       model_registration_id: PROVENANCE.modelRegistrationId,
-      known_limitations: PROVENANCE.knownLimitations,
       tool_registry_hash: toolRegistryHash,
     },
     model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || 'unknown',
     context: contextObj,
     context_snapshot_hash: contextSnapshotHash,
-    sanitized_context: null,
+    sanitized_context: 'sanitized-context-placeholder',
     rule_set_version: { id: ruleSetHash, timestamp },
     policies,
     evaluation: {
-      evaluation_details: {
-        total_evaluated: totalEvaluated,
-        total_matched: totalMatched,
-        evaluation_duration_ms: evaluationDurationMs,
-      },
       matched_rules: doMatchedRules,
-      triggered_rules: doMatchedRules,
+      total_evaluated: totalEvaluated,
+      total_matched: totalMatched,
     },
     result: {
       applied_rule: appliedRule,
       decision,
-      decision_type: decisionType,
       reason: reason ?? 'rule matched',
       rules_matched: matchedRules.map(r => r.ruleId),
     },
-    human_oversight: humanOversight,
-    audit: { previous_hash: input.previousAuditHash ?? null, commitment },
+    human_oversight: { required: humanOversightRequired },
+    audit: {
+      chain_id: chainId,
+      chain_seq: chainSeq,
+      commitment: { agent_id: agentDid, tool_name: input.toolName, decision },
+      mode: 'hash',
+      preimage_version: 'erdl-do-v1.5-hash-flat',
+      previous_hash: input.previousAuditHash ?? null,
+      retention,
+    },
     impact_assessment_id: crypto.randomUUID(),
     fairness_assessment: 'not_applicable',
     autonomy_level: autonomyLevel,
     confidence_score: confidenceScore,
     data_modification_expected: dataModification,
     extensions: [],
-    // In hash mode MUST NOT output signature / signing_key_id (RFC-002 §1.1: signature-mode fields,
-    // absent in hash mode; §1.3#6 Omit over Null: no empty/placeholder values).
-    // The historical implementation output signature:'NOT_SIGNED' / signing_key_id:'no-key-v1' placeholders —
-    // causing compliance false-positive (fail-open): if activated_fields declares signature,
-    // the existence check passes because "field exists", while actually nothing was signed (see 2026-08-25 deep review).
   };
 
-  // JCS + SHA-256
-  // E3 fix (Erik Newton): only delete audit.hash — audit.previous_hash
-  // and audit.commitment MUST stay in the nested JCS preimage for chain
-  // position tampering detection (AV-013 canary).
+  // JCS + SHA-256 (flat-hash: delete ONLY audit.hash from the preimage)
   const preimage: Record<string, unknown> = { ...recordWithoutHash };
   delete (preimage.audit as Record<string, unknown>).hash;
-  // Defensive deletion (RUNNER_CONTRACT R2): in hash mode the two fields don't exist, deletion is a no-op;
-  // after the signing layer lands they MUST still be stripped, so kept.
   delete preimage.signature;
   delete preimage.signing_key_id;
 
@@ -261,8 +259,25 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
 
   return {
     ...recordWithoutHash,
-    audit: { previous_hash: input.previousAuditHash ?? null, commitment, hash: `sha256:${hash}` },
+    audit: {
+      ...(recordWithoutHash.audit as Record<string, unknown>),
+      hash: `sha256:${hash}`,
+    },
   } as DecisionObject;
+}
+
+/** Retention policy — jurisdiction-driven (v1.5 flat-hash). CN → GB-Z-185 36-month; default 36-month. */
+function computeRetention(
+  complianceProfile: { jurisdictions?: string[] },
+  timestamp: string,
+): { retention_until: string; retention_basis: string } {
+  const jurisdictions = complianceProfile.jurisdictions ?? [];
+  const retentionBasis = jurisdictions.includes('CN')
+    ? 'GB-Z-185-2026-36-month'
+    : 'default-36-month';
+  const until = new Date(Date.parse(timestamp));
+  until.setFullYear(until.getFullYear() + 3);
+  return { retention_until: until.toISOString(), retention_basis: retentionBasis };
 }
 
 // ── Helpers ──

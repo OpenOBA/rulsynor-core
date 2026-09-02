@@ -58,7 +58,7 @@ describe('@openoba/rulsynor-core', () => {
       const c = require('crypto');
       const clone = JSON.parse(JSON.stringify(do1));
       const stored = (clone as any).audit.hash;
-      // Correct preimage per ERDL Decision Object v1.3 (Erik Newton E1/E3 fix):
+      // Correct preimage per ERDL Decision Object v1.5 flat-hash (delete audit.hash only):
       //   delete audit.hash (NOT entire audit object)
       //   delete signature, signing_key_id
       //   audit.previous_hash + audit.commitment stay nested → chain integrity preserved
@@ -69,7 +69,7 @@ describe('@openoba/rulsynor-core', () => {
         stored,
       );
     });
-    it('agent 8 fields', () => expect(Object.keys((base() as any).agent)).toHaveLength(8));
+    it('agent 7 fields', () => expect(Object.keys((base() as any).agent)).toHaveLength(7));
     it('agent.aid OID prefix', () =>
       expect((base() as any).agent.aid).toMatch(/^1\.2\.156\.3088\./));
     it('extensions []', () => expect((base() as any).extensions).toEqual([]));
@@ -157,7 +157,7 @@ describe('@openoba/rulsynor-core', () => {
   });
 
   describe('Provenance', () => {
-    it('has license', () => expect(PROVENANCE.license).toBe('MIT'));
+    it('has license', () => expect(PROVENANCE.license).toBe('BSL 1.1'));
   });
 
   describe('Guidance', () => {
