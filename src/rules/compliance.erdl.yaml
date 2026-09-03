@@ -146,12 +146,12 @@ category: writing
 severity: none
 ring: 3
 priority: 100
-description: "Always allow read-only tool operations (read, search, list)"
+description: "Always allow read-only tool operations (read_file, list_dir, read, search, list)"
 when:
   conditions:
     - field: "tool.name"
       operator: in
-      value: ["read", "search", "list", "get", "find", "query", "ls"]
+      value: ["read_file", "list_dir", "read", "search", "list", "get", "find", "query", "ls"]
 then:
   decision: ALLOW
   instruction: "Read-only operation allowed."

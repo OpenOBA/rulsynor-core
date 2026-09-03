@@ -51,6 +51,16 @@ describe('preset rules under canonical context shape', () => {
   it('ALLOW safe read', () => {
     expect(decide('read_file', { path: 'README.md' })).toBe('ALLOW');
   });
+
+  it('read_file / list_dir match CNV-002 read-only allow-list', () => {
+    const result = evaluator.evaluate(rules, {
+      tool: { name: 'read_file', args: { path: 'README.md' } },
+      sessionId: 'x',
+      agentId: 'x',
+    });
+    expect(result.decision).toBe('ALLOW');
+    expect(result.matchedRules.some(m => m.ruleId.includes('CNV-002'))).toBe(true);
+  });
 });
 
 describe('preset context.* rules (business-context injection)', () => {
@@ -67,6 +77,12 @@ describe('preset context.* rules (business-context injection)', () => {
   it('REQUEST_HUMAN large financial transaction (CMP-003)', () => {
     expect(
       decide('exec', { command: 'ls' }, { amount: 9000, transaction_type: 'financial' }),
+    ).toBe('REQUEST_HUMAN');
+  });
+
+  it('REQUEST_HUMAN GDPR delete (CMP-002)', () => {
+    expect(
+      decide('exec', { command: 'ls' }, { operation: 'delete', gdpr_relevant: true }),
     ).toBe('REQUEST_HUMAN');
   });
 
