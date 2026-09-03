@@ -339,7 +339,8 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       // agent as tool feedback; the agent re-issues the call; the guard re-adjudicates each
       // attempt deterministically. After 3 correction rounds without resolution the runtime
       // escalates to a human (REQUEST_HUMAN).
-      if (evalResult.decision === 'CORRECT') {
+      // An explicit REQUEST_HUMAN signal in the agent's reply takes precedence over the loop.
+      if (evalResult.decision === 'CORRECT' && !rhDetected) {
         const correction = evalResult.primaryCorrection || reason;
         const primaryCorrectRule = (evalResult.matchedRules ?? []).find(
           m => m.decision === 'CORRECT',
@@ -400,22 +401,27 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         continue;
       }
 
-      // Any non-CORRECT verdict ends an active correction sequence. Run the state machine
-      // for the terminal transition (ALLOW → correct_resolved; DENY/EMERGENCY_HALT →
-      // correct_escalated = leave the loop; the terminal disposition still follows the
+      // Any non-CORRECT verdict ends an active correction sequence. The state machine only
+      // models the verdicts it knows: ALLOW → correct_resolved; DENY/EMERGENCY_HALT →
+      // correct_escalated (= leave the loop; the terminal disposition still follows the
       // verdict itself — a hard DENY stays blocked, it is not converted into a human ask).
+      // Other verdicts (NOTIFY/GUIDE/DEFER/…) end the sequence silently — the DO chain
+      // already records exactly what happened.
       if (correctRound > 0) {
-        const resolution = advanceCorrectLoop(
-          {
-            ruleId: correctRuleId,
-            originalToolCall: correctOriginalCall ?? { name: tc.name, args: tc.arguments },
-            correction: '',
-            round: correctRound,
-            state: correctState ?? 'correct_round_1',
-          },
-          evalResult.decision,
-        );
-        opts.onCorrectLoop?.(resolution.state, correctRound);
+        const d = evalResult.decision;
+        if (d === 'ALLOW' || d === 'DENY' || d === 'EMERGENCY_HALT') {
+          const resolution = advanceCorrectLoop(
+            {
+              ruleId: correctRuleId,
+              originalToolCall: correctOriginalCall ?? { name: tc.name, args: tc.arguments },
+              correction: '',
+              round: correctRound,
+              state: correctState ?? 'correct_round_1',
+            },
+            d,
+          );
+          opts.onCorrectLoop?.(resolution.state, correctRound);
+        }
         correctRound = 0;
         correctState = null;
         correctRuleId = '';
@@ -490,8 +496,13 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
     finalResponse = 'Max steps reached without completion.';
   }
 
+  // Exiting with an unresolved correction sequence (agent stopped re-issuing instead of
+  // resolving it) must not read as ALLOW — report CORRECT so the summary matches the audit
+  // chain (which already holds every CORRECT DO).
+  const endedMidCorrection = correctRound > 0;
+
   return {
-    decision: step >= maxSteps ? 'MAX_STEPS' : 'ALLOW',
+    decision: step >= maxSteps ? 'MAX_STEPS' : endedMidCorrection ? 'CORRECT' : 'ALLOW',
     thought: '',
     steps: step,
     auditHashes,

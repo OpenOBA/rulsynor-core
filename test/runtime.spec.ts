@@ -243,6 +243,90 @@ describe('runReActLoop — CORRECT 3 轮纠正循环（原始设计 D21）', () 
       'correct_escalated',
     ]);
   });
+
+  it('CORRECT 时 Agent 明示请求人工 → 人工信号优先，不进纠正循环', async () => {
+    const executed: unknown[][] = [];
+    const loopStates: string[] = [];
+    const compiledRules = [makeArgsRule('asker', '/tmp/x', 'CORRECT', 'fix it')];
+    const result = await runReActLoop({
+      llm: async () => ({
+        content: 'REQUEST_HUMAN: need approval before touching this path',
+        toolCalls: [{ name: 'asker', arguments: { path: '/tmp/x' } }],
+      }),
+      evaluator: new Evaluator(),
+      compiledRules,
+      rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
+      tools: { asker: makeTool(executed) },
+      userMessage: 'do it',
+      agentId: 'test-agent',
+      sessionId: 'test-session',
+      planFirst: false,
+      onCorrectLoop: state => loopStates.push(state),
+    });
+    expect(executed).toHaveLength(0);
+    expect(result.decision).toBe('REQUEST_HUMAN');
+    expect(loopStates).toEqual([]); // 循环从未启动
+    expect(result.auditHashes).toHaveLength(1); // 只落了这一次裁决的 DO
+  });
+
+  it('CORRECT 后下一个调用命中 NOTIFY → 循环静默结束，状态报告不说谎', async () => {
+    const executed: unknown[][] = [];
+    const loopStates: string[] = [];
+    const compiledRules = [
+      makeArgsRule('fixer', '/tmp/bad', 'CORRECT', 'use /tmp/safe'),
+      { ...makeArgsRule('notifier', '/tmp/x', 'NOTIFY'), id: 'RTN-notifier' },
+    ];
+    let call = 0;
+    const result = await runReActLoop({
+      llm: async () => {
+        call++;
+        if (call === 1)
+          return { content: 'try', toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/bad' } }] };
+        if (call === 2)
+          return { content: 'switch', toolCalls: [{ name: 'notifier', arguments: { path: '/tmp/x' } }] };
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules,
+      rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
+      tools: { fixer: makeTool(executed), notifier: makeTool(executed) },
+      userMessage: 'do it',
+      agentId: 'test-agent',
+      sessionId: 'test-session',
+      planFirst: false,
+      onCorrectLoop: state => loopStates.push(state),
+    });
+    expect(result.decision).toBe('ALLOW');
+    expect(executed).toHaveLength(1); // NOTIFY 照常规执行（记录不中断）
+    // 只报告过第 1 轮；序列因 NOTIFY 静默结束，不谎报「进入第 2 轮」
+    expect(loopStates).toEqual(['correct_round_1']);
+  });
+
+  it('CORRECT 后 Agent 放弃重试（不再发起调用）→ 汇总报 CORRECT 而非 ALLOW', async () => {
+    const executed: unknown[][] = [];
+    const compiledRules = [makeArgsRule('giver', '/tmp/bad', 'CORRECT', 'fix it')];
+    let call = 0;
+    const result = await runReActLoop({
+      llm: async () => {
+        call++;
+        if (call === 1)
+          return { content: 'try', toolCalls: [{ name: 'giver', arguments: { path: '/tmp/bad' } }] };
+        return { content: 'I give up' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules,
+      rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
+      tools: { giver: makeTool(executed) },
+      userMessage: 'do it',
+      agentId: 'test-agent',
+      sessionId: 'test-session',
+      planFirst: false,
+    });
+    expect(executed).toHaveLength(0);
+    expect(result.decision).toBe('CORRECT'); // 未解决的纠正不得伪装成 ALLOW
+    expect(result.finalResponse).toBe('I give up');
+    expect(result.auditHashes).toHaveLength(1);
+  });
 });
 
 describe('runReActLoop — previous_hash 审计链（R3b）', () => {
