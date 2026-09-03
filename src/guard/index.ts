@@ -217,7 +217,10 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || 'unknown',
     context: contextObj,
     context_snapshot_hash: contextSnapshotHash,
-    sanitized_context: 'sanitized-context-placeholder',
+    // PII sanitization not implemented yet — empty string (no fake placeholder).
+    // The DO context is already minimal (`tool.name`/`tool.args`); PII redaction
+    // of `tool.args` is a planned compliance-layer feature.
+    sanitized_context: '',
     rule_set_version: { id: ruleSetHash, timestamp },
     policies,
     evaluation: {

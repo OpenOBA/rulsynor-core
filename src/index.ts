@@ -89,7 +89,6 @@ export {
   buildDoPayload,
   assignAbArm,
   trustLabel,
-  parseToolCalls,
 } from './preflight/index.js';
 export type {
   CorrectLoopState,
@@ -98,7 +97,6 @@ export type {
   DoPayload,
   AbArm,
   ToolEnhancement,
-  ToolEngineResult,
 } from './preflight/index.js';
 export { extractNavigationGuide } from './guidance/index.js';
 export type { NavigationGuide, GuidanceRuleMatch, GuidanceOptions } from './guidance/index.js';

@@ -1,5 +1,4 @@
-// Comprehensive stub types for @openoba/rulsynor-core/preflight/tool-engine
-// Real implementation: atcf/rulsynor-core/src/preflight/tool-engine.ts
+// ToolEnhancement type definitions (shared with the rulsynor backend tool registry).
 
 // Enhancement subtypes
 export interface ToolUsageContext {
@@ -60,16 +59,4 @@ export interface ToolEnhancement {
   businessPreconditions?: ToolBusinessPreconditions;
   lifecycle?: ToolLifecycle;
   businessRules?: ToolBusinessRules;
-}
-
-export interface ToolEngineResult {
-  toolCalls: Array<{ name: string; arguments: Record<string, unknown> }>;
-}
-
-/**
- * @deprecated Stub — always returns empty toolCalls.
- * Full implementation planned for v1.1 (see ROADMAP.md § parseToolCalls).
- */
-export function parseToolCalls(_content: string): ToolEngineResult {
-  return { toolCalls: [] };
 }

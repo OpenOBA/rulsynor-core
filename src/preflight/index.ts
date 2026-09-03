@@ -12,10 +12,8 @@ export type {
   AbArm,
 } from './guard-integration.js';
 export { trustLabel } from './rag-formatter.js';
-export { parseToolCalls } from './tool-engine.js';
 export type {
   ToolEnhancement,
-  ToolEngineResult,
   ToolUsageContext,
   ToolPreconditions,
   ToolInputExample,
