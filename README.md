@@ -1,9 +1,13 @@
 # @openoba/rulsynor-core
 
-> **LLM vendors deliver exceptional intelligence. We deliver accountability.**
-> **Last updated**: 2026-09-03 — quickstart field path aligned to canonical `tool.name`; Node requirement corrected to ≥22.13.0; preset rule count 30 → 34 (cross-tool security rules split per tool + `tool.name` constraint).
+> **Rules Decide Everything.**
+> **Last updated**: 2026-09-03 — slogan 「规则决定一切 / Rules Decide Everything」; whitepaper positioning integrated.
 
-**rulsynor-core** is ethics-first Harness Engineering: rules as the reins, accountability as the baseline — safely channeling AI Agent capabilities while ensuring every autonomous action is traceable, auditable, and verifiable.
+**rulsynor-core** is the deterministic core that makes it true: **rules — not prompts — decide every action an agent takes.**
+
+LLMs deliver intelligence, but intelligence alone has no direction and no accountability — the capability is real, yet the trusted capability has no one responsible (see the [Professionalized AI Employee whitepaper](./pae-whitepaper-v1.0-en.md)). rulsynor-core closes that gap: before any tool runs, the ERDL rule engine adjudicates it (allow / deny / correct / escalate / request-human); after every verdict, a tamper-evident **Decision Object** is sealed — JCS + SHA-256, independently re-computable and byte-verifiable.
+
+**The model reasons. The rules decide.**
 
 ```bash
 npm install @openoba/rulsynor-core
@@ -109,7 +113,7 @@ Following HR best practices: **Hire → Train → Certify → Badge → Deploy �
 **It doesn't handcuff your Agent. It gives it a rulebook and says "go build."**
 
 - **Before execution**: Guard evaluates every tool call against rules you define — ring-sorted, sub-millisecond
-- **When mistakes happen**: Navigation Guide tells the LLM why, what to do instead, and auto-corrects fixable errors (up to 3 rounds)
+- **When mistakes happen**: Navigation Guide tells the LLM why, what to do instead, and returns correction guidance for fixable errors (CORRECT verdict — the agent re-issues the corrected call)
 - **After every decision**: A 25-field Decision Object is cryptographically sealed — JCS-canonicalized, SHA-256 hashed, chain-linked
 - **For compliance**: Jurisdiction-aware fields auto-activate (EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI)
 - **For trust**: Every employee has a badge (AID). Every Decision Object is independently verifiable with no SDK.
@@ -247,7 +251,7 @@ then:
 |------|------|------|
 | `ALLOW` | Go ahead, logged | Safe operations, batch jobs, known patterns |
 | `DENY` | Stop. Here's why. Here's how to fix it. | Dangerous operations with clear alternatives |
-| `CORRECT` | Auto-fix and retry. Up to 3 rounds. | Wrong path, wrong format, fixable mistakes |
+| `CORRECT` | Return correction guidance; the agent re-issues the corrected call | Wrong path, wrong format, fixable mistakes |
 | `NOTIFY` | Log and continue — no interruption | Anomaly detected, threshold alert, compliance event |
 | `QUARANTINE` | Run in sandbox, flag for review | Suspicious but possibly legitimate |
 | `REQUEST_HUMAN` | Ask a person before proceeding | Production DB, GDPR delete, >$5K transactions |
@@ -337,9 +341,8 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
       return execute(toolName, args);
 
     case 'CORRECT':
-      // 🔧 Auto-correct and retry (3 rounds max)
-      const corrected = applyGuidance(toolName, args, result);
-      return execute(corrected.toolName, corrected.args);
+      // 🔧 Fail-close — return correction guidance; the agent re-issues the corrected call
+      return { decision: 'CORRECT', correction: result.primaryCorrection };
 
     case 'REQUEST_HUMAN':
       // 👤 Escalate — show the reason + alternative
@@ -383,7 +386,7 @@ const guide = extractNavigationGuide({
 
 Pass `guide.corrections` and `guide.alternatives` back to the LLM in the next `assistant` message. The Agent adapts and tries the right way.
 
-**CORRECT loop**: When `decision === 'CORRECT'`, the engine's `advanceCorrectLoop()` auto-applies the correction, increments the retry counter, and re-evaluates. After 3 successful rounds, the task continues. After 3 failures, the task escalates.
+**CORRECT (fail-close)**: In the built-in runtime, a `CORRECT` verdict fails closed — it returns the correction guidance and the agent re-issues the corrected call. A standalone `advanceCorrectLoop()` helper (3-round auto-retry state machine) is also exported for hosts that want automatic retry:
 
 ```typescript
 import { advanceCorrectLoop } from '@openoba/rulsynor-core/preflight';
@@ -556,7 +559,7 @@ registry.register({
 │  │  34 preset + your rules  │           │
 │  │  30 operators / 34 nodes │           │
 │  │  within / rate trackers  │           │
-│  │  CORRECT auto-retry      │           │
+│  │  CORRECT correction     │           │
 │  │  Guidance for LLM        │           │
 │  └────────┬─────────────────┘           │
 │           │                             │
@@ -675,7 +678,7 @@ The cross-implementation test vector set lives in its own authoritative reposito
 
 BUSL-1.1 © 2026-present OpenOBA ([Shenzhen Miaojing Technology Co., Ltd.](https://openoba.com))
 
-> "LLM vendors deliver exceptional intelligence. We deliver accountability."
+> "Rules Decide Everything."
 >
 > Train your Agent. Verify every decision.
 
