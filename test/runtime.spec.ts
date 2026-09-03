@@ -3,6 +3,9 @@
  *
  * 修复前：ESCALATE/CORRECT/DEFER/DELEGATE/WORKFLOW 落入 fall-through 照常执行工具（越权执行）；
  * 且每步 DO 未传 previousAuditHash，审计链每条都是 genesis。
+ *
+ * CORRECT 现为原始设计的 3 轮纠正循环（D21）：纠偏指引回注 Agent 重新发起，每次重试重新裁决，
+ * 3 轮未解决 → 升级人工。任何情况下都不执行原始参数（不复活 4c6f653 修的 fail-open 洞）。
  */
 import { runReActLoop, type LLMResponse } from '../src/runtime.js';
 import { Evaluator } from '../src/engine/evaluator.js';
@@ -78,6 +81,33 @@ const baseOpts = (toolName: string, decision: string, correction?: string) => {
   };
 };
 
+/** Rule matching tool.name + tool.args.path (AND) — for CORRECT-loop retry scenarios. */
+function makeArgsRule(
+  toolName: string,
+  path: string,
+  decision: string,
+  correction?: string,
+): RuleDefinition {
+  return {
+    id: `RTA-${decision}-${path.replace(/[^a-z0-9]/gi, '')}`,
+    name: `Rule ${decision} ${path}`,
+    description: 'correct loop test',
+    category: 'custom',
+    conditions: [
+      { kind: 'context_matches', field: 'tool.name', operator: 'eq', value: toolName },
+      { kind: 'context_matches', field: 'tool.args.path', operator: 'eq', value: path },
+    ],
+    conditionLogic: 'AND',
+    action: {
+      decision: decision as RuleDefinition['action']['decision'],
+      reason: `${decision} triggered`,
+      correction,
+    },
+    priority: 1,
+    enabled: true,
+  };
+}
+
 describe('runReActLoop — 决策穷尽分发（R3a）', () => {
   it('ALLOW → 执行工具', async () => {
     const { executed, opts } = baseOpts('safe_tool', 'ALLOW');
@@ -115,19 +145,103 @@ describe('runReActLoop — 决策穷尽分发（R3a）', () => {
     expect(result.decision).toBe('DELEGATE');
   });
 
-  it('CORRECT 带纠偏 → fail-close 不执行，返回纠偏文本', async () => {
-    const { executed, opts } = baseOpts('fixable', 'CORRECT', 'use /tmp/safe instead');
-    const result = await runReActLoop(opts);
+  it('CORRECT 后重试命中 DENY → 按 DENY 封锁（退出循环，不转人工）', async () => {
+    const executed: unknown[][] = [];
+    const compiledRules = [makeArgsRule('drill', '/tmp/bad', 'CORRECT'), makeArgsRule('drill', '/tmp/evil', 'DENY')];
+    let call = 0;
+    const result = await runReActLoop({
+      llm: async () => {
+        call++;
+        if (call === 1)
+          return { content: 'try', toolCalls: [{ name: 'drill', arguments: { path: '/tmp/bad' } }] };
+        if (call === 2)
+          return { content: 'retry', toolCalls: [{ name: 'drill', arguments: { path: '/tmp/evil' } }] };
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules,
+      rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
+      tools: { drill: makeTool(executed) },
+      userMessage: 'do it',
+      agentId: 'test-agent',
+      sessionId: 'test-session',
+      planFirst: false,
+    });
     expect(executed).toHaveLength(0);
-    expect(result.decision).toBe('CORRECT');
-    expect(result.finalResponse).toContain('use /tmp/safe instead');
+    expect(result.decision).toBe('DENY');
+    expect(result.finalResponse).toContain('blocked');
+  });
+});
+
+describe('runReActLoop — CORRECT 3 轮纠正循环（原始设计 D21）', () => {
+  it('CORRECT → 纠偏回注 → 重试 ALLOW → 执行纠正后的参数', async () => {
+    const executed: unknown[][] = [];
+    const loopStates: string[] = [];
+    const compiledRules = [makeArgsRule('fixer', '/tmp/bad', 'CORRECT', 'use /tmp/safe instead')];
+    let call = 0;
+    const result = await runReActLoop({
+      llm: async (msgs: Array<{ role: string; content: string }>) => {
+        call++;
+        if (call === 1) {
+          return { content: 'try', toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/bad' } }] };
+        }
+        if (call === 2) {
+          // The correction feedback must reach the model as a tool message before the retry.
+          const last = msgs[msgs.length - 1];
+          expect(last.role).toBe('tool');
+          expect(last.content).toContain('use /tmp/safe instead');
+          return { content: 'retry', toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/safe' } }] };
+        }
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules,
+      rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
+      tools: { fixer: makeTool(executed) },
+      userMessage: 'do it',
+      agentId: 'test-agent',
+      sessionId: 'test-session',
+      planFirst: false,
+      onCorrectLoop: state => loopStates.push(state),
+    });
+    // 原始参数永不执行；只执行纠正后的调用。
+    expect(executed).toHaveLength(1);
+    expect(executed[0][0]).toEqual({ path: '/tmp/safe' });
+    expect(result.decision).toBe('ALLOW');
+    // 状态机轨迹：首轮纠正 → ALLOW 解决
+    expect(loopStates).toEqual(['correct_round_1', 'correct_resolved']);
+    // 两次裁决各落一条 DO（CORRECT + ALLOW）
+    expect(result.auditHashes).toHaveLength(2);
   });
 
-  it('CORRECT 无纠偏 → fail-close 不执行', async () => {
-    const { executed, opts } = baseOpts('fixable', 'CORRECT');
-    const result = await runReActLoop(opts);
+  it('CORRECT ×4 冥顽不改 → 3 轮后升级人工（不执行）', async () => {
+    const executed: unknown[][] = [];
+    const loopStates: string[] = [];
+    const compiledRules = [makeArgsRule('stubborn', '/tmp/x', 'CORRECT', 'fix the format')];
+    const result = await runReActLoop({
+      llm: makeLLM('stubborn', 10),
+      evaluator: new Evaluator(),
+      compiledRules,
+      rules: compiledRules.map(r => ({ name: r.name, version: 1 })),
+      tools: { stubborn: makeTool(executed) },
+      userMessage: 'do it',
+      agentId: 'test-agent',
+      sessionId: 'test-session',
+      planFirst: false,
+      onCorrectLoop: state => loopStates.push(state),
+    });
     expect(executed).toHaveLength(0);
-    expect(result.decision).toBe('CORRECT');
+    expect(result.decision).toBe('REQUEST_HUMAN');
+    expect(result.finalResponse).toContain('exhausted');
+    expect(result.finalResponse).toContain('fix the format');
+    // 原始调用 + 3 轮重试 = 4 次 CORRECT 裁决，各落一条 DO 审计链
+    expect(result.auditHashes).toHaveLength(4);
+    expect(loopStates).toEqual([
+      'correct_round_1',
+      'correct_round_2',
+      'correct_round_3',
+      'correct_escalated',
+    ]);
   });
 });
 

@@ -23,7 +23,12 @@ import type { DecisionObject } from './guard/index.js';
 import { PlanParser } from './engine/plan-parser.js';
 import { resolveDomain, formatRagContext } from './knowledge/index.js';
 import type { ScoredFragment } from './knowledge/types.js';
-import { parseRequestHumanSignal, buildDoPayload } from './preflight/index.js';
+import {
+  parseRequestHumanSignal,
+  buildDoPayload,
+  advanceCorrectLoop,
+} from './preflight/index.js';
+import type { CorrectLoopState } from './preflight/index.js';
 
 export interface DecisionObjectMeta {
   sessionId: string;
@@ -69,6 +74,11 @@ export interface RuntimeOptions {
   planFirst?: boolean;
   /** 7-step progress callback (①理解意图 → ⑦审计落链) */
   onStep?: (step: number, detail: string) => void;
+  /**
+   * CORRECT loop progress (original design D21): fired on every state transition of the
+   * 3-round correction state machine — round start, round advance, resolution, escalation.
+   */
+  onCorrectLoop?: (state: CorrectLoopState, round: number) => void;
   /**
    * Decision Object hook (⑦ 审计落链): called for every guarded tool call with the
    * fully-built, tamper-evident DO plus loop metadata. CORE uses it for
@@ -209,6 +219,17 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
   let finalResponse = '';
   let step = 0;
 
+  // ── CORRECT loop state (original design D21 — Henry Plan A) ──
+  // A CORRECT verdict starts a bounded retry sequence: the correction guidance is fed back
+  // to the agent, which re-issues the call; every retry gets a fresh deterministic verdict.
+  // Max 3 correction rounds → then escalate to human (REQUEST_HUMAN). The state machine is
+  // advanceCorrectLoop() (preflight/guard-integration). The ORIGINAL args are never executed
+  // (fail-open hole fixed in 4c6f653) — only a fresh ALLOW executes the corrected call.
+  let correctRound = 0; // 0 = no active sequence; otherwise current round (1..3)
+  let correctState: CorrectLoopState | null = null;
+  let correctRuleId = '';
+  let correctOriginalCall: { name: string; args: Record<string, unknown> } | null = null;
+
   for (step = 0; step < maxSteps; step++) {
     // ── ④ 推理决策 ──
     onStep?.(4, `reasoning (ReAct round ${step + 1})`);
@@ -254,11 +275,6 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       const reason = evalResult.primaryReason || 'guard rule matched';
       onStep?.(5, `guard: ${evalResult.decision}`);
 
-      // CORRECT: fail-close — the correction is a textual instruction for the agent,
-      // not a mechanical argument rewrite. The tool call is NOT executed; the agent
-      // must re-issue the call with corrected arguments. (Previously the runtime
-      // appended a `__correction` field and still executed the ORIGINAL args — a
-      // fail-open hole that let e.g. /etc writes through.)
       const rhDetected = parseRequestHumanSignal(response.content).detected;
       const shouldExecute =
         (evalResult.decision === 'ALLOW' ||
@@ -318,6 +334,94 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         `audit: ${auditHash.slice(0, 16)}…${doPayload.dataRefs?.length ? ` (${doPayload.dataRefs.length} knowledge refs)` : ''}`,
       );
 
+      // ── CORRECT loop (original design D21) ──
+      // The tool call is NOT executed on CORRECT. The correction guidance goes back to the
+      // agent as tool feedback; the agent re-issues the call; the guard re-adjudicates each
+      // attempt deterministically. After 3 correction rounds without resolution the runtime
+      // escalates to a human (REQUEST_HUMAN).
+      if (evalResult.decision === 'CORRECT') {
+        const correction = evalResult.primaryCorrection || reason;
+        const primaryCorrectRule = (evalResult.matchedRules ?? []).find(
+          m => m.decision === 'CORRECT',
+        );
+
+        let loopState: CorrectLoopState;
+        if (correctRound === 0) {
+          // Sequence start: first correction round.
+          correctRuleId = primaryCorrectRule?.ruleId ?? 'unknown';
+          correctOriginalCall = { name: tc.name, args: tc.arguments };
+          correctState = 'correct_round_1';
+          correctRound = 1;
+          loopState = correctState;
+        } else {
+          const loopOutcome = advanceCorrectLoop(
+            {
+              ruleId: correctRuleId,
+              originalToolCall: correctOriginalCall ?? { name: tc.name, args: tc.arguments },
+              correction,
+              round: correctRound,
+              state: correctState ?? 'correct_round_1',
+            },
+            'CORRECT',
+          );
+
+          if (loopOutcome.escalate) {
+            // 3 rounds exhausted → escalate to human (original design: 3 轮失败 → 升级人工).
+            opts.onCorrectLoop?.('correct_escalated', correctRound);
+            finalResponse = `Correction loop exhausted after ${correctRound} rounds — escalated to human operator: ${correction}`;
+            return {
+              decision: 'REQUEST_HUMAN',
+              thought: response.content,
+              steps: step + 1,
+              auditHashes,
+              finalResponse,
+            };
+          }
+
+          correctRound += 1;
+          correctState = loopOutcome.state;
+          loopState = correctState;
+        }
+
+        opts.onCorrectLoop?.(loopState, correctRound);
+        onStep?.(5, `guard: CORRECT (round ${correctRound}/3)`);
+
+        // Feedback as tool result keeps the function-calling round-trip intact:
+        // the assistant tool_calls message was already pushed, so this tool message
+        // answers tc.id and the next LLM round sees the correction guidance.
+        messages.push({
+          role: 'tool',
+          tool_call_id: tc.id,
+          content:
+            `Guard verdict: CORRECT (round ${correctRound}/3). ` +
+            `Correction: ${correction} ` +
+            `Re-issue the tool call with corrected arguments.`,
+        });
+        continue;
+      }
+
+      // Any non-CORRECT verdict ends an active correction sequence. Run the state machine
+      // for the terminal transition (ALLOW → correct_resolved; DENY/EMERGENCY_HALT →
+      // correct_escalated = leave the loop; the terminal disposition still follows the
+      // verdict itself — a hard DENY stays blocked, it is not converted into a human ask).
+      if (correctRound > 0) {
+        const resolution = advanceCorrectLoop(
+          {
+            ruleId: correctRuleId,
+            originalToolCall: correctOriginalCall ?? { name: tc.name, args: tc.arguments },
+            correction: '',
+            round: correctRound,
+            state: correctState ?? 'correct_round_1',
+          },
+          evalResult.decision,
+        );
+        opts.onCorrectLoop?.(resolution.state, correctRound);
+        correctRound = 0;
+        correctState = null;
+        correctRuleId = '';
+        correctOriginalCall = null;
+      }
+
       // R3 fix: exhaustive decision dispatch — any non-allow decision does not execute the tool (incl. ESCALATE/DEFER/DELEGATE/WORKFLOW and unknown decisions)
       if (!shouldExecute) {
         const dispatchDecision = rhDetected ? 'REQUEST_HUMAN' : evalResult.decision;
@@ -338,9 +442,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
           case 'ROLLBACK':
             finalResponse = `Rollback triggered: ${reason}`;
             break;
-          case 'CORRECT':
-            finalResponse = `Correction required: ${evalResult.primaryCorrection || reason}`;
-            break;
+          // CORRECT is fully handled by the correction loop above (never reaches this dispatch).
           case 'DEFER':
             finalResponse = `Action deferred: ${reason}`;
             break;
