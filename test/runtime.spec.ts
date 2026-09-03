@@ -115,14 +115,12 @@ describe('runReActLoop — 决策穷尽分发（R3a）', () => {
     expect(result.decision).toBe('DELEGATE');
   });
 
-  it('CORRECT 带纠偏 → 执行且参数携带纠偏内容', async () => {
+  it('CORRECT 带纠偏 → fail-close 不执行，返回纠偏文本', async () => {
     const { executed, opts } = baseOpts('fixable', 'CORRECT', 'use /tmp/safe instead');
     const result = await runReActLoop(opts);
-    expect(executed).toHaveLength(1);
-    expect((executed[0][0] as Record<string, unknown>)['__correction']).toBe(
-      'use /tmp/safe instead',
-    );
-    expect(result.decision).toBe('ALLOW');
+    expect(executed).toHaveLength(0);
+    expect(result.decision).toBe('CORRECT');
+    expect(result.finalResponse).toContain('use /tmp/safe instead');
   });
 
   it('CORRECT 无纠偏 → fail-close 不执行', async () => {

@@ -254,23 +254,16 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       const reason = evalResult.primaryReason || 'guard rule matched';
       onStep?.(5, `guard: ${evalResult.decision}`);
 
-      // CORRECT single-pass: apply correction then execute (no correction content → fail-close)
-      let effectiveArgs = tc.arguments;
-      const canApplyCorrection =
-        evalResult.decision === 'CORRECT' &&
-        typeof evalResult.primaryCorrection === 'string' &&
-        evalResult.primaryCorrection.length > 0;
-      if (canApplyCorrection) {
-        effectiveArgs = { ...tc.arguments, __correction: evalResult.primaryCorrection };
-      }
-
-      // Agent-initiated REQUEST_HUMAN (explicit markers in the reply) — overrides execute
+      // CORRECT: fail-close — the correction is a textual instruction for the agent,
+      // not a mechanical argument rewrite. The tool call is NOT executed; the agent
+      // must re-issue the call with corrected arguments. (Previously the runtime
+      // appended a `__correction` field and still executed the ORIGINAL args — a
+      // fail-open hole that let e.g. /etc writes through.)
       const rhDetected = parseRequestHumanSignal(response.content).detected;
       const shouldExecute =
         (evalResult.decision === 'ALLOW' ||
           evalResult.decision === 'NOTIFY' ||
-          evalResult.decision === 'GUIDE' ||
-          canApplyCorrection) &&
+          evalResult.decision === 'GUIDE') &&
         !rhDetected;
 
       // Build DO
@@ -279,7 +272,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
           runId: `runtime-${Date.now()}`,
           step,
           toolName: tc.name,
-          toolArgs: effectiveArgs,
+          toolArgs: tc.arguments,
           context: evalContext,
           agentId,
           sessionId,
@@ -346,8 +339,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
             finalResponse = `Rollback triggered: ${reason}`;
             break;
           case 'CORRECT':
-            // CORRECT with no correction content: fail-close, escalate to human
-            finalResponse = `Correction required but no correction provided: ${reason}`;
+            finalResponse = `Correction required: ${evalResult.primaryCorrection || reason}`;
             break;
           case 'DEFER':
             finalResponse = `Action deferred: ${reason}`;
@@ -384,7 +376,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         continue;
       }
 
-      const toolResult = await executor.execute(effectiveArgs);
+      const toolResult = await executor.execute(tc.arguments);
 
       onToolResult?.(toolResult, step);
 
