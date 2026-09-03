@@ -1,6 +1,6 @@
 # RULE-PROMPT.md — Generate ERDL Rules from Natural Language
 
-> **Last updated**: 2026-09-03 — field path corrected to canonical `tool.name` / `tool.args.*` (Entity namespace; `context.tool.*` is not a rule field path).
+> **Last updated**: 2026-09-03 — prompt template migrated to the canonical ERDL document format (language spec v2.0 §2.1: `protocol`/`version`/`metadata`/`rules[]` + string `then`); decision types corrected to the 13 §6 enum; category values corrected to the 11 canonical categories.
 
 You don't need to know YAML to write rules for rulsynor-core. Copy the prompt template
 below, paste it into any LLM (ChatGPT, Claude, Gemini, …), replace the
@@ -18,54 +18,55 @@ plain Chinese — and the LLM will return valid ERDL YAML you can save as
 
 ```text
 You are an ERDL rule author for rulsynor-core, an AI Agent governance engine.
-I will describe rules in natural language. You translate them into valid ERDL
-YAML, ready to save as a .erdl.yaml file. Follow this reference exactly.
+I will describe rules in natural language. You translate them into a valid ERDL
+document, ready to save as a .erdl.yaml file. Follow this reference exactly.
 
 ═══════════════════════════════════════════════════════
-1. RULE STRUCTURE (when → then)
+1. DOCUMENT STRUCTURE
 ═══════════════════════════════════════════════════════
 
-Each rule is one YAML document. Multiple rules in one file are separated by
-a line containing only: ---
+One .erdl.yaml file = one document with a fixed top-level shape:
 
-name: kebab-case-unique-name      # Required. Unique identifier
-version: 1                        # Integer, bump when the rule changes
-category: security                # See §5 for allowed values
-severity: high                    # critical | high | medium | low | none
-ring: 0                           # 0-3, see §4
-priority: 500                     # 1-1000, LOWER number = checked FIRST
-description: "One line about why this rule exists."
+protocol: "erdl/v2"              # fixed protocol identifier
+version: "2.0.0"                 # rule-format version
+metadata:
+  name: my-rule-set              # rule-set name
+  description: "..."             # optional
+  category: security             # default category for rules without one (§5)
+  decision: ALLOW                # fallback decision when no rule matches (§6)
+rules:
+  - name: SEC-001-block-exec     # [CAT]-[NNN]-desc, unique, kebab-case suffix
+    description: "One line about why this rule exists."
+    priority: 500                # 1-1000, LOWER number = checked FIRST
+    override: high               # optional: critical > high > normal > low
+    ring: 0                      # 0-3, see §4
+    when:                        # "Under what conditions does this fire?"
+      logic: AND                 # AND = all conditions; OR = any
+      conditions:
+        - field: "tool.name"      # field path (§2)
+          operator: eq            # one of the 30 operators (§2)
+          value: "exec"           # expected value
+    then: DENY                    # decision type, a STRING (§6)
+    message: "Shown to the Agent: why this happened."   # blocking MUST be non-empty
+    instruction: "Optional guidance."                   # ALLOW + instruction
+    alternative: "The right way to do it."              # optional
+    correction: "..."             # REQUIRED for decision CORRECT
+    unless: null                  # optional exemption block (same shape as when)
 
-when:                             # "Under what conditions does this fire?"
-  conditionLogic: AND             # AND = all conditions match; OR = any matches
-  conditions:
-    - field: "tool.name"           # Field path in the tool-call context
-      operator: eq                # One of the 30 operators (§2)
-      value: "exec"               # Expected value (type depends on operator)
-
-then:                             # "What happens when conditions match?"
-  decision: DENY                  # One of the 7 decisions (§3)
-  instruction: "Shown to the Agent: why this happened."
-  alternative:                    # Optional: the RIGHT way to do it
-    en: "Do this instead."
-  correction: "..."               # Required only for decision: CORRECT
-
-Field paths available in `when.conditions[].field`:
-  tool.name               → name of the tool being called (e.g. "exec",
+Field paths available in `when.conditions[].field` (Entity namespace, SPEC §3):
+  tool.name              → name of the tool being called (e.g. "exec",
                            "write_file", "read", "http_request")
-  tool.args.<arg>         → any tool argument, dot-notation
+  tool.args.<arg>        → any tool argument, dot-notation
                            (tool.args.command, tool.args.path, tool.args.url,
                             tool.args.content, ...)
   context.<key>          → custom runtime context (context.amount,
                            context.maintenance_mode, context.previous_promise)
   fn:<name>              → registered custom function result (advanced)
 
-Note: field paths use Entity namespaces (ERDL SPEC §3) — `tool.*` for the tool call,
-`context.*` for business context. Legacy forms (`toolName`, `context.tool.*`) are
-NOT canonical and are not auto-normalized.
+Legacy forms (`toolName`, `toolArgs.*`, `context.tool.*`) are NOT canonical.
 
 ═══════════════════════════════════════════════════════
-2. THE 30 operators
+2. THE 30 OPERATORS
 ═══════════════════════════════════════════════════════
 
 Equality & comparison:
@@ -105,26 +106,32 @@ Temporal (stateful rate limiting; optional windowMs, default 60000 = 1 min):
   rate        max N calls per sliding window value: 100, windowMs: 60000
 
 ═══════════════════════════════════════════════════════
-3. THE 7 DECISION TYPES
+3. THE 13 DECISION TYPES (then:)
 ═══════════════════════════════════════════════════════
 
   ALLOW           Let it run, record it.
                   Use for: safe operations, batch jobs, known-good patterns.
-  DENY            Block it; instruction must explain why and alternative
-                  should say how to do it right.
+  DENY            Block it; message must explain why, alternative says the
+                  right way.
                   Use for: dangerous operations with a clear alternative.
-  CORRECT         Auto-fix the parameter and retry (engine retries ≤3 rounds).
-                  `correction` field is REQUIRED.
+  CORRECT         Auto-correct the parameter and retry (max 3 rounds, then
+                  escalate to a human). `correction` field is REQUIRED.
                   Use for: wrong paths, wrong formats, fixable mistakes.
   NOTIFY          Log it and continue without interruption.
                   Use for: anomaly flags, threshold alerts, audit events.
-  QUARANTINE      Run in sandbox, flag for human review.
-                  Use for: suspicious but possibly legitimate operations.
   REQUEST_HUMAN   Pause until a person approves.
                   Use for: production DB access, GDPR deletes, >$5K
                   transactions, anything irreversible and high-stakes.
+  ESCALATE        Route to a higher authority (human or superior Agent).
+  DELEGATE        Hand the task to another Agent.
+  DEFER           Postpone; do not execute now.
   EMERGENCY_HALT  Stop all monitored Agents immediately.
                   Use for: credential leaks, active attacks (SSRF, exfil).
+  ROLLBACK        Undo prior actions; restore the previous state.
+  QUARANTINE      Run in sandbox, flag for human review.
+                  Use for: suspicious but possibly legitimate operations.
+  WORKFLOW        Enter a multi-step workflow (state machine).
+  GUIDE           Positive guidance: steer the Agent per an SOP/best practice.
 
 ═══════════════════════════════════════════════════════
 4. EXECUTION RINGS (which rules fire first)
@@ -148,111 +155,123 @@ are checked first.
 ═══════════════════════════════════════════════════════
 
   category MUST be one of:
-    security    — blocking threats, vulnerability prevention
-    compliance  — regulatory/legal mandates, approvals
-    workflow    — how work should flow (approvals, routing)
-    integrity   — promise-keeping, honesty, consistency
-    format      — argument presence, shape, and format checks
-    convention  — team conventions, advisories, logging-only rules
+    coding         — code standards and patterns
+    engineering    — engineering discipline and workflow
+    security       — security rules and vulnerability prevention
+    writing        — content and documentation standards
+    design         — UI/UX and visual design constraints
+    performance    — runtime efficiency and optimization
+    testing        — test coverage and quality gates
+    compliance     — regulatory and legal mandates
+    accessibility  — a11y and inclusive design
+    observability  — logging, metrics, monitoring
+    custom         — user-defined / uncategorized
 
 ═══════════════════════════════════════════════════════
-6. EXAMPLES — natural language → ERDL YAML
+6. EXAMPLES — natural language → ERDL document
 ═══════════════════════════════════════════════════════
 
 Example A
   Say: "If the agent runs a shell command containing rm -rf, block it and
         tell it to inspect files first."
   YAML:
-    name: block-destructive-rm
-    version: 1
-    category: security
-    severity: critical
-    ring: 0
-    priority: 900
-    description: "Block rm -rf style destructive commands."
-    when:
-      conditionLogic: AND
-      conditions:
-        - field: "tool.name"
-          operator: eq
-          value: "exec"
-        - field: "tool.args.command"
-          operator: contains
-          value: "rm -rf"
-    then:
-      decision: DENY
-      instruction: "Destructive command blocked."
-      alternative:
-        en: "Use the read tool to inspect the target first, or request human approval."
+    protocol: "erdl/v2"
+    version: "2.0.0"
+    metadata:
+      name: security-guard
+      category: security
+      decision: ALLOW
+    rules:
+      - name: SEC-001-block-destructive-rm
+        description: "Block rm -rf style destructive commands."
+        ring: 0
+        priority: 900
+        when:
+          logic: AND
+          conditions:
+            - field: "tool.name"
+              operator: eq
+              value: "exec"
+            - field: "tool.args.command"
+              operator: contains
+              value: "rm -rf"
+        then: DENY
+        message: "Destructive command blocked."
+        alternative: "Use the read tool to inspect the target first, or request human approval."
 
 Example B
   Say: "File writes over 5MB are fine (batch jobs) but log a note suggesting
         chunking."
   YAML:
-    name: large-write-advisory
-    version: 1
-    category: convention
-    severity: low
-    ring: 3
-    priority: 300
-    description: "Advisory for large file writes."
-    when:
-      conditionLogic: AND
-      conditions:
-        - field: "tool.name"
-          operator: eq
-          value: "write_file"
-        - field: "tool.args.content"
-          operator: length_gt
-          value: 5242880
-    then:
+    protocol: "erdl/v2"
+    version: "2.0.0"
+    metadata:
+      name: performance-advisories
+      category: performance
       decision: ALLOW
-      instruction: "Large file write (>5MB) logged. Consider chunking for reliability."
+    rules:
+      - name: PERF-001-large-write-advisory
+        description: "Advisory for large file writes."
+        ring: 3
+        priority: 300
+        when:
+          logic: AND
+          conditions:
+            - field: "tool.name"
+              operator: eq
+              value: "write_file"
+            - field: "tool.args.content"
+              operator: length_gt
+              value: 5242880
+        then: ALLOW
+        instruction: "Large file write (>5MB) logged. Consider chunking for reliability."
 
 Example C
   Say: "Any command touching the production database needs my approval.
         Suggest the staging database instead."
   YAML:
-    name: production-db-needs-approval
-    version: 1
-    category: workflow
-    severity: high
-    ring: 0
-    priority: 500
-    description: "Production database access requires human approval."
-    when:
-      conditionLogic: AND
-      conditions:
-        - field: "tool.name"
-          operator: eq
-          value: "exec"
-        - field: "tool.args.command"
-          operator: contains
-          value: "PRODUCTION_DATABASE"
-    then:
-      decision: REQUEST_HUMAN
-      instruction: "Production database access requires approval."
-      alternative:
-        en: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
-      correction: "Change connection string to STAGING_DATABASE and retry."
+    protocol: "erdl/v2"
+    version: "2.0.0"
+    metadata:
+      name: db-guard
+      category: compliance
+      decision: ALLOW
+    rules:
+      - name: CMP-001-prod-db-approval
+        description: "Production database access requires human approval."
+        ring: 0
+        priority: 500
+        when:
+          logic: AND
+          conditions:
+            - field: "tool.name"
+              operator: eq
+              value: "exec"
+            - field: "tool.args.command"
+              operator: contains
+              value: "PRODUCTION_DATABASE"
+        then: REQUEST_HUMAN
+        message: "Production database access requires approval."
+        alternative: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
 
 ═══════════════════════════════════════════════════════
 7. OUTPUT FORMAT (strict)
 ═══════════════════════════════════════════════════════
 
 - Output ONLY the ERDL YAML — no commentary, no markdown fences unless I ask.
-- Multiple rules: separate with a line containing only ---
+- One document per file: protocol / version / metadata / rules[].
 - Valid YAML: quote strings containing special characters (: # { } [ ] & * ! | > ' " % @ `),
   escape backslashes in regex values.
-- Every rule MUST have: name, version, category, severity, ring, priority,
-  when (≥1 condition), then.decision, then.instruction.
-- decision CORRECT → include then.correction.
-- DENY / REQUEST_HUMAN → instruction explains WHY; alternative explains the RIGHT WAY.
-- Names: kebab-case, unique, descriptive.
+- Every document MUST have: protocol, version, metadata (name + decision), rules[].
+- Every rule MUST have: name, description, priority, when (≥1 condition), then.
+- decision CORRECT → include correction.
+- DENY / REQUEST_HUMAN / EMERGENCY_HALT → message explains WHY; alternative
+  says the RIGHT WAY.
+- Names: `[CAT]-[NNN]-desc` (e.g. `SEC-001-...`), unique, descriptive.
 - Choose ring and priority per §4; choose category per §5.
 - Prefer `contains`/`starts_with` over regex when possible; keep regex simple.
 
-Now generate ERDL YAML for these rules:
+Now generate an ERDL document for these rules:
 
 {{DESCRIBE YOUR RULES HERE}}
 ```
@@ -267,8 +286,8 @@ and load it as described in [README → Train](../README.md#2-train--compile-and
 ```typescript
 import { readFileSync } from 'fs';
 const yaml = readFileSync('rules/my-team.erdl.yaml', 'utf8');
-// Convert via toRuleDefinitions()/toERDLRuleSet()/toCompiledRules() — it validates
-// ReDoS safety, operator whitelist, and required fields before loading.
+// loadRulesFromDir() / toCompiledRules() parse the canonical document format and
+// validate ReDoS safety, operator whitelist, naming, and required fields before loading.
 ```
 
 Test any rule instantly without code:
@@ -292,4 +311,4 @@ you own the rulebook. For the full language reference see
 > "如果 Agent 执行的命令里包含 DROP TABLE，直接拦截，告诉它改用软删除；
 > 如果一次写文件超过 10MB，放行但提醒它分块。"
 
-模型会返回可直接保存为 `.erdl.yaml` 的规则。部署前务必人工复核。
+模型会返回可直接保存为 `.erdl.yaml` 的规范 ERDL 文档。部署前务必人工复核。
