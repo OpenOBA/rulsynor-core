@@ -11,8 +11,8 @@
  */
 
 import { spawn } from 'node:child_process';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import {
   Evaluator,
@@ -74,6 +74,29 @@ const TOOL_SCHEMAS: LlmToolSchema[] = [
       additionalProperties: false,
     },
   },
+  {
+    name: 'write_file',
+    description: 'Write a text file to disk (creates parent directories).',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'File path to write' },
+        content: { type: 'string', description: 'File content to write' },
+      },
+      required: ['path', 'content'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'http_request',
+    description: 'Make an HTTP GET request to a URL and return the response body.',
+    parameters: {
+      type: 'object',
+      properties: { url: { type: 'string', description: 'URL to fetch (http/https)' } },
+      required: ['url'],
+      additionalProperties: false,
+    },
+  },
 ];
 
 function runShell(command: string): Promise<string> {
@@ -100,7 +123,7 @@ function runShell(command: string): Promise<string> {
   });
 }
 
-/** Build the built-in tool executors (exec / read_file / list_dir). Exported for tests. */
+/** Build the built-in tool executors (exec / read_file / list_dir / write_file / http_request). Exported for tests. */
 export function buildTools(): Record<string, ToolExecutor> {
   return {
     exec: createToolExecutor(async args => {
@@ -133,6 +156,32 @@ export function buildTools(): Record<string, ToolExecutor> {
             }
           });
         return entries.length > 0 ? entries.join('\n') : '(empty directory)';
+      } catch (e: unknown) {
+        return `error: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    }),
+    write_file: createToolExecutor(async args => {
+      const p = typeof args.path === 'string' ? args.path : '';
+      const content = typeof args.content === 'string' ? args.content : '';
+      if (p.length === 0) return 'error: write_file requires a "path" argument';
+      try {
+        const fullPath = resolve(p);
+        mkdirSync(dirname(fullPath), { recursive: true });
+        writeFileSync(fullPath, content, 'utf8');
+        return `wrote ${Buffer.byteLength(content)} bytes to ${p}`;
+      } catch (e: unknown) {
+        return `error: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    }),
+    http_request: createToolExecutor(async args => {
+      const url = typeof args.url === 'string' ? args.url : '';
+      if (url.length === 0) return 'error: http_request requires a "url" argument';
+      try {
+        const resp = await fetch(url, { signal: AbortSignal.timeout(TOOL_TIMEOUT_MS) });
+        const body = await resp.text();
+        return `HTTP ${resp.status} ${resp.statusText}\n${body.slice(0, OUTPUT_LIMIT)}${
+          body.length > OUTPUT_LIMIT ? '\n[truncated]' : ''
+        }`;
       } catch (e: unknown) {
         return `error: ${e instanceof Error ? e.message : String(e)}`;
       }

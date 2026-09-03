@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { HOME_ENV, RULES_DIR_ENV } from '../src/config.js';
@@ -120,5 +120,38 @@ describe('CLI commands', () => {
 
     const exec = await tools.exec.execute({ command: 'echo hello123' });
     expect(exec).toContain('hello123');
+  });
+
+  it('built-in tools: write_file / http_request work', async () => {
+    const tools = buildTools();
+
+    // write_file writes content and creates parent dirs
+    const written = await tools.write_file.execute({
+      path: join(home, 'sub', 'w.txt'),
+      content: 'written content',
+    });
+    expect(written).toContain('wrote');
+    expect(readFileSync(join(home, 'sub', 'w.txt'), 'utf8')).toBe('written content');
+
+    // write_file errors on empty path
+    expect(await tools.write_file.execute({ path: '', content: 'x' })).toContain('error:');
+
+    // http_request errors on empty url
+    expect(await tools.http_request.execute({ url: '' })).toContain('error:');
+
+    // http_request fetches (mock fetch)
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async () => ({
+      status: 200,
+      statusText: 'OK',
+      text: async () => 'response body',
+    })) as unknown as typeof fetch;
+    try {
+      const fetched = await tools.http_request.execute({ url: 'https://example.com/' });
+      expect(fetched).toContain('HTTP 200');
+      expect(fetched).toContain('response body');
+    } finally {
+      globalThis.fetch = origFetch;
+    }
   });
 });
