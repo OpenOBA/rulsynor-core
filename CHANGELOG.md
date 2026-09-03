@@ -17,8 +17,10 @@
 - **用户规则目录加载**：`loadRulesFromDir`（drop-in 生效）
 - **LLM 结构化工具回环**：function calling（tool_call id + tool role）
 - **业务上下文注入**：runtime `context` 选项 + MCP `rulsynor_guard_evaluate` 的 `context` 参数（`context.*` 规则由宿主确定性注入，非 LLM 猜）
+- **`onCorrectLoop` 回调**：CORRECT 纠正循环状态机观测点（round/resolve/escalate）
 
 ### Changed
+- **CORRECT 裁决按原始设计（D21）接入内置运行时**：纠偏指引回注 Agent 重新发起，Guard 对每次重试确定性重裁（`advanceCorrectLoop()` 状态机，最多 3 轮）；纠正后 `ALLOW` → 执行纠正后的调用，3 轮未解决 → 升级人工（REQUEST_HUMAN），硬 `DENY`/`EMERGENCY_HALT` → 退出循环按裁决封锁。原始参数永不执行（保持 4c6f653 的 fail-open 修复）；每次 CORRECT 尝试各落一条 DO 审计链
 - 许可证：运行时 MIT → BSL 1.1（Change Date 2030-06-09，Change License GPL 3.0；非生产使用免费，见 LICENSE）
 - **Decision Object v1.3 → v1.5 扁平哈希**（`erdl-do-v1.5-hash-flat`）；签名模式（ECDSA P-256）待 RFC-002 §10
 - **预设规则 30 → 34**（跨工具安全规则按工具拆分：新增 SEC-025/026/027/028）

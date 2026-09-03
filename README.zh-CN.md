@@ -1,7 +1,7 @@
 # @openoba/rulsynor-core
 
 > **规则决定一切。**
-> **Last updated**: 2026-09-03 — Slogan 定为「规则决定一切」；整合白皮书定位。
+> **Last updated**: 2026-09-03 — CORRECT 循环按原始设计接入内置运行时（3 轮自动纠正，3 轮未解决升级人工）；原始参数永不执行。
 
 **rulsynor-core** 是让这句话落地的确定性内核：**规则——而非 prompt——决定 Agent 的每一个动作。**
 
@@ -75,7 +75,7 @@ AI 的效率，每一家企业都看得见，但经常会因为一段模糊的�
 
 - **上岗前**：用when/then句式写成ERDL YAML格式的培训教材，人类秒懂、机器可读，Agent遵守。
 - **执行前**：Guard 评估每次工具调用——按环排序，亚毫秒级，first-match-wins
-- **出错时**：Navigation Guide 告诉 LLM 为什么、怎么改，修得好的返回纠偏指引（CORRECT 裁决，Agent 重新发起改对的调用）
+- **出错时**：Navigation Guide 告诉 LLM 为什么、怎么改，并自动纠正可修复的错误——纠偏指引回注 Agent，重新发起、重新裁决（CORRECT 循环，最多 3 轮，未解决升级人工）
 - **决策后**：每条决策生成 25 字段 Decision Object，JCS 规范化 + SHA-256 加密密封，哈希链串联
 - **合规层**：辖区感知字段自动激活（EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI）
 - **可信层**：每个员工有工牌（AID）。每条 Decision Object 可零 SDK 独立验证。
@@ -146,7 +146,7 @@ npx @openoba/rulsynor-core --tool=write_file --path="/etc/cron.d/x"
 rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上：
 
 ```
-撰写规则 ──→ 培训 ──→ 上岗 ──→ 执行（Guard 护航）──→ 纠偏（CORRECT 返回纠偏指引）──→ 审计每一步
+撰写规则 ──→ 培训 ──→ 上岗 ──→ 执行（Guard 护航）──→ 纠偏（CORRECT 3 轮纠正循环）──→ 审计每一步
 ```
 
 它不是"安全过滤器"。它是让你**验证 Agent 每一步决策**的治理基础设施。
@@ -216,7 +216,7 @@ then:
 |------|------|------|
 | `ALLOW` | 放行，已记录 | 安全操作、批处理任务、已知模式 |
 | `DENY` | 不行。告诉你为什么，告诉你怎么办。 | 危险操作但有明确替代方案 |
-| `CORRECT` | 返回纠偏指引；Agent 重新发起改对的调用 | 路径写错、格式不对、可修复的错误 |
+| `CORRECT` | 自动纠正并重试（最多 3 轮，每轮重新裁决；未解决 → 升级人工） | 路径写错、格式不对、可修复的错误 |
 | `NOTIFY` | 记录并放行，不中断 | 异常检测、阈值告警、合规事件 |
 | `QUARANTINE` | 沙箱执行，标记审查 | 可疑但有可能合法 |
 | `REQUEST_HUMAN` | 找人审批再执行 | 生产库操作、GDPR 删除、>$5K 交易 |
@@ -306,9 +306,9 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
       return execute(toolName, args);
 
     case 'CORRECT':
-      // 🔧 fail-close — 返回纠偏指引；Agent 重新发起改对的调用
-      const corrected = applyGuidance(toolName, args, result);
-      return execute(corrected.toolName, corrected.args);
+      // 🔧 CORRECT 循环（原始设计）——纠偏指引回注，Agent 重新发起，Guard 逐轮重裁（最多 3 轮）。
+      // runReActLoop 已内置接线；自研分发宿主用同一个 advanceCorrectLoop() 状态机驱动。
+      return runCorrectLoop(toolName, args, result); // 解决 → 执行纠正后调用；3 轮未解决 → REQUEST_HUMAN
 
     case 'REQUEST_HUMAN':
       // 👤 升级——展示原因 + 替代方案
@@ -352,7 +352,7 @@ const guide = extractNavigationGuide({
 
 把 `guide.corrections` 和 `guide.alternatives` 注入到下一个 LLM `assistant` 消息中。Agent 据此自行调整，回归合规路径。
 
-**CORRECT（fail-close）**：内置运行时里，`CORRECT` 裁决失败即关闭——返回纠偏指引，Agent 重新发起改对的调用。另导出独立的 `advanceCorrectLoop()`（3 轮自动重试状态机）供需要自动重试的宿主使用：
+**CORRECT 循环（原始设计）**：收到 `CORRECT` 裁决时，内置运行时把纠偏指引作为工具反馈回注给 Agent；Agent 重新发起调用，Guard 对每次重试做确定性重裁（`advanceCorrectLoop()` 状态机，最多 3 轮）。纠正后拿到 `ALLOW` → 循环解决，执行纠正后的调用；3 轮仍是 `CORRECT` → 升级人工（`REQUEST_HUMAN`）；遇到硬 `DENY`/`EMERGENCY_HALT` → 退出循环，按裁决封锁。**原始参数永不执行**——任何执行都需要一次全新的 `ALLOW` 裁决。自研分发的宿主可直接驱动同一个导出状态机：
 
 ```typescript
 import { advanceCorrectLoop } from '@openoba/rulsynor-core/preflight';
@@ -644,4 +644,4 @@ BUSL-1.1 © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://o
 
 ---
 
-[OpenOBA](https://openoba.com) — 数字智力资源平台
+[OpenOBA](https://openoba.com) — 职业化AI员工平台[PAE]
