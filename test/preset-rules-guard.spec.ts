@@ -59,7 +59,7 @@ describe('preset rules under canonical context shape', () => {
       agentId: 'x',
     });
     expect(result.decision).toBe('ALLOW');
-    expect(result.matchedRules.some(m => m.ruleId.includes('CNV-002'))).toBe(true);
+    expect(result.matchedRules.some(m => m.ruleName.includes('CNV-002'))).toBe(true);
   });
 });
 

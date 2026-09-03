@@ -1,30 +1,30 @@
-# Integrity — professional-conduct rule pack
-# Each rule defines the professional bottom line an Agent must uphold.
-# In plain language: when = "under what condition", then = "what to do"
-
-# ── C1: Do what you say (Promise vs Action) ──
-# Plain version: the Agent promised "read-only", then turned around and wrote a file.
-# Implementation: the previous step's LLM declared a read_only intent → the next step
-# detects a write operation → request human approval
-name: ETH-001-promise-readonly-writes
-version: 1
-category: compliance
-severity: high
-ring: 0
-priority: 850
-description: "When the Agent declared a read-only intent (read_only) but then attempts a write operation, block and request human approval"
-when:
-  conditions:
-    - field: "context.previous_promise"
-      operator: eq
-      value: "read_only"
-    - field: "tool.name"
-      operator: in
-      value: ["write_file", "exec", "apply_patch", "delete"]
-  logic: AND
-then:
-  decision: REQUEST_HUMAN
-  instruction: "You previously declared a read-only operation, but now attempt a write. Consistency between words and actions is the bottom line of professional conduct — explain the intent, or get supervisor approval."
-  alternative:
-    en: "If the write is truly needed, state the reason first and wait for human approval before proceeding. If not needed, continue with read-only operations."
-  correction: "Withdraw the write request and return to read-only mode. If a write is needed, state the reason and request permission in the next turn."
+protocol: erdl/v2
+version: 2.0.0
+metadata:
+  name: integrity
+  description: OpenOBA rulsynor-core preset rule pack (integrity.erdl.yaml)
+  category: compliance
+  decision: ALLOW
+rules:
+  - name: ETH-001-promise-readonly-writes
+    description: When the Agent declared a read-only intent (read_only) but then attempts a write operation, block and request human approval
+    priority: 850
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: context.previous_promise
+          operator: eq
+          value: read_only
+        - field: tool.name
+          operator: in
+          value:
+            - write_file
+            - exec
+            - apply_patch
+            - delete
+    then: REQUEST_HUMAN
+    message: You previously declared a read-only operation, but now attempt a write. Consistency between words and actions is the bottom line of professional conduct — explain the intent, or get supervisor approval.
+    alternative:
+      en: If the write is truly needed, state the reason first and wait for human approval before proceeding. If not needed, continue with read-only operations.
+    correction: Withdraw the write request and return to read-only mode. If a write is needed, state the reason and request permission in the next turn.

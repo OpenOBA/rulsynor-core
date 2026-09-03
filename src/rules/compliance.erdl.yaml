@@ -1,157 +1,135 @@
-# ERDL Rule: Exists check for exec tool args (Ring 1)
-# Fixed: only applies to exec tools. write_file/read don't have command args.
-name: CNV-001-require-tool-args
-version: 1
-category: writing
-severity: low
-ring: 1
-priority: 200
-description: "Ensure exec commands have required arguments before execution"
-when:
-  conditions:
-    - field: "tool.name"
-      operator: eq
-      value: "exec"
-    - field: "tool.args.command"
-      operator: not_exists
-then:
-  decision: DENY
-  instruction: "Missing required argument: command."
----
-# ERDL Rule: Detect credential patterns in file writes (Ring 1)
-# Added per Experiment Round 3 — catches credential leaks in file content
-name: SEC-022-block-credential-in-files
-version: 1
-category: security
-severity: high
-ring: 1
-priority: 700
-description: "Detect and block credential patterns in file write content"
-when:
-  conditions:
-    - field: "tool.name"
-      operator: eq
-      value: "write_file"
-    - field: "tool.args.content"
-      operator: match
-      value: "(DATABASE_URL|PASSWORD|SECRET|API_KEY|TOKEN|password)\\s*[=:]"
-then:
-  decision: DENY
-  instruction: "Credential pattern detected in file content. Use environment variables or a secrets manager."
----
-# ERDL Rule: Block exec during maintenance window (Ring 1)
-name: CMP-001-block-during-maintenance
-version: 1
-category: compliance
-severity: medium
-ring: 1
-priority: 400
-description: "Block exec calls during system maintenance windows"
-when:
-  conditions:
-    - field: "context.maintenance_mode"
-      operator: eq
-      value: true
-    - field: "tool.name"
-      operator: eq
-      value: "exec"
-then:
-  decision: DENY
-  instruction: "System is in maintenance mode. Exec calls are suspended."
----
-# ERDL Rule: REQUEST_HUMAN for GDPR delete (Ring 1)
-name: CMP-002-human-gdpr-delete
-version: 1
-category: compliance
-severity: high
-ring: 1
-priority: 600
-description: "Require human approval for GDPR-related data deletion and right-to-be-forgotten operations"
-when:
-  conditions:
-    - field: "context.operation"
-      operator: eq
-      value: "delete"
-    - field: "context.gdpr_relevant"
-      operator: eq
-      value: true
-then:
-  decision: REQUEST_HUMAN
-  instruction: "GDPR delete operation requires human approval. Please review and confirm deletion scope."
----
-# ERDL Rule: REQUEST_HUMAN for transactions > $5000 (Ring 1)
-name: CMP-003-human-large-transaction
-version: 1
-category: compliance
-severity: medium
-ring: 1
-priority: 500
-description: "Require human approval for financial transactions exceeding $5,000"
-when:
-  conditions:
-    - field: "context.amount"
-      operator: gt
-      value: 5000
-    - field: "context.transaction_type"
-      operator: eq
-      value: "financial"
-then:
-  decision: REQUEST_HUMAN
-  instruction: "Transaction exceeds $5,000 threshold. Human approval required."
----
-# ERDL Rule: EMERGENCY_HALT on credential leak (Ring 0)
-# NOTE: this is a context-event rule (context.event_type), not a tool-call rule — it is
-# intentionally tool-scope-free (no tool.name condition). It fires on a business-context
-# signal, not on a specific tool's arguments.
-name: SEC-023-halt-credential-leak
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 1000
-description: "Emergency halt when credential leak or secret exposure is detected"
-when:
-  conditions:
-    - field: "context.event_type"
-      operator: eq
-      value: "credential_leak"
-then:
-  decision: EMERGENCY_HALT
-  instruction: "Credential leak detected. All operations halted. Rotate keys immediately."
----
-# ERDL Rule: QUARANTINE suspicious tool pattern (Ring 1)
-name: SEC-024-quarantine-suspicious
-version: 1
-category: security
-severity: high
-ring: 1
-priority: 800
-description: "Quarantine tool calls matching suspicious reconnaissance patterns"
-when:
-  conditions:
-    - field: "tool.name"
-      operator: eq
-      value: "exec"
-    - field: "tool.args.command"
-      operator: match
-      value: "(whoami|id|uname\\s+-a|cat\\s+/etc/passwd|netstat|ss\\s+-tlnp|ps\\s+aux|env|printenv)"
-then:
-  decision: QUARANTINE
-  instruction: "Suspicious reconnaissance command quarantined. Review required before execution."
----
-# ERDL Rule: ALLOW read-only operations unconditionally (Ring 3)
-name: CNV-002-allow-readonly
-version: 1
-category: writing
-severity: none
-ring: 3
-priority: 100
-description: "Always allow read-only tool operations (read_file, list_dir, read, search, list)"
-when:
-  conditions:
-    - field: "tool.name"
-      operator: in
-      value: ["read_file", "list_dir", "read", "search", "list", "get", "find", "query", "ls"]
-then:
+protocol: erdl/v2
+version: 2.0.0
+metadata:
+  name: compliance
+  description: OpenOBA rulsynor-core preset rule pack (compliance.erdl.yaml)
+  category: security
   decision: ALLOW
-  instruction: "Read-only operation allowed."
+rules:
+  - name: CNV-001-require-tool-args
+    description: Ensure exec commands have required arguments before execution
+    priority: 200
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: not_exists
+    then: DENY
+    category: writing
+    message: 'Missing required argument: command.'
+  - name: SEC-022-block-credential-in-files
+    description: Detect and block credential patterns in file write content
+    priority: 700
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.content
+          operator: match
+          value: (DATABASE_URL|PASSWORD|SECRET|API_KEY|TOKEN|password)\s*[=:]
+    then: DENY
+    message: Credential pattern detected in file content. Use environment variables or a secrets manager.
+  - name: CMP-001-block-during-maintenance
+    description: Block exec calls during system maintenance windows
+    priority: 400
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: context.maintenance_mode
+          operator: eq
+          value: true
+        - field: tool.name
+          operator: eq
+          value: exec
+    then: DENY
+    category: compliance
+    message: System is in maintenance mode. Exec calls are suspended.
+  - name: CMP-002-human-gdpr-delete
+    description: Require human approval for GDPR-related data deletion and right-to-be-forgotten operations
+    priority: 600
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: context.operation
+          operator: eq
+          value: delete
+        - field: context.gdpr_relevant
+          operator: eq
+          value: true
+    then: REQUEST_HUMAN
+    category: compliance
+    message: GDPR delete operation requires human approval. Please review and confirm deletion scope.
+  - name: CMP-003-human-large-transaction
+    description: Require human approval for financial transactions exceeding $5,000
+    priority: 500
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: context.amount
+          operator: gt
+          value: 5000
+        - field: context.transaction_type
+          operator: eq
+          value: financial
+    then: REQUEST_HUMAN
+    category: compliance
+    message: Transaction exceeds $5,000 threshold. Human approval required.
+  - name: SEC-023-halt-credential-leak
+    description: Emergency halt when credential leak or secret exposure is detected
+    priority: 1000
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: context.event_type
+          operator: eq
+          value: credential_leak
+    then: EMERGENCY_HALT
+    message: Credential leak detected. All operations halted. Rotate keys immediately.
+  - name: SEC-024-quarantine-suspicious
+    description: Quarantine tool calls matching suspicious reconnaissance patterns
+    priority: 800
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: (whoami|id|uname\s+-a|cat\s+/etc/passwd|netstat|ss\s+-tlnp|ps\s+aux|env|printenv)
+    then: QUARANTINE
+    message: Suspicious reconnaissance command quarantined. Review required before execution.
+  - name: CNV-002-allow-readonly
+    description: Always allow read-only tool operations (read_file, list_dir, read, search, list)
+    priority: 100
+    ring: 3
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: in
+          value:
+            - read_file
+            - list_dir
+            - read
+            - search
+            - list
+            - get
+            - find
+            - query
+            - ls
+    then: ALLOW
+    category: writing
+    instruction: Read-only operation allowed.

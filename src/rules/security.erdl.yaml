@@ -1,490 +1,396 @@
-name: SEC-001-block-dangerous-cmd
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 900
-description: 'Block destructive commands: rm -rf, format, shutdown, dd, redirect to /dev/sda, etc.'
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: (rm\s+-rf|shutdown|reboot|mkfs\.|dd\s+if=|>\s*/dev/sda|:(){ :\|:& };:)
-then:
-  decision: DENY
-  instruction: Destructive command blocked. Use safe alternatives or request human approval.
-  alternative: Use the read tool to inspect the target first, or request explicit human approval before any destructive command.
----
-name: SEC-002-block-fork-bomb
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 890
-description: Block fork bomb and process explosion patterns
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: (:\()|fork\s*bomb|while\s*:\s*;\s*do
-then:
-  decision: DENY
-  instruction: Fork bomb pattern detected and blocked.
----
-name: SEC-003-block-system-writes
-version: 1
-category: security
-severity: high
-ring: 0
-priority: 850
-description: Block file writes to system directories and configuration paths
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.path
-      operator: match
-      value: ^(/etc/|/sys/|/proc/|/boot/|/dev/|C:\\Windows|C:\\Program Files)
-then:
-  decision: DENY
-  instruction: System file write blocked. Use application directory only.
-  alternative: Write to your application's working directory (e.g. /var/app/) instead of system paths like /etc, /sys, or /proc.
----
-name: SEC-004-block-dotfile-writes
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 700
-description: Block writes to dot-files and dot-directories (SSH keys, env files, git config)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.path
-      operator: match
-      value: (/\.ssh/|/\.git/config|/\.env|\.bashrc|\.zshrc|\.profile|authorized_keys)
-then:
-  decision: DENY
-  instruction: Write to sensitive dot-file blocked. Review and approve manually.
-  alternative: Store secrets in a secrets manager or environment injection, not in dot-files under version control.
----
-name: SEC-005-block-ssrf
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 850
-description: 'SSRF prevention: block HTTP requests to internal/private IPs and metadata endpoints'
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: http_request
-    - field: tool.args.url
-      operator: match
-      value: (10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata|169\.254\.)
-then:
-  decision: DENY
-  instruction: SSRF blocked. Internal IP / metadata endpoint access denied.
-  alternative: >-
-    Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata
-    endpoint.
----
-name: SEC-006-block-curl-ssrf
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 855
-description: 'SSRF prevention: block curl/wget to internal/private IPs and metadata endpoints'
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: (curl|wget).*(169\.254\.|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata)
-then:
-  decision: DENY
-  instruction: SSRF via curl/wget blocked. Internal IP / metadata endpoint access denied.
-  alternative: >-
-    Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata endpoint.
----
-name: SEC-007-block-nonstandard-ports
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 600
-description: Block HTTP requests to unusual ports (common exploit targets)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: http_request
-    - field: tool.args.url
-      operator: match
-      value: ':(22|25|53|3389|6379|27017|11211|5432|3306)'
-then:
-  decision: DENY
-  instruction: Non-standard port HTTP blocked. Verify destination before proceeding.
----
-name: SEC-008-block-empty-command
-version: 1
-category: security
-severity: low
-ring: 1
-priority: 400
-description: Block exec calls with empty or whitespace-only command
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: ^\s*$
-then:
-  decision: DENY
-  instruction: Empty command blocked. Specify a valid command.
----
-name: SEC-009-block-sql-injection
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 880
-description: Block SQL injection patterns in exec commands
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: contains
-      value: '''; DROP TABLE'
-then:
-  decision: DENY
-  instruction: SQL injection pattern detected in exec command and blocked.
----
-name: SEC-025-block-sql-injection-url
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 880
-description: Block SQL injection patterns in HTTP request URLs
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: http_request
-    - field: tool.args.url
-      operator: contains
-      value: '''; DROP TABLE'
-then:
-  decision: DENY
-  instruction: SQL injection pattern detected in HTTP URL and blocked.
----
-name: SEC-026-block-xss-content
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 880
-description: Block XSS script patterns in file write content
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.content
-      operator: contains
-      value: <script>
-then:
-  decision: DENY
-  instruction: XSS script pattern detected in file content and blocked.
----
-name: SEC-010-block-large-writes
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 650
-description: Block file writes exceeding 10MB to prevent resource exhaustion
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.content
-      operator: length_gt
-      value: 10485760
-then:
-  decision: DENY
-  instruction: Write exceeds 10MB limit. Split into smaller files.
----
-name: SEC-011-block-sensitive-temp-writes
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 550
-description: Block writes to /tmp when the content contains passwords or tokens
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.path
-      operator: starts_with
-      value: /tmp/
-    - field: tool.args.content
-      operator: match
-      value: (password|secret|token|api_key|private_key|-----BEGIN)
-then:
-  decision: DENY
-  instruction: Sensitive data in /tmp blocked. Use encrypted storage.
----
-name: SEC-012-block-shell-metachar
-version: 1
-category: security
-severity: high
-ring: 1
-priority: 750
-description: Block commands containing shell meta-characters (command chaining, backticks, eval)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: '[;&|`$(){}]'
-then:
-  decision: DENY
-  instruction: Shell meta-characters detected. Use parameterized command execution.
----
-name: SEC-013-block-open-redirect
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 500
-description: Block HTTP URLs that appear to be open redirect targets
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: http_request
-    - field: tool.args.url
-      operator: contains
-      value: redirect
-then:
-  decision: DENY
-  instruction: Potential open redirect URL blocked.
----
-name: SEC-014-correct-unsafe-path
-version: 1
-category: security
-severity: medium
-ring: 0
-priority: 840
-description: When write targets a restricted path, suggest correction to allowed app directory
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.path
-      operator: starts_with
-      value: /etc/
-then:
-  decision: CORRECT
-  instruction: Change path from /etc/ to /var/app/. System paths are read-only.
-  correction: Rewrite the write target to /var/app/ (or another application-owned directory) instead of /etc/.
----
-name: SEC-015-block-multiline-cmd
-version: 1
-category: security
-severity: high
-ring: 0
-priority: 870
-description: Block commands containing newline characters (injection via multi-line)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: contains
-      value: |+
+protocol: erdl/v2
+version: 2.0.0
+metadata:
+  name: security
+  description: OpenOBA rulsynor-core preset rule pack (security.erdl.yaml)
+  category: security
+  decision: ALLOW
+rules:
+  - name: SEC-001-block-dangerous-cmd
+    description: 'Block destructive commands: rm -rf, format, shutdown, dd, redirect to /dev/sda, etc.'
+    priority: 900
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: (rm\s+-rf|shutdown|reboot|mkfs\.|dd\s+if=|>\s*/dev/sda|:(){ :\|:& };:)
+    then: DENY
+    message: Destructive command blocked. Use safe alternatives or request human approval.
+    alternative: Use the read tool to inspect the target first, or request explicit human approval before any destructive command.
+  - name: SEC-002-block-fork-bomb
+    description: Block fork bomb and process explosion patterns
+    priority: 890
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: (:\()|fork\s*bomb|while\s*:\s*;\s*do
+    then: DENY
+    message: Fork bomb pattern detected and blocked.
+  - name: SEC-003-block-system-writes
+    description: Block file writes to system directories and configuration paths
+    priority: 850
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.path
+          operator: match
+          value: ^(/etc/|/sys/|/proc/|/boot/|/dev/|C:\\Windows|C:\\Program Files)
+    then: DENY
+    message: System file write blocked. Use application directory only.
+    alternative: Write to your application's working directory (e.g. /var/app/) instead of system paths like /etc, /sys, or /proc.
+  - name: SEC-004-block-dotfile-writes
+    description: Block writes to dot-files and dot-directories (SSH keys, env files, git config)
+    priority: 700
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.path
+          operator: match
+          value: (/\.ssh/|/\.git/config|/\.env|\.bashrc|\.zshrc|\.profile|authorized_keys)
+    then: DENY
+    message: Write to sensitive dot-file blocked. Review and approve manually.
+    alternative: Store secrets in a secrets manager or environment injection, not in dot-files under version control.
+  - name: SEC-005-block-ssrf
+    description: 'SSRF prevention: block HTTP requests to internal/private IPs and metadata endpoints'
+    priority: 850
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: http_request
+        - field: tool.args.url
+          operator: match
+          value: (10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata|169\.254\.)
+    then: DENY
+    message: SSRF blocked. Internal IP / metadata endpoint access denied.
+    alternative: Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata endpoint.
+  - name: SEC-006-block-curl-ssrf
+    description: 'SSRF prevention: block curl/wget to internal/private IPs and metadata endpoints'
+    priority: 855
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: (curl|wget).*(169\.254\.|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.0\.0\.|0\.0\.0\.0|localhost|metadata)
+    then: DENY
+    message: SSRF via curl/wget blocked. Internal IP / metadata endpoint access denied.
+    alternative: Call the internal service through the sanctioned service-mesh route, not by direct IP or the cloud metadata endpoint.
+  - name: SEC-007-block-nonstandard-ports
+    description: Block HTTP requests to unusual ports (common exploit targets)
+    priority: 600
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: http_request
+        - field: tool.args.url
+          operator: match
+          value: ':(22|25|53|3389|6379|27017|11211|5432|3306)'
+    then: DENY
+    message: Non-standard port HTTP blocked. Verify destination before proceeding.
+  - name: SEC-008-block-empty-command
+    description: Block exec calls with empty or whitespace-only command
+    priority: 400
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: ^\s*$
+    then: DENY
+    message: Empty command blocked. Specify a valid command.
+  - name: SEC-009-block-sql-injection
+    description: Block SQL injection patterns in exec commands
+    priority: 880
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: contains
+          value: '''; DROP TABLE'
+    then: DENY
+    message: SQL injection pattern detected in exec command and blocked.
+  - name: SEC-025-block-sql-injection-url
+    description: Block SQL injection patterns in HTTP request URLs
+    priority: 880
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: http_request
+        - field: tool.args.url
+          operator: contains
+          value: '''; DROP TABLE'
+    then: DENY
+    message: SQL injection pattern detected in HTTP URL and blocked.
+  - name: SEC-026-block-xss-content
+    description: Block XSS script patterns in file write content
+    priority: 880
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.content
+          operator: contains
+          value: <script>
+    then: DENY
+    message: XSS script pattern detected in file content and blocked.
+  - name: SEC-010-block-large-writes
+    description: Block file writes exceeding 10MB to prevent resource exhaustion
+    priority: 650
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.content
+          operator: length_gt
+          value: 10485760
+    then: DENY
+    message: Write exceeds 10MB limit. Split into smaller files.
+  - name: SEC-011-block-sensitive-temp-writes
+    description: Block writes to /tmp when the content contains passwords or tokens
+    priority: 550
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.path
+          operator: starts_with
+          value: /tmp/
+        - field: tool.args.content
+          operator: match
+          value: (password|secret|token|api_key|private_key|-----BEGIN)
+    then: DENY
+    message: Sensitive data in /tmp blocked. Use encrypted storage.
+  - name: SEC-012-block-shell-metachar
+    description: Block commands containing shell meta-characters (command chaining, backticks, eval)
+    priority: 750
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: '[;&|`$(){}]'
+    then: DENY
+    message: Shell meta-characters detected. Use parameterized command execution.
+  - name: SEC-013-block-open-redirect
+    description: Block HTTP URLs that appear to be open redirect targets
+    priority: 500
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: http_request
+        - field: tool.args.url
+          operator: contains
+          value: redirect
+    then: DENY
+    message: Potential open redirect URL blocked.
+  - name: SEC-014-correct-unsafe-path
+    description: When write targets a restricted path, suggest correction to allowed app directory
+    priority: 840
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.path
+          operator: starts_with
+          value: /etc/
+    then: CORRECT
+    message: Change path from /etc/ to /var/app/. System paths are read-only.
+    correction: Rewrite the write target to /var/app/ (or another application-owned directory) instead of /etc/.
+  - name: SEC-015-block-multiline-cmd
+    description: Block commands containing newline characters (injection via multi-line)
+    priority: 870
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: contains
+          value: |+
 
-then:
-  decision: DENY
-  instruction: Multi-line command injection blocked.
----
-name: SEC-016-block-base64-payload
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 400
-description: Block commands containing base64-encoded data (common obfuscation technique)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: echo\s+[A-Za-z0-9+/]{20,}=*\s*\|\s*(base64|sh|bash)
-then:
-  decision: DENY
-  instruction: Base64-encoded command blocked. Use explicit, readable commands.
----
-name: SEC-017-block-download-to-file
-version: 1
-category: security
-severity: medium
-ring: 1
-priority: 600
-description: Block wget/curl that saves output to filesystem without inspection
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: (wget|curl).*(-o|-O)\s+
-then:
-  decision: DENY
-  instruction: Download-to-file blocked. Use read tool for URL content inspection first.
----
-name: SEC-018-block-chmod-777
-version: 1
-category: security
-severity: high
-ring: 1
-priority: 700
-description: Block chmod 777 and other overly permissive permission changes
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: chmod.*777
-then:
-  decision: DENY
-  instruction: chmod 777 blocked. Use minimum required permissions.
----
-name: SEC-019-block-sql-drop
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 885
-description: Block DROP TABLE / DROP DATABASE statements in exec commands
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: DROP\s+(TABLE|DATABASE)
-then:
-  decision: DENY
-  instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
----
-name: SEC-027-block-sql-drop-url
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 885
-description: Block DROP TABLE statements in HTTP request URLs
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: http_request
-    - field: tool.args.url
-      operator: contains
-      value: DROP TABLE
-then:
-  decision: DENY
-  instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
----
-name: SEC-028-block-sql-drop-content
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 885
-description: Block DROP TABLE / DROP DATABASE statements in file write content
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: write_file
-    - field: tool.args.content
-      operator: match
-      value: DROP\s+(TABLE|DATABASE)
-then:
-  decision: DENY
-  instruction: Destructive DROP statement blocked. Use archived/soft-delete instead.
----
-name: SEC-020-block-docker-privileged
-version: 1
-category: security
-severity: critical
-ring: 0
-priority: 860
-description: Block docker run with --privileged (host-level escalation)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: contains
-      value: docker run
-    - field: tool.args.command
-      operator: contains
-      value: '--privileged'
-then:
-  decision: DENY
-  instruction: Privileged container execution blocked. Use a least-privilege container profile.
----
-name: SEC-021-block-curl-pipe-shell
-version: 1
-category: security
-severity: high
-ring: 1
-priority: 680
-description: Block piping a remote download straight into a shell (curl|sh, wget|bash)
-when:
-  conditions:
-    - field: tool.name
-      operator: eq
-      value: exec
-    - field: tool.args.command
-      operator: match
-      value: (curl|wget).*\|.*(sh|bash)
-then:
-  decision: DENY
-  instruction: Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
+    then: DENY
+    message: Multi-line command injection blocked.
+  - name: SEC-016-block-base64-payload
+    description: Block commands containing base64-encoded data (common obfuscation technique)
+    priority: 400
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: echo\s+[A-Za-z0-9+/]{20,}=*\s*\|\s*(base64|sh|bash)
+    then: DENY
+    message: Base64-encoded command blocked. Use explicit, readable commands.
+  - name: SEC-017-block-download-to-file
+    description: Block wget/curl that saves output to filesystem without inspection
+    priority: 600
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: (wget|curl).*(-o|-O)\s+
+    then: DENY
+    message: Download-to-file blocked. Use read tool for URL content inspection first.
+  - name: SEC-018-block-chmod-777
+    description: Block chmod 777 and other overly permissive permission changes
+    priority: 700
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: chmod.*777
+    then: DENY
+    message: chmod 777 blocked. Use minimum required permissions.
+  - name: SEC-019-block-sql-drop
+    description: Block DROP TABLE / DROP DATABASE statements in exec commands
+    priority: 885
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: DROP\s+(TABLE|DATABASE)
+    then: DENY
+    message: Destructive DROP statement blocked. Use archived/soft-delete instead.
+  - name: SEC-027-block-sql-drop-url
+    description: Block DROP TABLE statements in HTTP request URLs
+    priority: 885
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: http_request
+        - field: tool.args.url
+          operator: contains
+          value: DROP TABLE
+    then: DENY
+    message: Destructive DROP statement blocked. Use archived/soft-delete instead.
+  - name: SEC-028-block-sql-drop-content
+    description: Block DROP TABLE / DROP DATABASE statements in file write content
+    priority: 885
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: write_file
+        - field: tool.args.content
+          operator: match
+          value: DROP\s+(TABLE|DATABASE)
+    then: DENY
+    message: Destructive DROP statement blocked. Use archived/soft-delete instead.
+  - name: SEC-020-block-docker-privileged
+    description: Block docker run with --privileged (host-level escalation)
+    priority: 860
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: contains
+          value: docker run
+        - field: tool.args.command
+          operator: contains
+          value: '--privileged'
+    then: DENY
+    message: Privileged container execution blocked. Use a least-privilege container profile.
+  - name: SEC-021-block-curl-pipe-shell
+    description: Block piping a remote download straight into a shell (curl|sh, wget|bash)
+    priority: 680
+    ring: 1
+    when:
+      logic: AND
+      conditions:
+        - field: tool.name
+          operator: eq
+          value: exec
+        - field: tool.args.command
+          operator: match
+          value: (curl|wget).*\|.*(sh|bash)
+    then: DENY
+    message: Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
