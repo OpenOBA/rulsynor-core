@@ -1,7 +1,8 @@
 /**
  * Decision Object Builder — standalone (zero framework dependency).
  *
- * Produces 25-field Decision Objects aligned to erdl-vectors v1.3.
+ * Produces Decision Objects aligned to erdl-vectors v1.5 (flat-hash scheme,
+ * `erdl-do-v1.5-hash-flat`).
  * All fields enter JCS → SHA-256 → audit.hash.
  *
  * Usage:
