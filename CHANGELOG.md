@@ -32,6 +32,7 @@
 - **`context.*` 规则休眠**：SEC-023 / CMP-001/002/003 因 runtime 不注入 `context` 而永不命中
 - **ETH-001 言行一致失效**：`previous_promise` 未从计划派生，且 PlanParser 无法解析运行时 prompt 的 `op:` 标签
 - 质量门禁 34 条 0 warning（原 11 warning / 30 条）
+- **CORRECT 循环三处边缘缺陷（自查发现）**：① Agent 明示请求人工时人工信号优先于纠正循环；② 非 ALLOW/DENY/EMERGENCY_HALT 裁决结束序列时不再误报「进入下一轮」；③ 纠正未解决即退出不得伪装成 ALLOW（汇总改报 CORRECT）
 
 ### Security
 - 跨工具内容匹配规则显式 `tool.name` 约束（消除“匹配所有工具调用”的隐性越界）
