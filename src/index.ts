@@ -81,8 +81,12 @@ export {
   toRuleDefinitions,
   toERDLRuleSet,
   toCompiledRules,
+  isCanonicalDocument,
+  getFallbackDecision,
 } from './rules/index.js';
 export type { PresetRule } from './rules/index.js';
+export { parseErdlDocument, loadErdlFile } from './engine/erdl-loader.js';
+export type { ErdlDocument, ErdlMetadata } from './engine/erdl-loader.js';
 export {
   advanceCorrectLoop,
   parseRequestHumanSignal,

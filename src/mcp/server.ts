@@ -25,6 +25,7 @@ import {
   buildDecisionObject,
   loadPresetRules,
   loadRulesFromDir,
+  getFallbackDecision,
   toCompiledRules,
 } from '../index.js';
 import { PROVENANCE } from '../provenance.js';
@@ -89,6 +90,7 @@ export function createMcpDeps(): McpDeps {
   const presetRules = loadPresetRules();
   const userRules = paths.rulesDir ? loadRulesFromDir(paths.rulesDir) : [];
   const compiled = toCompiledRules([...presetRules, ...userRules]);
+  const fallbackDecision = getFallbackDecision([...presetRules, ...userRules]);
   const evaluator = new Evaluator(new GuardStateManager());
   let prevHash: string | null = null;
 
@@ -99,12 +101,14 @@ export function createMcpDeps(): McpDeps {
       context: Record<string, unknown> = {},
     ): McpEvalResult {
       const startMs = Date.now();
-      const result = evaluator.evaluate(compiled, {
+      const evalCtx: Record<string, unknown> = {
         tool: { name: toolName, args: toolArgs },
         context,
         sessionId: 'mcp',
         agentId: 'rulsynor-mcp',
-      });
+      };
+      if (fallbackDecision !== undefined) evalCtx['metadata.decision'] = fallbackDecision;
+      const result = evaluator.evaluate(compiled, evalCtx);
       const doObj = buildDecisionObject({
         input: {
           runId: `mcp-${Date.now()}`,

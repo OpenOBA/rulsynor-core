@@ -15,7 +15,7 @@
  */
 
 import { Evaluator } from './engine/evaluator.js';
-import type { RuleDefinition } from './engine/rule-definition.js';
+import type { RuleDefinition, Decision } from './engine/rule-definition.js';
 import { ruleWhenToExpr } from './engine/expr-tree/rule-to-expr.js';
 import { toSExpr } from './engine/expr-tree/s-expression.js';
 import { buildDecisionObject } from './guard/index.js';
@@ -79,6 +79,12 @@ export interface RuntimeOptions {
    * 3-round correction state machine — round start, round advance, resolution, escalation.
    */
   onCorrectLoop?: (state: CorrectLoopState, round: number) => void;
+  /**
+   * Fallback decision (metadata.decision, language spec §2.2): the verdict applied when
+   * no rule matches. Resolved from the loaded documents by getFallbackDecision(); when
+   * omitted the evaluator's default ALLOW applies.
+   */
+  fallbackDecision?: Decision;
   /**
    * Decision Object hook (⑦ 审计落链): called for every guarded tool call with the
    * fully-built, tamper-evident DO plus loop metadata. CORE uses it for
@@ -166,6 +172,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
     context = {},
     planFirst = true,
     onStep,
+    fallbackDecision,
   } = opts;
 
   // ── ① 理解意图 ──
@@ -259,7 +266,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
       onThought?.(response.content, step);
       onToolCall?.(tc.name, tc.arguments, step);
 
-      const ctx = {
+      const ctx: Record<string, unknown> = {
         // Canonical evaluation context: Entity namespaces at the top level —
         // `tool.name`/`tool.args.*` for the tool call (ERDL SPEC §3/§4/§7),
         // `context.*` for business context. NOT `{context:{tool:...}}`.
@@ -268,6 +275,11 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         sessionId,
         agentId,
       };
+      // metadata.decision fallback (§2.2) — injected when the host resolves one from the
+      // loaded documents; absent -> evaluator default ALLOW.
+      if (fallbackDecision !== undefined) {
+        ctx['metadata.decision'] = fallbackDecision;
+      }
 
       // ── ⑤ 规则把关 ──
       const evalStart = performance.now();

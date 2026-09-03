@@ -22,6 +22,7 @@ import {
   createToolExecutor,
   loadPresetRules,
   loadRulesFromDir,
+  getFallbackDecision,
   runReActLoop,
   toCompiledRules,
 } from '../index.js';
@@ -208,6 +209,7 @@ export async function runChat(args: string[]): Promise<void> {
     const userRules = paths.rulesDir ? loadRulesFromDir(paths.rulesDir) : [];
     const compiled = toCompiledRules([...presetRules, ...userRules]);
     const rulesMeta = compiled.map(r => ({ name: r.name, version: 1 }));
+    const fallbackDecision = getFallbackDecision([...presetRules, ...userRules]);
 
     const llm = createOpenAiCompatibleLlm(modelCfg, apiKey, TOOL_SCHEMAS);
     const evaluator = new Evaluator(new GuardStateManager());
@@ -224,6 +226,7 @@ export async function runChat(args: string[]): Promise<void> {
         userMessage: message,
         agentId: 'rulsynor-cli',
         sessionId,
+        fallbackDecision,
         onStep: (step, detail) =>
           console.log(dim(`   ${STEP_LABELS[step] ?? `step ${step}`} · ${detail}`)),
         onDecisionObject: (doObj, meta) => {

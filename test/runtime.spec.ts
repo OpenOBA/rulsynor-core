@@ -494,6 +494,52 @@ describe('runReActLoop — business context 注入（context.* 规则）', () =>
   });
 });
 
+describe('runReActLoop — metadata.decision fallback（§2.2）', () => {
+  it('fallbackDecision=DENY 且无规则命中 → 不执行、裁决 DENY', async () => {
+    const executed: unknown[][] = [];
+    const result = await runReActLoop({
+      llm: async () => ({
+        content: 'call',
+        toolCalls: [{ name: 'unknown_tool', arguments: {} }],
+      }),
+      evaluator: new Evaluator(),
+      compiledRules: [],
+      rules: [],
+      tools: { unknown_tool: makeTool(executed) },
+      userMessage: 'go',
+      agentId: 'a',
+      sessionId: 's',
+      planFirst: false,
+      fallbackDecision: 'DENY',
+    });
+    expect(executed).toHaveLength(0);
+    expect(result.decision).toBe('DENY');
+  });
+
+  it('fallbackDecision 缺省 → 无规则命中默认 ALLOW', async () => {
+    const executed: unknown[][] = [];
+    let call = 0;
+    const result = await runReActLoop({
+      llm: async () => {
+        call++;
+        if (call === 1)
+          return { content: 'call', toolCalls: [{ name: 'unknown_tool', arguments: {} }] };
+        return { content: 'done' };
+      },
+      evaluator: new Evaluator(),
+      compiledRules: [],
+      rules: [],
+      tools: { unknown_tool: makeTool(executed) },
+      userMessage: 'go',
+      agentId: 'a',
+      sessionId: 's',
+      planFirst: false,
+    });
+    expect(executed).toHaveLength(1);
+    expect(result.decision).toBe('ALLOW');
+  });
+});
+
 describe('runReActLoop — previous_promise 派生（ETH-001 言行一致）', () => {
   it('计划声明 read-only 后写工具 → REQUEST_HUMAN 且不执行', async () => {
     const preset = toCompiledRules(loadPresetRules());
