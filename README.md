@@ -77,7 +77,7 @@ rulsynor mcp   # stdio: rulsynor_guard_evaluate / rulsynor_rules_list / rulsynor
 import { Evaluator, GuardStateManager, loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
 const evaluator = new Evaluator(new GuardStateManager());
-const rules = toCompiledRules(loadPresetRules());   // 30 bundled rules
+const rules = toCompiledRules(loadPresetRules());   // 34 bundled rules
 const result = evaluator.evaluate(rules, {
   tool: { name: 'exec', args: { command: 'rm -rf /' } },
   sessionId: 's1',
@@ -302,7 +302,7 @@ Copy the prompt template from [`docs/RULE-PROMPT.md`](docs/RULE-PROMPT.md), past
 ```typescript
 import { loadPresetRules, toCompiledRules } from '@openoba/rulsynor-core';
 
-// 30 built-in rules + your business rules
+// 34 built-in rules + your business rules
 const presetRules = loadPresetRules();           // PresetRule[]
 const rules = toCompiledRules(presetRules);       // CompiledRule[] — ready for the engine
 
@@ -594,7 +594,7 @@ registry.register({
 | `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object (return type: `DecisionObject`) |
 | `generateAID()` | Generate Agent Identity Code (OID 1.2.156.3088) |
 | `getComplianceProfile()` | Jurisdiction-aware compliance auto-configuration |
-| `loadPresetRules()` | Load 30 built-in ERDL YAML rules |
+| `loadPresetRules()` | Load 34 built-in ERDL YAML rules |
 | `toCompiledRules(rules)` | Convert preset rules → `CompiledRule[]` for Evaluator |
 | `toERDLRuleSet(rules)` | Convert preset rules → ERDLRuleSet format |
 | `extractNavigationGuide(opts)` | Structured LLM guidance from Guard decisions |
@@ -667,7 +667,7 @@ The cross-implementation test vector set lives in its own authoritative reposito
 - [`CHANGELOG.md`](CHANGELOG.md) — change log (Keep a Changelog)
 - [`ROADMAP.md`](ROADMAP.md) — version roadmap
 
-> **Current status**: `0.1.0-alpha` — engine aligned to Spec v2.0 (30 operators / 34 nodes); Decision Object still v1.3 caliber (`decision_type` legacy field), migrating to v1.5 (RFC-002) in the `0.1.0-beta` milestone.
+> **Current status**: `0.1.0-alpha` — engine aligned to Spec v2.0 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
 
 ---
 

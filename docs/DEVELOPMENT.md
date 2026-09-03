@@ -139,7 +139,7 @@ pnpm test
 |------|------|
 | `pnpm run build` | tsc 编译 + 复制规则 YAML 到 dist/ |
 | `pnpm run typecheck` | 仅类型检查（`tsc --noEmit`） |
-| `pnpm test` | 跑全部 555 测试 |
+| `pnpm test` | 跑全部 615 测试 |
 | `pnpm run dev` | 监听模式 |
 | `pnpm run lint` | ESLint（严格规则） |
 | `pnpm run format` | Prettier 自动修复 |
@@ -208,7 +208,7 @@ pnpm test
 | 层 | 内容 |
 |----|------|
 | **单元** | `engine/*.spec.ts`：每模块一测（求值器/编译/序列化/校验/模板…） |
-| **一致性** | `engine/erdl-schema.spec.ts`：单一事实源 24 条断言（运算符逐个真过编译器等） |
+| **一致性** | `engine/erdl-schema.spec.ts`：单一事实源 25 条断言（运算符逐个真过编译器等） |
 | **集成** | `core.spec.ts`：Decision Object 全流程 + 审计链 |
 | **冒烟** | CI smoke：playground CLI DENY 断言 |
 

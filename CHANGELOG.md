@@ -11,9 +11,28 @@
 ### Added
 - `VERSIONING.md`：软件版本全生命周期规范（SemVer + 阶段 + 兼容承诺 + 废弃政策）
 - `RELEASING.md`：发布流程与门禁清单
+- **开箱即用 CLI**：`rulsynor chat`（7 步工作法）/ `setup`（model 配置，key 只进 env 不落库）/ `rules list` / `audit list|show`（只读无导出）/ `mcp`（stdio JSON-RPC）/ `demo`（无 key 守卫演示）
+- **配置底座**：`RULSYNOR_HOME` / `RULSYNOR_RULES_DIR` / `RULSYNOR_API_KEY`（env-only）
+- **审计持久化**：SQLite `audit_records` 表（写入 + 只读查看，哈希幂等）
+- **用户规则目录加载**：`loadRulesFromDir`（drop-in 生效）
+- **LLM 结构化工具回环**：function calling（tool_call id + tool role）
+- **业务上下文注入**：runtime `context` 选项 + MCP `rulsynor_guard_evaluate` 的 `context` 参数（`context.*` 规则由宿主确定性注入，非 LLM 猜）
 
 ### Changed
 - 许可证：运行时 MIT → BSL 1.1（Change Date 2030-06-09，Change License GPL 3.0；非生产使用免费，见 LICENSE）
+- **Decision Object v1.3 → v1.5 扁平哈希**（`erdl-do-v1.5-hash-flat`）；签名模式（ECDSA P-256）待 RFC-002 §10
+- **预设规则 30 → 34**（跨工具安全规则按工具拆分：新增 SEC-025/026/027/028）
+- 规则质量门禁 `no-tool-constraint`：仅对引用 `tool.*` 字段的 coding/security 规则告警，纯 `context.*` 事件规则豁免
+
+### Fixed
+- **P0 字段路径**：规范规则字段路径是 `tool.name`/`tool.args.*`（Entity 命名空间），非 `context.tool.name`——此前 30 条预设规则因上下文形状错误而静默 ALLOW，Guard 形同虚设
+- **11 条跨工具安全规则缺 `tool.name` 约束**：补 tool.name / 按工具拆分（含 SEC-011 `logic:OR→AND` 语义修复）
+- **`context.*` 规则休眠**：SEC-023 / CMP-001/002/003 因 runtime 不注入 `context` 而永不命中
+- **ETH-001 言行一致失效**：`previous_promise` 未从计划派生，且 PlanParser 无法解析运行时 prompt 的 `op:` 标签
+- 质量门禁 34 条 0 warning（原 11 warning / 30 条）
+
+### Security
+- 跨工具内容匹配规则显式 `tool.name` 约束（消除“匹配所有工具调用”的隐性越界）
 
 ## [0.1.0-alpha] - 2026-09-01
 
