@@ -63,9 +63,9 @@ describe('toCompiledRules', () => {
       expect(c.action.ring ?? 0).toBeLessThanOrEqual(3);
       expect(typeof c.action.decision).toBe('string');
       // Blocking rules carry a reason (message); ALLOW rules carry an instruction.
-      expect(
-        typeof c.action.reason === 'string' || typeof c.action.instruction === 'string',
-      ).toBe(true);
+      expect(typeof c.action.reason === 'string' || typeof c.action.instruction === 'string').toBe(
+        true,
+      );
       expect(typeof c.conditionLogic).toBe('string');
       expect(c.conditionLogic).toMatch(/^AND|OR$/);
       expect(c.enabled).toBe(true);

@@ -46,7 +46,10 @@ describe('createOpenAiCompatibleLlm', () => {
     ]);
     await withTools([{ role: 'user', content: 'x' }]);
     expect(body().tools).toEqual([
-      { type: 'function', function: { name: 'exec', description: 'd', parameters: { type: 'object' } } },
+      {
+        type: 'function',
+        function: { name: 'exec', description: 'd', parameters: { type: 'object' } },
+      },
     ]);
 
     const withoutTools = createOpenAiCompatibleLlm({}, 'k');
@@ -60,7 +63,9 @@ describe('createOpenAiCompatibleLlm', () => {
         {
           message: {
             content: '',
-            tool_calls: [{ id: 'call_1', function: { name: 'exec', arguments: '{"command":"ls"}' } }],
+            tool_calls: [
+              { id: 'call_1', function: { name: 'exec', arguments: '{"command":"ls"}' } },
+            ],
           },
         },
       ],
@@ -103,7 +108,11 @@ describe('createOpenAiCompatibleLlm', () => {
       { name: 'exec', description: 'd', parameters: { type: 'object' } },
     ]);
     await llm([
-      { role: 'assistant', content: '', tool_calls: [{ id: 'call_1', name: 'exec', arguments: { command: 'ls' } }] },
+      {
+        role: 'assistant',
+        content: '',
+        tool_calls: [{ id: 'call_1', name: 'exec', arguments: { command: 'ls' } }],
+      },
       { role: 'tool', tool_call_id: 'call_1', content: 'output' },
     ]);
     expect(body().messages).toEqual([
@@ -111,7 +120,11 @@ describe('createOpenAiCompatibleLlm', () => {
         role: 'assistant',
         content: null,
         tool_calls: [
-          { id: 'call_1', type: 'function', function: { name: 'exec', arguments: '{"command":"ls"}' } },
+          {
+            id: 'call_1',
+            type: 'function',
+            function: { name: 'exec', arguments: '{"command":"ls"}' },
+          },
         ],
       },
       { role: 'tool', content: 'output', tool_call_id: 'call_1' },

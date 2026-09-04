@@ -32,7 +32,8 @@ export interface RulsynorPaths {
 /** Resolve CORE paths from the environment. Pure — creates nothing on disk. */
 export function resolvePaths(): RulsynorPaths {
   const envHome = process.env[HOME_ENV];
-  const home = envHome && envHome.trim().length > 0 ? resolve(envHome) : join(homedir(), '.rulsynor');
+  const home =
+    envHome && envHome.trim().length > 0 ? resolve(envHome) : join(homedir(), '.rulsynor');
   return {
     home,
     dbPath: join(home, 'rulsynor.db'),

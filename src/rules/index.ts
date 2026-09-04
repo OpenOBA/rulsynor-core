@@ -58,8 +58,7 @@ export function loadRulesFromDir(dir: string): PresetRule[] {
       if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
         if (isCanonicalDocument(doc)) {
           // One canonical document per file; expand its rules in toCompiledRules.
-          const name = ((doc.metadata as Record<string, unknown> | undefined)?.name as
-            string) || f;
+          const name = ((doc.metadata as Record<string, unknown> | undefined)?.name as string) || f;
           rules.push({ name, content, parsed: doc });
         } else {
           const name = (doc.name as string) || f;

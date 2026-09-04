@@ -75,15 +75,15 @@ describe('preset context.* rules (business-context injection)', () => {
   });
 
   it('REQUEST_HUMAN large financial transaction (CMP-003)', () => {
-    expect(
-      decide('exec', { command: 'ls' }, { amount: 9000, transaction_type: 'financial' }),
-    ).toBe('REQUEST_HUMAN');
+    expect(decide('exec', { command: 'ls' }, { amount: 9000, transaction_type: 'financial' })).toBe(
+      'REQUEST_HUMAN',
+    );
   });
 
   it('REQUEST_HUMAN GDPR delete (CMP-002)', () => {
-    expect(
-      decide('exec', { command: 'ls' }, { operation: 'delete', gdpr_relevant: true }),
-    ).toBe('REQUEST_HUMAN');
+    expect(decide('exec', { command: 'ls' }, { operation: 'delete', gdpr_relevant: true })).toBe(
+      'REQUEST_HUMAN',
+    );
   });
 
   it('context.* rules stay silent without context (ALLOW)', () => {

@@ -147,15 +147,24 @@ describe('runReActLoop — 决策穷尽分发（R3a）', () => {
 
   it('CORRECT 后重试命中 DENY → 按 DENY 封锁（退出循环，不转人工）', async () => {
     const executed: unknown[][] = [];
-    const compiledRules = [makeArgsRule('drill', '/tmp/bad', 'CORRECT'), makeArgsRule('drill', '/tmp/evil', 'DENY')];
+    const compiledRules = [
+      makeArgsRule('drill', '/tmp/bad', 'CORRECT'),
+      makeArgsRule('drill', '/tmp/evil', 'DENY'),
+    ];
     let call = 0;
     const result = await runReActLoop({
       llm: async () => {
         call++;
         if (call === 1)
-          return { content: 'try', toolCalls: [{ name: 'drill', arguments: { path: '/tmp/bad' } }] };
+          return {
+            content: 'try',
+            toolCalls: [{ name: 'drill', arguments: { path: '/tmp/bad' } }],
+          };
         if (call === 2)
-          return { content: 'retry', toolCalls: [{ name: 'drill', arguments: { path: '/tmp/evil' } }] };
+          return {
+            content: 'retry',
+            toolCalls: [{ name: 'drill', arguments: { path: '/tmp/evil' } }],
+          };
         return { content: 'done' };
       },
       evaluator: new Evaluator(),
@@ -183,14 +192,20 @@ describe('runReActLoop — CORRECT 3 轮纠正循环（原始设计 D21）', () 
       llm: async (msgs: Array<{ role: string; content: string }>) => {
         call++;
         if (call === 1) {
-          return { content: 'try', toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/bad' } }] };
+          return {
+            content: 'try',
+            toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/bad' } }],
+          };
         }
         if (call === 2) {
           // The correction feedback must reach the model as a tool message before the retry.
           const last = msgs[msgs.length - 1];
           expect(last.role).toBe('tool');
           expect(last.content).toContain('use /tmp/safe instead');
-          return { content: 'retry', toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/safe' } }] };
+          return {
+            content: 'retry',
+            toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/safe' } }],
+          };
         }
         return { content: 'done' };
       },
@@ -281,9 +296,15 @@ describe('runReActLoop — CORRECT 3 轮纠正循环（原始设计 D21）', () 
       llm: async () => {
         call++;
         if (call === 1)
-          return { content: 'try', toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/bad' } }] };
+          return {
+            content: 'try',
+            toolCalls: [{ name: 'fixer', arguments: { path: '/tmp/bad' } }],
+          };
         if (call === 2)
-          return { content: 'switch', toolCalls: [{ name: 'notifier', arguments: { path: '/tmp/x' } }] };
+          return {
+            content: 'switch',
+            toolCalls: [{ name: 'notifier', arguments: { path: '/tmp/x' } }],
+          };
         return { content: 'done' };
       },
       evaluator: new Evaluator(),
@@ -310,7 +331,10 @@ describe('runReActLoop — CORRECT 3 轮纠正循环（原始设计 D21）', () 
       llm: async () => {
         call++;
         if (call === 1)
-          return { content: 'try', toolCalls: [{ name: 'giver', arguments: { path: '/tmp/bad' } }] };
+          return {
+            content: 'try',
+            toolCalls: [{ name: 'giver', arguments: { path: '/tmp/bad' } }],
+          };
         return { content: 'I give up' };
       },
       evaluator: new Evaluator(),

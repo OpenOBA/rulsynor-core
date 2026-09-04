@@ -171,9 +171,7 @@ rules:
 `);
     const r = doc.rules[0]!;
     expect(r.action.decision).toBe('CORRECT');
-    expect(r.action.correction).toBe(
-      'Rewrite the write target to /var/app/ instead of /etc/.',
-    );
+    expect(r.action.correction).toBe('Rewrite the write target to /var/app/ instead of /etc/.');
   });
 
   it('maps legal_basis / source_text', () => {
@@ -194,7 +192,9 @@ rules:
 
   it('rejects an unsupported protocol', () => {
     expect(() =>
-      parseErdlDocument(`protocol: "erdl/v1"\nversion: "1.0.0"\nmetadata: { name: "x" }\nrules: []`),
+      parseErdlDocument(
+        `protocol: "erdl/v1"\nversion: "1.0.0"\nmetadata: { name: "x" }\nrules: []`,
+      ),
     ).toThrow(/Unsupported protocol/);
   });
 

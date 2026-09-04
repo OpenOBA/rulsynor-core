@@ -287,9 +287,7 @@ export class Store {
   listAudit(limit = 20): AuditRecord[] {
     const safeLimit = Math.max(1, Math.min(1000, Math.trunc(limit)));
     const rows = this.db
-      .prepare(
-        'SELECT * FROM audit_records ORDER BY id DESC LIMIT ?',
-      )
+      .prepare('SELECT * FROM audit_records ORDER BY id DESC LIMIT ?')
       .all(safeLimit) as unknown[];
     return rows.map(row => this.mapAudit(row as Record<string, unknown>));
   }
@@ -297,8 +295,7 @@ export class Store {
   /** Exact-hash lookup. */
   getAuditByHash(hash: string): AuditRecord | undefined {
     const row = this.db.prepare('SELECT * FROM audit_records WHERE hash = ?').get(hash) as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     return row ? this.mapAudit(row) : undefined;
   }
 
@@ -309,7 +306,7 @@ export class Store {
     // (sha256:<hex>). Reject them so a viewer can't wildcard-match arbitrary records.
     if (/[%_]/.test(prefix)) return undefined;
     const rows = this.db
-      .prepare('SELECT * FROM audit_records WHERE hash LIKE ? || \'%\' LIMIT 2')
+      .prepare("SELECT * FROM audit_records WHERE hash LIKE ? || '%' LIMIT 2")
       .all(prefix) as unknown[];
     if (rows.length !== 1) return undefined;
     return this.mapAudit(rows[0] as Record<string, unknown>);

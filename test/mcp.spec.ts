@@ -4,9 +4,8 @@ import type { JsonRpcRequest, McpDeps } from '../src/mcp/server.js';
 function fakeDeps(): McpDeps {
   return {
     evaluate: (toolName, toolArgs) => ({
-      decision: toolName === 'exec' && String(toolArgs.command ?? '').includes('rm -rf')
-        ? 'DENY'
-        : 'ALLOW',
+      decision:
+        toolName === 'exec' && String(toolArgs.command ?? '').includes('rm -rf') ? 'DENY' : 'ALLOW',
       reason: toolName === 'exec' ? 'recursive delete blocked' : null,
       hash: 'sha256:fake',
       matchedRules: toolName === 'exec' ? ['block-rm-rf'] : [],
@@ -114,14 +113,16 @@ describe('MCP stdio server — handleRequest', () => {
 
   it('lists rules and recent audit read-only', () => {
     const rules = handleRequest(req('tools/call', { name: 'rulsynor_rules_list' }), deps);
-    expect(JSON.parse((rules?.result as { content: Array<{ text: string }> }).content[0].text))
-      .toHaveLength(1);
+    expect(
+      JSON.parse((rules?.result as { content: Array<{ text: string }> }).content[0].text),
+    ).toHaveLength(1);
     const audit = handleRequest(
       req('tools/call', { name: 'rulsynor_audit_recent', arguments: { limit: 2 } }),
       deps,
     );
-    expect(JSON.parse((audit?.result as { content: Array<{ text: string }> }).content[0].text))
-      .toHaveLength(2);
+    expect(
+      JSON.parse((audit?.result as { content: Array<{ text: string }> }).content[0].text),
+    ).toHaveLength(2);
   });
 
   it('rejects unknown methods and unknown tools', () => {

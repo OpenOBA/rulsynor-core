@@ -53,7 +53,9 @@ export async function runSetup(args: string[]): Promise<void> {
     console.log('── rulsynor config ────────────────────────────');
     console.log(`  home:      ${paths.home}`);
     console.log(`  db:        ${paths.dbPath}`);
-    console.log(`  rules dir: ${paths.rulesDir ?? '(none — put *.erdl.yaml in ./rules or ~/.rulsynor/rules)'}`);
+    console.log(
+      `  rules dir: ${paths.rulesDir ?? '(none — put *.erdl.yaml in ./rules or ~/.rulsynor/rules)'}`,
+    );
     console.log(`  model:     ${cfg.modelName ?? 'gpt-4o-mini (default)'}`);
     console.log(`  base url:  ${cfg.baseUrl ?? 'https://api.openai.com/v1 (default)'}`);
     console.log(

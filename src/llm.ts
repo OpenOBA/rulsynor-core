@@ -50,9 +50,7 @@ export function createOpenAiCompatibleLlm(
   const base = (cfg.baseUrl ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
   const model = cfg.modelName ?? 'gpt-4o-mini';
   const toolDefs =
-    tools && tools.length > 0
-      ? tools.map(t => ({ type: 'function', function: t }))
-      : undefined;
+    tools && tools.length > 0 ? tools.map(t => ({ type: 'function', function: t })) : undefined;
 
   return async (messages: LlmMessage[]) => {
     const resp = await fetch(`${base}/chat/completions`, {

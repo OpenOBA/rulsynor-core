@@ -24,9 +24,10 @@ function allowRule(toolName: string): RuleDefinition {
   };
 }
 
-function makeCapturingLlm(
-  responses: LLMResponse[],
-): { llm: (messages: LLMMessage[]) => Promise<LLMResponse>; captured: LLMMessage[][] } {
+function makeCapturingLlm(responses: LLMResponse[]): {
+  llm: (messages: LLMMessage[]) => Promise<LLMResponse>;
+  captured: LLMMessage[][];
+} {
   const captured: LLMMessage[][] = [];
   let i = 0;
   return {
@@ -67,7 +68,11 @@ describe('runReActLoop — structured tool-call round-trip', () => {
       tool_calls: [{ id: 'call_abc', name: 'exec', arguments: { command: 'ls' } }],
     });
     const toolMsg = round2.find(m => m.role === 'tool');
-    expect(toolMsg).toMatchObject({ role: 'tool', tool_call_id: 'call_abc', content: 'file1\nfile2' });
+    expect(toolMsg).toMatchObject({
+      role: 'tool',
+      tool_call_id: 'call_abc',
+      content: 'file1\nfile2',
+    });
   });
 
   it('emits a tool-role message for an unknown tool (id preserved)', async () => {
