@@ -3,11 +3,13 @@
 > **规则决定一切。**
 > **Last updated**: 2026-09-03 — CORRECT 循环按原始设计接入内置运行时（3 轮自动纠正，3 轮未解决升级人工）；原始参数永不执行。
 
-**rulsynor-core** 是让这句话落地的确定性内核：**规则——而非 prompt——决定 Agent 的每一个动作。**
+**rulsynor-core** 是让这句话落地的确定性内核：**规则——决定 Agent 的每一个动作。**
 
 大模型交付的是智力，但智力本身既没有方向、也没有责任主体——能力是真实的，可被信任的能力却没有人负责（见[《职业化AI员工白皮书》](./pae-whitepaper-v1.0.md)）。rulsynor-core 补齐了这个缺口：任何工具在执行前，都先经过 ERDL 规则引擎的确定性裁决（允许 / 拒绝 / 纠偏 / 上报 / 人工审批）；每一条裁决之后，都封存一份防篡改的**决策证据（Decision Object）**——JCS + SHA-256，可独立重算、逐字节验证。
 
 **模型负责思考，规则负责决定。**
+
+**技术基础**：rulsynor-core 建立在 **ERDL**（Entity-Rule Definition Language，实体规则定义语言）之上——一种声明式、确定性、可跨实现逐字节验证的规则格式（[ERDL 规范 v2.1](./docs/SPEC/erdl-spec.md)）；每一次确定性裁决都封存为 **Decision Object**（决策对象），遵循 [RFC-002 v1.5](./docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) 的扁平哈希链（`erdl-do-v1.5-hash-flat`，JCS + SHA-256）；整体架构对齐 [OpenOBA SPEC v2.0](./docs/SPEC/spec-2.0.md)（职业化 AI 员工开放规范）。
 
 ```bash
 npm install @openoba/rulsynor-core
@@ -205,7 +207,7 @@ message: "大批量写入（>10MB）已记录。建议分块以提高可靠性�
 
 **可用运算符**（30 种——28 种条件运算符 + 2 种修饰符 `within`/`rate`，Spec v2.1 §5.2）：`eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
 
-**规则可以做的决策**：
+**规则可以做的决策**（Spec v2.1 §6）：
 
 | 决策 | 含义 | 什么时候用 |
 |------|------|------|
@@ -219,7 +221,7 @@ message: "大批量写入（>10MB）已记录。建议分块以提高可靠性�
 | `DELEGATE` | 委派给其他 Agent/角色 | 专业任务转交 |
 | `EMERGENCY_HALT` | 立即停摆所有操作 | 凭证泄漏、SSRF 攻击 |
 
-**执行环**——哪些规则先触发：
+**执行环**——哪些规则先触发（Spec v2.1 §4.1 `ring` 字段：0 内核 / 1 恢复 / 2 审批 / 3 建议）：
 
 | 环 | 评估顺序 | 典型规则 |
 |:---:|------|------|
