@@ -1,19 +1,19 @@
 # ERDL Rule Authoring Guide
 
 > For engine internals, see [DEVELOPMENT.md](./DEVELOPMENT.md).
-> For the formal specification, see [ERDL Spec v2.0](./SPEC/erdl-spec.md).
-> **Last updated**: 2026-09-03 — presets and loader migrated to the canonical ERDL document format (language spec v2.0 §2.1: `protocol`/`version`/`metadata`/`rules[]` + string `then`); this guide now documents that format end-to-end. Field paths canonical `tool.name`/`tool.args.*` (Entity namespace).
+> For the formal specification, see [ERDL Spec v2.1](./SPEC/erdl-spec.md).
+> **Last updated**: 2026-09-03 — presets and loader migrated to the canonical ERDL document format (language spec v2.1 §2.1: `protocol`/`version`/`metadata`/`rules[]` + string `then`); this guide now documents that format end-to-end. Field paths canonical `tool.name`/`tool.args.*` (Entity namespace).
 
 ---
 
 ## Rule Anatomy
 
 An ERDL rule lives inside a **document** — a single `*.erdl.yaml` file with the
-canonical top-level shape (language spec v2.0 §2.1):
+canonical top-level shape (language spec v2.1 §2.1):
 
 ```yaml
 protocol: "erdl/v2"             # Protocol identifier (fixed value)
-version: "2.0.0"                # Rule-format version (semver)
+version: "2.1.0"                # Rule-format version (semver)
 metadata:
   name: my-rule-set             # Rule-set name
   description: "My guard rules"
@@ -23,9 +23,11 @@ metadata:
 rules:
   - name: SEC-001-block-exec    # Required: [CAT]-[NNN]-desc, unique
     description: "Block dangerous exec commands"
+    category: security          # Rule-level category (defaults to metadata.category)
     priority: 900               # Lower number = higher priority (1-1000)
     override: high              # critical > high > normal > low (§7.1; optional)
     ring: 0                     # 0 = check first, 3 = check last
+    enabled: true               # Rule enabled flag (default true)
     when:                       # Trigger condition
       logic: AND                # AND = all conditions, OR = any
       conditions:
@@ -38,19 +40,19 @@ rules:
     then: DENY                   # String decision type (§6)
     message: "Destructive command blocked."   # Decision message (blocking MUST be non-empty)
     instruction: "Use a read tool to inspect first."  # ALLOW + instruction guidance
-    alternative: "Inspect the target before destructive changes."  # Blocked alternative
     correction: "Rewrite the path to an app directory."  # CORRECT decision fix text
     unless: null                # Exemption block (§4.1; optional)
     explanation:                # Bilingual why (optional)
       zh: "防止破坏性命令"
       en: "Prevents destructive commands"
+    alternative: "Inspect the target before destructive changes."  # Blocked alternative
     legal_basis: "Article 23(2)"  # Regulation clause (optional)
     source_text: "..."            # Original regulation text (optional)
 ```
 
-**Field order** (language spec §4.1): `name` → `description` → `priority` → `override`
-→ `ring` → `when` → `then` → `message` → `instruction` → `unless` → `explanation`
-→ `alternative` → `legal_basis` → `source_text`.
+**Field order** (language spec §4.1): `name` → `description` → `category` → `priority` → `override`
+→ `ring` → `enabled` → `when` → `then` → `message` → `instruction` → `correction`
+→ `unless` → `explanation` → `alternative` → `legal_basis` → `source_text`.
 
 `then` is a **string** — the decision type — not an object. The decision message,
 instruction, alternative and correction are separate rule-level fields.
@@ -112,14 +114,14 @@ Without a `context` object, `context.*` rules stay silent (no match → default 
 
 ## Operator Reference
 
-> **30 operators** (28 condition operators + 2 modifiers `within`/`rate`, Spec v2.0 §11). The 28 condition operators are covered by V-ENGINE cross-implementation vectors. Temporal operators (`within`/`rate`) are stateful and require `evaluator.commitTemporal()` after ALLOW decisions.
+> **30 operators** (28 condition operators + 2 modifiers `within`/`rate`, Spec v2.1 §5.2). The 28 condition operators are covered by V-ENGINE cross-implementation vectors. Temporal operators (`within`/`rate`) are stateful; their window counts are snapshotted into `evaluation.temporal_state` automatically (RFC-002 §2.4).
 
 ### Equality & Comparison
 
 | Operator | Description | Example `value` | Example Match |
 |----------|-------------|----------------|---------------|
 | `eq` | Equal (deep comparison for objects) | `"exec"` | `tool.name = "exec"` |
-| `neq` / `ne` | Not equal | `"read"` | `tool.name ≠ "read"` |
+| `ne` | Not equal | `"read"` | `tool.name ≠ "read"` |
 | `gt` | Greater than (numbers only) | `5000` | `amount > 5000` |
 | `gte` | Greater than or equal | `100` | `count >= 100` |
 | `lt` | Less than | `10` | `size < 10` |
@@ -138,7 +140,7 @@ Without a `context` object, `context.*` rules stay silent (no match → default 
 
 | Operator | Description | Example `value` | Example Match |
 |----------|-------------|----------------|---------------|
-| `match` / `matches` | Regex match (ReDoS-protected) | `"^rm\\s+-rf"` | `"rm -rf /"` |
+| `match` | Regex match (ReDoS-protected) | `"^rm\\s+-rf"` | `"rm -rf /"` |
 | `starts_with` | String starts with | `"/etc/"` | `"/etc/hosts"` |
 | `ends_with` | String ends with | `".js"` | `"app.js"` |
 
@@ -170,7 +172,7 @@ Applies to both strings and arrays.
 | `within` | Count calls within a time window | Max calls allowed | 60000 (1 minute) |
 | `rate` | Count calls in a sliding rate window | Max rate | 60000 (1 minute) |
 
-⚠️ Temporal rules require `evaluator.commitTemporal()` to be called after ALLOW decisions. The ReAct runtime does this automatically.
+⚠️ Temporal rules (`within`/`rate`) are stateful: their window counts enter `evaluation.temporal_state` automatically (RFC-002 §2.4) — no manual commit step.
 
 ---
 
@@ -196,7 +198,7 @@ First-match-wins: the first rule whose conditions match determines the outcome. 
 | `ALLOW` | Go ahead | Normal execution | Safe operations |
 | `DENY` | Stop with explanation | Operation blocked | Dangerous operation with clear alternative |
 | `CORRECT` | Auto-fix and retry | Parameter corrected, re-evaluated (max 3 rounds) | Fixable mistake (wrong path, format) |
-| `NOTIFY` | Log and continue | No interruption | Anomaly, threshold alert |
+| `DELEGATE` | Delegate to another agent/role | Handed off to another agent | Specialized task handoff |
 | `REQUEST_HUMAN` | Pause for approval | Operation suspended | GDPR delete, >$5K transaction |
 | `QUARANTINE` | Sandbox execution | Run but flag for review | Suspicious but possibly legitimate |
 | `EMERGENCY_HALT` | Stop everything | All monitored Agents halted | Credential leak |
@@ -218,28 +220,10 @@ Gates run automatically during compilation. Errors prevent rule loading; warning
 
 ### ReDoS Protection
 
-All `match`/`matches` operators go through `safeRegExp()` which rejects:
+All `match` operators go through `safeRegExp()` which rejects:
 - Nested quantifiers (`(a+)+` → exponential backtracking)
 - Patterns longer than 200 characters
 - Invalid regex syntax
-
-### Verify Equivalence Fuzz
-
-The evaluator can fuzz-test compiled decision trees against raw ERDL condition evaluation:
-
-```typescript
-const result = compiler.verifyEquivalence(ruleSet, compiled, 'fuzz');
-// result.passed: boolean — 500 random inputs per rule, decision tree vs ERDL semantics
-```
-
-### Vector Set Verification
-
-Decision Objects can be verified against the cross-implementation vector set:
-
-```typescript
-const result = compiler.verifyAgainstVectors(compiled, vectors);
-// Traverses the decision tree against each vector's context, compares decisions
-```
 
 ---
 
