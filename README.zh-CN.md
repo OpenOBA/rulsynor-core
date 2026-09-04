@@ -162,45 +162,52 @@ rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上�
 ```yaml
 # rules/finance-team.erdl.yaml
 
-# 财务团队需要查生产库做报表——但要审批
-name: SEC-020-production-db-approval
-description: "生产数据库访问需要审批。"
-category: workflow
-priority: 500                  # 数字越小越先检查
-override: high
-ring: 2                        # 0=最先评估, 3=最后评估
-when:
-  logic: AND
-  conditions:
-    - field: "tool.name"
-      operator: eq
-      value: "exec"
-    - field: "tool.args.command"
-      operator: contains
-      value: "PRODUCTION_DATABASE"
-then: REQUEST_HUMAN             # 不是 DENY——是"找你领导审批"
-message: "生产数据库访问需要审批。"
-alternative: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"
-correction: "把连接字符串改成 STAGING_DATABASE 然后重试。"
+protocol: "erdl/v2"
+version: "2.1.0"
+metadata:
+  name: "finance-team"
+  description: "财务团队规则"
+  category: workflow
+  decision: ALLOW
+rules:
+  # 财务团队需要查生产库做报表——但要审批
+  - name: SEC-020-production-db-approval
+    description: "生产数据库访问需要审批。"
+    category: workflow
+    priority: 500                  # 数字越小越先检查
+    override: high
+    ring: 2                        # 0=最先评估, 3=最后评估
+    when:
+      logic: AND
+      conditions:
+        - field: "tool.name"
+          operator: eq
+          value: "exec"
+        - field: "tool.args.command"
+          operator: contains
+          value: "PRODUCTION_DATABASE"
+    then: REQUEST_HUMAN             # 不是 DENY——是"找你领导审批"
+    message: "生产数据库访问需要审批。"
+    correction: "把连接字符串改成 STAGING_DATABASE 然后重试。"
+    alternative: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"
 
----
-# 大批量写入是正常的批处理任务——告警就好，不拦截
-name: CNV-001-large-write-advisory
-description: "大批量写入记录即可，不拦截。"
-category: convention
-priority: 300
-ring: 3                        # 被动环——记录即可，不拦截
-when:
-  logic: AND
-  conditions:
-    - field: "tool.name"
-      operator: eq
-      value: "write_file"
-    - field: "tool.args.content"
-      operator: length_gt
-      value: 10485760          # 10MB
-then: ALLOW                     # 放行——批处理任务
-message: "大批量写入（>10MB）已记录。建议分块以提高可靠性。"
+  # 大批量写入是正常的批处理任务——告警就好，不拦截
+  - name: CNV-001-large-write-advisory
+    description: "大批量写入记录即可，不拦截。"
+    category: convention
+    priority: 300
+    ring: 3                        # 被动环——记录即可，不拦截
+    when:
+      logic: AND
+      conditions:
+        - field: "tool.name"
+          operator: eq
+          value: "write_file"
+        - field: "tool.args.content"
+          operator: length_gt
+          value: 10485760          # 10MB
+    then: ALLOW                     # 放行——批处理任务
+    message: "大批量写入（>10MB）已记录。建议分块以提高可靠性。"
 ```
 
 **核心洞察**：规则不是阻碍工作的，规则定义的是工作的**正确方式**。
@@ -239,24 +246,31 @@ message: "大批量写入（>10MB）已记录。建议分块以提高可靠性�
 模型返回一条可直接保存的规则：
 
 ```yaml
-name: SEC-001-block-destructive-rm
-description: "拦截破坏性的 rm -rf 命令。"
-category: security
-priority: 900
-override: critical
-ring: 0
-when:
-  logic: AND
-  conditions:
-    - field: "tool.name"
-      operator: eq
-      value: "exec"
-    - field: "tool.args.command"
-      operator: contains
-      value: "rm -rf"
-then: DENY
-message: "破坏性命令已拦截。"
-alternative: "请先用 read 工具检查目标，或请求人工审批。"
+protocol: "erdl/v2"
+version: "2.1.0"
+metadata:
+  name: "security-guard"
+  category: security
+  decision: ALLOW
+rules:
+  - name: SEC-001-block-destructive-rm
+    description: "拦截破坏性的 rm -rf 命令。"
+    category: security
+    priority: 900
+    override: critical
+    ring: 0
+    when:
+      logic: AND
+      conditions:
+        - field: "tool.name"
+          operator: eq
+          value: "exec"
+        - field: "tool.args.command"
+          operator: contains
+          value: "rm -rf"
+    then: DENY
+    message: "破坏性命令已拦截。"
+    alternative: "请先用 read 工具检查目标，或请求人工审批。"
 ```
 
 把 [docs/RULE-PROMPT.md](docs/RULE-PROMPT.md) 中的提示词模板复制出来，粘贴到 ChatGPT、Claude 或任何大模型中，描述你的规则，把输出保存为 .erdl.yaml 即可。编译器在加载前会验证每条规则（ReDoS 安全、运算符白名单、必填字段）——部署前请务必人工复核。模型负责起草，规则手册由你定稿。
