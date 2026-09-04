@@ -72,6 +72,12 @@ describe('@openoba/rulsynor-core', () => {
     it('agent 7 fields', () => expect(Object.keys((base() as any).agent)).toHaveLength(7));
     it('agent.aid OID prefix', () =>
       expect((base() as any).agent.aid).toMatch(/^1\.2\.156\.3088\./));
+    it('decision_id / execution_trace_id are UUID v7 (SPEC v2.0 §5.2)', () => {
+      // v7: version nibble (13th char) = '7'; variant nibble (17th char) = 8/9/a/b
+      const v7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+      expect((base() as any).decision_id).toMatch(v7);
+      expect((base() as any).execution_trace_id).toMatch(v7);
+    });
     it('extensions []', () => expect((base() as any).extensions).toEqual([]));
   });
 

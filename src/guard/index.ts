@@ -13,6 +13,7 @@ import * as crypto from 'node:crypto';
 import { canonicalize } from 'json-canonicalize';
 import { PROVENANCE } from '../provenance.js';
 import { getComplianceProfile } from '../compliance/index.js';
+import { uuidv7 } from '../uuidv7.js';
 
 // ── Types ──
 
@@ -130,8 +131,8 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     modelId,
   } = opts;
   const timestamp = new Date().toISOString();
-  const decisionId = crypto.randomUUID();
-  const executionTraceId = crypto.randomUUID();
+  const decisionId = uuidv7();
+  const executionTraceId = uuidv7();
 
   // Agent DID — did:erdl:sha256:<hash>. Extension point: CRM ID binding appends further method segments later.
   const agentDid = `did:erdl:sha256:${crypto.createHash('sha256').update(input.agentId).digest('hex').slice(0, 16)}`;
@@ -244,7 +245,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
       previous_hash: input.previousAuditHash ?? null,
       retention,
     },
-    impact_assessment_id: crypto.randomUUID(),
+    impact_assessment_id: uuidv7(),
     fairness_assessment: 'not_applicable',
     autonomy_level: autonomyLevel,
     confidence_score: confidenceScore,
