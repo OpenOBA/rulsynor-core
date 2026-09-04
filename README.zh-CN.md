@@ -653,6 +653,20 @@ agent.algorithm_filing_no · agent.model_registration_id
 
 ---
 
+## 确定性生态 —— 三个互相验证的开源仓库
+
+rulsynor-core 的确定性不是孤立的承诺，而是三个独立仓库共同验证的结果：
+
+| 层 | 仓库 | 定位 | 现状 |
+|---|---|---|---|
+| **语言** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl`（MIT） | 「规则决定一切」的声明式确定性规则语言：34 节点语义内核 / 30 运算符 / 13 决策 | v2.1 · npm 已发布 |
+| **测试** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors)（向量 CC0 / 代码 Apache） | 跨实现字节级验证：301 条冻结向量，78 条审计层向量已由 2 个独立 runner（Go / Python）逐字节验证 | v1.5 |
+| **证明** | [erdl-formal](https://github.com/OpenOBA/erdl-formal)（Apache-2.0） | Z3/SMT 形式化验证：34 节点全覆盖 + E1–E12，把「测试过的确定性」升级为「对所有输入成立的证明」 | v0.1.2 · PyPI 已发布 |
+
+**一句话**：语言定义规则，向量证明「实现一致」，形式化证明「所有输入安全」——确定性从**宣称**、到**测量**、到**证明**，三层递进。
+
+---
+
 ## 已知限制
 
 早期 alpha：确定性内核已对齐 ERDL 规范 v2.1 与 Decision Object v1.5 扁平哈希，但以下尚未完成：
