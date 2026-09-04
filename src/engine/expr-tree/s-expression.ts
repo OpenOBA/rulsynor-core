@@ -224,12 +224,18 @@ export function fromSExpr(input: unknown): ExprNode {
     };
   }
 
-  // Simple negative dual operators (not_in/not_contains/not_starts_with/not_ends_with/
-  // not_exists/not_between) are Simple-projection operators (field + operator + value), NOT
-  // expression-tree nodes. simple-compiler.ts compiles them WITH an exists guard (spec §5.2).
-  // The Expression projection's canonical negation is the `not` node, so these keys are rejected
-  // here rather than leniently parsed to a bare not(...) — which would drop the exists guard and
-  // flip null propagation (a fail-open safety hole). Write { not: { in: [...] } } plus an explicit
+  // not_exists is the ONE Simple negation-dual operator that is also a valid expression-tree
+  // alias: spec §5.2 explicitly makes it the exception to the exists-guard rule — it compiles
+  // to bare not(exists(...)) (field missing -> true), identical to the canonical { not: { exists: ... } }.
+  // Keep it as a lenient alias (zero divergence, zero fail-open).
+  if (key === 'not_exists') {
+    return { type: 'not', arg: { type: 'exists', arg: fromSExpr(val) } };
+  }
+
+  // The remaining not_* operators (not_in/not_contains/not_starts_with/not_ends_with/
+  // not_between) are Simple-projection operators that MUST compile WITH an exists guard
+  // (exists(field) AND not(...), spec §5.2). A lenient bare not(...) would drop that guard and
+  // flip null propagation (fail-open). Reject them: write { not: { in: [...] } } plus an explicit
   // exists guard when field presence matters. Keeps the canonical tree unique (E7).
 
   if (STRING_OPS.includes(key as StringOp)) {

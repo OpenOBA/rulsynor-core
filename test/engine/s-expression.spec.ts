@@ -11,7 +11,7 @@ import {
   SExprParseError,
 } from '../../src/engine/expr-tree/s-expression.js';
 
-describe('fromSExpr — negation dual operators are rejected (canonical negation is `not`)', () => {
+describe('fromSExpr — negation dual operators (not_exists kept, others rejected)', () => {
   it('not_in / not_contains / not_starts_with / not_ends_with throw', () => {
     expect(() => fromSExpr({ not_in: ['x', ['a', 'b']] })).toThrow(SExprParseError);
     expect(() => fromSExpr({ not_contains: ['x', 'y'] })).toThrow(SExprParseError);
@@ -19,21 +19,20 @@ describe('fromSExpr — negation dual operators are rejected (canonical negation
     expect(() => fromSExpr({ not_ends_with: ['x', 'y'] })).toThrow(SExprParseError);
   });
 
-  it('not_exists / not_between throw', () => {
-    expect(() => fromSExpr({ not_exists: { field: 'a' } })).toThrow(SExprParseError);
+  it('not_between throws', () => {
     expect(() => fromSExpr({ not_between: ['x', 1, 5] })).toThrow(SExprParseError);
+  });
+
+  it('not_exists stays a lenient alias for not(exists) (spec §5.2 exception)', () => {
+    const n = fromSExpr({ not_exists: { field: 'a' } });
+    expect(n.type).toBe('not');
+    expect((n as { arg: { type: string } }).arg.type).toBe('exists');
   });
 
   it('canonical { not: { in: [...] } } still parses to a not(in) tree', () => {
     const n = fromSExpr({ not: { in: ['x', ['a', 'b']] } });
     expect(n.type).toBe('not');
     expect((n as { arg: { type: string } }).arg.type).toBe('in');
-  });
-
-  it('canonical { not: { exists: [...] } } still parses to a not(exists) tree', () => {
-    const n = fromSExpr({ not: { exists: { field: 'a' } } });
-    expect(n.type).toBe('not');
-    expect((n as { arg: { type: string } }).arg.type).toBe('exists');
   });
 });
 
