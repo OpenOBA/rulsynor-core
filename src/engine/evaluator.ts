@@ -29,9 +29,9 @@ import type {
 import { GuardStateManager } from './guard-state-manager.js';
 import { SystemClock, type Clock } from './clock.js';
 import { ExprTreeEvaluator } from './expr-tree/evaluator.js';
-import { normalizeOperator } from './expr-tree/rule-to-expr.js';
+import { normalizeOperator, ruleWhenToExpr } from './expr-tree/rule-to-expr.js';
 import { compileSimpleCondition } from './expr-tree/simple-compiler.js';
-import { fromSExpr } from './expr-tree/s-expression.js';
+import { fromSExpr, toSExpr } from './expr-tree/s-expression.js';
 import { ExprLimitError } from './expr-tree/limits.js';
 
 // SPEC v2.0 §9: override level ranking — critical > high > normal > low
@@ -388,9 +388,19 @@ export class Evaluator {
       explanation: rule.action.explanation,
       alternative: rule.action.alternative,
       ring: rule.action.ring ?? ring,
+      canonicalTree: this.compileCanonicalTree(rule),
       correction: rule.action.correction,
       priority: rule.priority,
     };
+  }
+
+  /**
+   * Compile the matched rule's when into the canonical S-expression tree (RFC-002 §2.1).
+   * Returns undefined for non-pure rules (within/rate/fn delegation) that cannot compile.
+   */
+  private compileCanonicalTree(rule: RuleDefinition): unknown | undefined {
+    const tree = ruleWhenToExpr(rule);
+    return tree ? toSExpr(tree) : undefined;
   }
 
   simulate(rule: RuleDefinition, context: Record<string, unknown>): RuleMatch | null {

@@ -44,6 +44,8 @@ export interface RuleMatch {
   instruction?: string | null;
   correction?: string | null;
   ring?: number;
+  /** Canonical expression tree of the matched rule's when (S-expression JSON, RFC-002 §2.1). */
+  canonicalTree?: unknown;
 }
 
 /**
@@ -172,10 +174,10 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     hash: `sha256:${crypto.createHash('sha256').update(canonicalize(r)).digest('hex')}`,
   }));
 
-  // Matched rules — v1.5 evaluation.matched_rules (rule_id + optional ring)
+  // Matched rules — v1.5 evaluation.matched_rules (rule_id + canonical_tree, RFC-002 §2.1)
   const doMatchedRules = matchedRules.map(r => ({
     rule_id: r.ruleId,
-    ...(r.ring !== undefined ? { ring: r.ring } : {}),
+    ...(r.canonicalTree !== undefined ? { canonical_tree: r.canonicalTree } : {}),
   }));
 
   const toolRegistryHash = `sha256:${crypto

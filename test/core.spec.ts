@@ -107,6 +107,26 @@ describe('@openoba/rulsynor-core', () => {
     it('evaluation.temporal_state omitted when empty (Omit over Null)', () => {
       expect(Object.keys(base().evaluation)).not.toContain('temporal_state');
     });
+    it('evaluation.matched_rules carries canonical_tree (RFC-002 §2.1)', () => {
+      const do1 = buildDecisionObject({
+        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        decision: 'DENY',
+        actionTaken: 'blocked',
+        reason: 'blocked',
+        matchedRules: [
+          { ruleId: 'sec-001', decision: 'DENY', reason: 'blocked', canonicalTree: { eq: [{ field: 'tool.name' }, 'exec'] } },
+        ],
+        totalEvaluated: 1,
+        totalMatched: 1,
+        rules: [],
+        evaluationDurationMs: 5,
+      });
+      expect(do1.evaluation.matched_rules[0]).toEqual({
+        rule_id: 'sec-001',
+        canonical_tree: { eq: [{ field: 'tool.name' }, 'exec'] },
+      });
+      expect(do1.evaluation.matched_rules[0]).not.toHaveProperty('ring');
+    });
   });
 
   describe('Compliance', () => {

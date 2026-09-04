@@ -273,6 +273,8 @@ export interface RuleMatch {
   explanation?: string | { zh: string; en: string };
   alternative?: string | { zh: string; en: string };
   ring?: RingLevel;
+  /** Canonical expression tree of the matched rule's when (S-expression JSON, RFC-002 §2.1). */
+  canonicalTree?: unknown;
   correction?: string;
   /** Corrected arguments carried by the CORRECT decision (parameter override) */
   correctedArgs?: Record<string, unknown>;
