@@ -1,9 +1,14 @@
-# @openoba/rulsynor-core
+# Rulsynor Core
+
+[![npm](https://img.shields.io/npm/v/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
+[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
+[![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
+[![Vectors](https://img.shields.io/badge/vectors-301%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
+[![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 
 > **Rules Decide Everything.**
-> **Last updated**: 2026-09-03 — CORRECT loop wired into the built-in runtime per the original design (3-round auto-correction, escalate to human after 3 failures); original args are never executed.
 
-**rulsynor-core** is the deterministic core that makes it true: **rules — not prompts — decide every action an agent takes.**
+**rulsynor-core** is the deterministic core that makes it true: **rules — decide every action an agent takes.**
 
 LLMs deliver intelligence, but intelligence alone has no direction and no accountability — the capability is real, yet the trusted capability has no one responsible (see the [Professionalized AI Employee whitepaper](./pae-whitepaper-v1.0-en.md)). rulsynor-core closes that gap: before any tool runs, the ERDL rule engine adjudicates it (allow / deny / correct / escalate / request-human); after every verdict, a tamper-evident **Decision Object** is sealed — JCS + SHA-256, independently re-computable and byte-verifiable.
 
@@ -13,7 +18,7 @@ LLMs deliver intelligence, but intelligence alone has no direction and no accoun
 npm install @openoba/rulsynor-core
 ```
 
-[![Try it now](https://img.shields.io/badge/%F0%9F%9B%A1%EF%B8%8F%20Playground-npx%20%40openoba%2Frulsynor-core-black)](#30-seconds-to-see-it-work)  ·  [Examples](examples/)  ·  [API Reference](#api-reference)  ·  [Specs](docs/SPEC/)  ·  [Contributing](CONTRIBUTING.md)
+[🛡️ Try the demo](#30-seconds-to-see-it-work) · [🧪 Quick start](#installation--quick-start) · [📖 Specs](docs/SPEC/) · [🤝 Registry](https://github.com/OpenOBA/erdl-landing/blob/main/REGISTRY.md)
 
 > ⚡ **Try it with a real LLM in 30 seconds:**
 >
@@ -24,6 +29,20 @@ npm install @openoba/rulsynor-core
 >
 > Works with any OpenAI-compatible provider (DeepSeek, Qwen, local vLLM…)
 > See [`examples/agent-demo.ts`](examples/agent-demo.ts) for setup.
+
+---
+
+## Trust Stack — verified by three independent systems
+
+rulsynor-core's determinism is not a standalone claim — it's verified by three independent repositories:
+
+| Layer | Repo | Role | Status |
+|---|---|---|---|
+| **Language** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl` (MIT) | Declarative deterministic rule language — "rules decide everything": 34-node kernel / 30 operators / 13 decisions | v2.1 · on npm |
+| **Tests** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors) (vectors CC0 / code Apache) | Cross-implementation byte-level verification: 301 frozen vectors; 78 audit-layer vectors byte-verified by 2 independent runners (Go / Python) | v1.5 |
+| **Proof** | [erdl-formal](https://github.com/OpenOBA/erdl-formal) (Apache-2.0) | Z3/SMT formal verification: 34-node coverage + E1–E12 — lifts "tested determinism" to "proven over all inputs" | v0.1.2 · on PyPI |
+
+**In one line**: the language defines rules, the vectors prove "implementations agree", the formal verifier proves "every input is safe" — determinism, from claim → measurement → proof.
 
 ---
 
@@ -671,20 +690,6 @@ The cross-implementation test vector set lives in its own authoritative reposito
 
 ---
 
-## Determinism Ecosystem — three mutually verifying repos
-
-rulsynor-core's determinism is not a standalone claim — it's verified by three independent repositories:
-
-| Layer | Repo | Role | Status |
-|---|---|---|---|
-| **Language** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl` (MIT) | Declarative deterministic rule language — "rules decide everything": 34-node kernel / 30 operators / 13 decisions | v2.1 · on npm |
-| **Tests** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors) (vectors CC0 / code Apache) | Cross-implementation byte-level verification: 301 frozen vectors; 78 audit-layer vectors byte-verified by 2 independent runners (Go / Python) | v1.5 |
-| **Proof** | [erdl-formal](https://github.com/OpenOBA/erdl-formal) (Apache-2.0) | Z3/SMT formal verification: 34-node coverage + E1–E12 — lifts "tested determinism" to "proven over all inputs" | v0.1.2 · on PyPI |
-
-**In one line**: the language defines rules, the vectors prove "implementations agree", the formal verifier proves "every input is safe" — determinism, from claim → measurement → proof.
-
----
-
 ## Versioning & Releases
 
 - [`VERSIONING.md`](VERSIONING.md) — version policy & lifecycle (SemVer + stages + compatibility + deprecation)
@@ -716,6 +721,16 @@ Object v1.5 flat-hash, but the following are not yet complete:
   external registration authority; `algorithm_filing_no` / `model_registration_id`
   are `NOT_FILED` pending China CAC filing.
 - **Bilingual docs**: English + Chinese; the runtime supports any language via the LLM.
+
+---
+
+## Get Involved
+
+- ⭐ **Star this repo** to follow our progress
+- 🧪 **Try the demo**: `npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"`
+- 📖 **Read the spec**: [ERDL v2.1](https://github.com/OpenOBA/erdl-landing)
+- 🧩 **Build a Runner**: [Join the Conformance Registry](https://github.com/OpenOBA/erdl-landing/blob/main/REGISTRY.md)
+- 💬 **Discuss**: [GitHub Discussions](https://github.com/OpenOBA/rulsynor-core/discussions)
 
 ---
 

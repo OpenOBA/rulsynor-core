@@ -1,7 +1,12 @@
-# @openoba/rulsynor-core
+# Rulsynor Core
+
+[![npm](https://img.shields.io/npm/v/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
+[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
+[![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
+[![Vectors](https://img.shields.io/badge/vectors-301%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
+[![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 
 > **规则决定一切。**
-> **Last updated**: 2026-09-03 — CORRECT 循环按原始设计接入内置运行时（3 轮自动纠正，3 轮未解决升级人工）；原始参数永不执行。
 
 **rulsynor-core** 是让这句话落地的确定性内核：**规则——决定 Agent 的每一个动作。**
 
@@ -14,6 +19,24 @@
 ```bash
 npm install @openoba/rulsynor-core
 ```
+
+[🛡️ 试试 demo](#30-秒见证) · [🧪 快速上手](#快速上手下载--api-key--开箱即用) · [📖 规范](docs/SPEC/) · [🤝 注册表](https://github.com/OpenOBA/erdl-landing/blob/main/REGISTRY.md)
+
+---
+
+## 信任栈 —— 三个独立系统共同验证
+
+rulsynor-core 的确定性不是孤立的承诺，而是三个独立仓库共同验证的结果：
+
+| 层 | 仓库 | 定位 | 现状 |
+|---|---|---|---|
+| **语言** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl`（MIT） | 「规则决定一切」的声明式确定性规则语言：34 节点语义内核 / 30 运算符 / 13 决策 | v2.1 · npm 已发布 |
+| **测试** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors)（向量 CC0 / 代码 Apache） | 跨实现字节级验证：301 条冻结向量，78 条审计层向量已由 2 个独立 runner（Go / Python）逐字节验证 | v1.5 |
+| **证明** | [erdl-formal](https://github.com/OpenOBA/erdl-formal)（Apache-2.0） | Z3/SMT 形式化验证：34 节点全覆盖 + E1–E12，把「测试过的确定性」升级为「对所有输入成立的证明」 | v0.1.2 · PyPI 已发布 |
+
+**一句话**：语言定义规则，向量证明「实现一致」，形式化证明「所有输入安全」——确定性从**宣称**、到**测量**、到**证明**，三层递进。
+
+---
 
 ## 快速上手：下载 + API key = 开箱即用
 
@@ -653,20 +676,6 @@ agent.algorithm_filing_no · agent.model_registration_id
 
 ---
 
-## 确定性生态 —— 三个互相验证的开源仓库
-
-rulsynor-core 的确定性不是孤立的承诺，而是三个独立仓库共同验证的结果：
-
-| 层 | 仓库 | 定位 | 现状 |
-|---|---|---|---|
-| **语言** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl`（MIT） | 「规则决定一切」的声明式确定性规则语言：34 节点语义内核 / 30 运算符 / 13 决策 | v2.1 · npm 已发布 |
-| **测试** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors)（向量 CC0 / 代码 Apache） | 跨实现字节级验证：301 条冻结向量，78 条审计层向量已由 2 个独立 runner（Go / Python）逐字节验证 | v1.5 |
-| **证明** | [erdl-formal](https://github.com/OpenOBA/erdl-formal)（Apache-2.0） | Z3/SMT 形式化验证：34 节点全覆盖 + E1–E12，把「测试过的确定性」升级为「对所有输入成立的证明」 | v0.1.2 · PyPI 已发布 |
-
-**一句话**：语言定义规则，向量证明「实现一致」，形式化证明「所有输入安全」——确定性从**宣称**、到**测量**、到**证明**，三层递进。
-
----
-
 ## 已知限制
 
 早期 alpha：确定性内核已对齐 ERDL 规范 v2.1 与 Decision Object v1.5 扁平哈希，但以下尚未完成：
@@ -677,6 +686,16 @@ rulsynor-core 的确定性不是孤立的承诺，而是三个独立仓库共同
 - **PII 脱敏**：`sanitized_context` 激活时以空字符串产出——`tool.args` 的脱敏是规划中功能。
 - **AID**：以 OID `1.2.156.3088` 自生成，尚未在外部注册机构登记；`algorithm_filing_no` / `model_registration_id` 为 `NOT_FILED`（待中国网信办备案）。
 - **双语文档**：英文 + 中文；运行时通过 LLM 支持任意语言。
+
+---
+
+## 参与贡献
+
+- ⭐ **Star 本仓库** 跟进进度
+- 🧪 **试试 demo**：`npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"`
+- 📖 **读规范**：[ERDL v2.1](https://github.com/OpenOBA/erdl-landing)
+- 🧩 **写一个 Runner**：[加入一致性注册表](https://github.com/OpenOBA/erdl-landing/blob/main/REGISTRY.md)
+- 💬 **讨论**：[GitHub Discussions](https://github.com/OpenOBA/rulsynor-core/discussions)
 
 ---
 
