@@ -307,9 +307,9 @@ const evaluator = new Evaluator(new GuardStateManager());
 
 // 这是你的 Agent 工具执行包装器：
 async function executeToolCall(toolName: string, args: Record<string, unknown>) {
-  const ctx = { toolName, toolArgs: args, sessionId, agentId };
+  const ctx = { tool: { name: toolName, args }, sessionId, agentId };
 
-  const result = evaluator.evaluate(ctx, rules);
+  const result = evaluator.evaluate(rules, ctx);
 
   switch (result.decision) {
     case 'ALLOW':
@@ -323,20 +323,20 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
     case 'REQUEST_HUMAN':
       // 👤 升级——展示原因 + 替代方案
-      return showApprovalDialog(result.reason, result.alternative);
+      return showApprovalDialog(result.primaryReason, result.primaryAlternative);
 
     case 'DENY':
       // 🛑 拦截但给出引导——Agent 学到后换种方式重试
-      throw new GuardGuidanceError(result.reason, result.alternative);
+      throw new Error(result.primaryReason ?? '已拦截，请 Agent 换一种方式重试');
 
     case 'QUARANTINE':
       // 🧪 沙箱——执行但标记审查
-      return sandboxExecute(toolName, args, { reviewReason: result.reason });
+      return sandboxExecute(toolName, args, { reviewReason: result.primaryReason });
   }
 }
 ```
 
-**LangChain**：wrap 工具。**MCP Server**：拦截 `CallToolRequest`。**自定义 ReAct 循环**：每次工具执行前调 `evaluator.evaluate()`。相同的模式，相同的 API。
+**LangChain**：用 `createToolExecutor` 包装工具。**MCP Server**：拦截 `CallToolRequest`。**自定义 ReAct 循环**：每次工具执行前调 `evaluator.evaluate(rules, ctx)`。相同的模式，相同的 API。
 
 > 📦 **开箱即用的完整示例**：[`examples/agent-demo.ts`](examples/agent-demo.ts) — 包含 ReAct Agent + 34 条预设规则 + 审计链的完整实现。`export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "你的任务"`
 

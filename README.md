@@ -327,9 +327,9 @@ const evaluator = new Evaluator(new GuardStateManager());
 
 // This is your Agent's tool-execution wrapper:
 async function executeToolCall(toolName: string, args: Record<string, unknown>) {
-  const ctx = { toolName, toolArgs: args, sessionId, agentId };
+  const ctx = { tool: { name: toolName, args }, sessionId, agentId };
 
-  const result = evaluator.evaluate(ctx, rules);
+  const result = evaluator.evaluate(rules, ctx);
 
   switch (result.decision) {
     case 'ALLOW':
@@ -343,20 +343,20 @@ async function executeToolCall(toolName: string, args: Record<string, unknown>) 
 
     case 'REQUEST_HUMAN':
       // 👤 Escalate — show the reason + alternative
-      return showApprovalDialog(result.reason, result.alternative);
+      return showApprovalDialog(result.primaryReason, result.primaryAlternative);
 
     case 'DENY':
       // 🛑 Block with guidance — Agent learns and tries something else
-      throw new GuardGuidanceError(result.reason, result.alternative);
+      throw new Error(result.primaryReason ?? 'blocked — agent should retry another way');
 
     case 'QUARANTINE':
       // 🧪 Sandbox — run but flag for review
-      return sandboxExecute(toolName, args, { reviewReason: result.reason });
+      return sandboxExecute(toolName, args, { reviewReason: result.primaryReason });
   }
 }
 ```
 
-**LangChain**: wrap tools with `guardedToolExecutor`. **MCP Server**: intercept `CallToolRequest`. **Custom ReAct loop**: call `evaluator.evaluate()` before each tool execution. Same pattern. Same API.
+**LangChain**: wrap tools with `createToolExecutor`. **MCP Server**: intercept `CallToolRequest`. **Custom ReAct loop**: call `evaluator.evaluate(rules, ctx)` before each tool execution. Same pattern. Same API.
 
 > 📦 **Ready-to-run demo**: [`examples/agent-demo.ts`](examples/agent-demo.ts) — a complete ReAct Agent with Guard, 34 preset rules, and audit chain. `export OPENAI_API_KEY=*** && npx tsx examples/agent-demo.ts "Your task"`
 
