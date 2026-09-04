@@ -1,6 +1,6 @@
 # RULE-PROMPT.md — Generate ERDL Rules from Natural Language
 
-> **Last updated**: 2026-09-03 — prompt template migrated to the canonical ERDL document format (language spec v2.0 §2.1: `protocol`/`version`/`metadata`/`rules[]` + string `then`); decision types corrected to the 13 §6 enum; category values corrected to the 11 canonical categories.
+> **Last updated**: 2026-09-03 — prompt template migrated to the canonical ERDL document format (language spec v2.1 §2.1: `protocol`/`version`/`metadata`/`rules[]` + string `then`); decision types corrected to the 13 §6 enum; category values corrected to the 11 canonical categories.
 
 You don't need to know YAML to write rules for rulsynor-core. Copy the prompt template
 below, paste it into any LLM (ChatGPT, Claude, Gemini, …), replace the
@@ -28,7 +28,7 @@ document, ready to save as a .erdl.yaml file. Follow this reference exactly.
 One .erdl.yaml file = one document with a fixed top-level shape:
 
 protocol: "erdl/v2"              # fixed protocol identifier
-version: "2.0.0"                 # rule-format version
+version: "2.1.0"                 # rule-format version
 metadata:
   name: my-rule-set              # rule-set name
   description: "..."             # optional
@@ -71,7 +71,7 @@ Legacy forms (`toolName`, `toolArgs.*`, `context.tool.*`) are NOT canonical.
 
 Equality & comparison:
   eq          equal                value: "exec"            (deep compare)
-  neq         not equal            value: "read"            (alias: ne)
+  ne          not equal            value: "read"            (alias: neq)
   gt          greater than         value: 5000              (numbers only)
   gte         greater or equal     value: 100
   lt          less than            value: 10
@@ -176,7 +176,7 @@ Example A
         tell it to inspect files first."
   YAML:
     protocol: "erdl/v2"
-    version: "2.0.0"
+    version: "2.1.0"
     metadata:
       name: security-guard
       category: security
@@ -204,7 +204,7 @@ Example B
         chunking."
   YAML:
     protocol: "erdl/v2"
-    version: "2.0.0"
+    version: "2.1.0"
     metadata:
       name: performance-advisories
       category: performance
@@ -231,7 +231,7 @@ Example C
         Suggest the staging database instead."
   YAML:
     protocol: "erdl/v2"
-    version: "2.0.0"
+    version: "2.1.0"
     metadata:
       name: db-guard
       category: compliance
@@ -299,7 +299,7 @@ npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 **Always review generated rules before deploying.** The LLM writes the draft;
 you own the rulebook. For the full language reference see
 [RULE-AUTHORING.md](./RULE-AUTHORING.md) and
-[ERDL Spec v2.0](./SPEC/erdl-spec.en.md).
+[ERDL Spec v2.1](./SPEC/erdl-spec.en.md).
 
 ---
 
