@@ -15,12 +15,10 @@ describe('@openoba/rulsynor-core', () => {
     });
   });
 
-  // ⚠️ 版本说明：core 的 guard/buildDecisionObject 当前产出 DO v1.3 形态（23 字段），
-  // 而 SPEC v2.0 权威是 DO v1.5（CORE14 + JUR15 扁平哈希）。
-  // 此测试锁定 v1.3 现状；DO 升级 v1.5 是后续技术债（待 rulsynor audit 模块迁移）。
-  // 2026-08-25：字段数 25 → 23 —— 移除 signature/signing_key_id 占位值
-  //（'NOT_SIGNED'/'no-key-v1'），它们违反 Omit over Null 且造成合规假阳；
-  // 两字段本来就不进哈希原像，故 audit.hash 不变（无兼容性破坏）。
+  // Decision Object v1.5 flat-hash（erdl-do-v1.5-hash-flat）。
+  // CORE 14 字段永久产出；JURISDICTION 字段按 compliance_profile.activated_fields 裁剪
+  //（未激活物理省略，Omit over Null，RFC-002 §1.1 / SPEC §5.3）。
+  // signature/signing_key_id 在哈希模式下不产出（禁占位值），不进哈希原像。
   describe('Decision Object', () => {
     const base = () =>
       buildDecisionObject({
@@ -43,8 +41,8 @@ describe('@openoba/rulsynor-core', () => {
         evaluationDurationMs: 5,
       });
 
-    it('23 fields（移除 signature/signing_key_id 占位值后）', () =>
-      expect(Object.keys(base())).toHaveLength(23));
+    it('15 fields when unconfigured (CORE + extensions; JURISDICTION omitted)', () =>
+      expect(Object.keys(base())).toHaveLength(15));
     it('哈希模式 MUST NOT 携带 signature/signing_key_id（禁占位值，RFC-002 §1.1/§1.3#6）', () => {
       const keys = Object.keys(base());
       expect(keys).not.toContain('signature');
@@ -69,9 +67,14 @@ describe('@openoba/rulsynor-core', () => {
         stored,
       );
     });
-    it('agent 7 fields', () => expect(Object.keys((base() as any).agent)).toHaveLength(7));
-    it('agent.aid OID prefix', () =>
-      expect((base() as any).agent.aid).toMatch(/^1\.2\.156\.3088\./));
+    it('agent 3 fields (id/role/version) when unconfigured', () =>
+      expect(Object.keys((base() as any).agent)).toHaveLength(3));
+    it('agent omits JURISDICTION subfields when unconfigured (Omit over Null)', () => {
+      const agent = (base() as any).agent;
+      expect(agent).not.toHaveProperty('aid');
+      expect(agent).not.toHaveProperty('known_limitations');
+      expect(agent).not.toHaveProperty('tool_registry_hash');
+    });
     it('decision_id / execution_trace_id are UUID v7 (SPEC v2.0 §5.2)', () => {
       // v7: version nibble (13th char) = '7'; variant nibble (17th char) = 8/9/a/b
       const v7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -126,6 +129,58 @@ describe('@openoba/rulsynor-core', () => {
         canonical_tree: { eq: [{ field: 'tool.name' }, 'exec'] },
       });
       expect(do1.evaluation.matched_rules[0]).not.toHaveProperty('ring');
+    });
+  });
+
+  describe('Decision Object — JURISDICTION activation (RFC-002 §1.1 / SPEC §5.3)', () => {
+    const { resetComplianceProfileCache } = require('../src/compliance/index.js');
+    const savedJ = process.env['RULSYNOR_JURISDICTIONS'];
+
+    const build = () =>
+      buildDecisionObject({
+        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        decision: 'ALLOW',
+        actionTaken: 'allowed',
+        reason: 'ok',
+        matchedRules: [],
+        totalEvaluated: 0,
+        totalMatched: 0,
+        rules: [],
+        evaluationDurationMs: 5,
+      });
+
+    afterAll(() => {
+      if (savedJ === undefined) delete process.env['RULSYNOR_JURISDICTIONS'];
+      else process.env['RULSYNOR_JURISDICTIONS'] = savedJ;
+      resetComplianceProfileCache();
+    });
+
+    it('CN → agent carries CN fields, no known_limitations', () => {
+      process.env['RULSYNOR_JURISDICTIONS'] = 'CN';
+      resetComplianceProfileCache();
+      const do1 = build();
+      expect(do1.agent.aid).toMatch(/^1\.2\.156\.3088\./);
+      expect(do1.agent.tool_registry_hash).toMatch(/^sha256:/);
+      expect(do1.agent.algorithm_filing_no).toBeDefined();
+      expect(do1.agent.model_registration_id).toBeDefined();
+      expect(do1.agent.known_limitations).toBeUndefined();
+      expect(do1.data_modification_expected).toBe(false);
+      expect(do1.autonomy_level).toBeDefined();
+      expect(do1.context_snapshot_hash).toMatch(/^sha256:/);
+      // CN does NOT activate model_id/confidence_score/fairness_assessment/impact_assessment_id
+      expect(do1.model_id).toBeUndefined();
+      expect(do1.confidence_score).toBeUndefined();
+    });
+
+    it('EU → agent carries known_limitations, no CN fields', () => {
+      process.env['RULSYNOR_JURISDICTIONS'] = 'EU';
+      resetComplianceProfileCache();
+      const do1 = build();
+      expect(do1.agent.known_limitations).toBeInstanceOf(Array);
+      expect(do1.agent.aid).toBeUndefined();
+      expect(do1.agent.tool_registry_hash).toBeUndefined();
+      expect(do1.model_id).toBeDefined();
+      expect(typeof do1.confidence_score).toBe('number');
     });
   });
 

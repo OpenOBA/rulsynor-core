@@ -122,7 +122,7 @@ if (jsonMode) {
   console.log('🛡️  Decision:   ' + result.decision);
   console.log('📝 Reason:     ' + (result.primaryReason || 'none'));
   console.log('🧾 Recorded:   ' + record.audit.hash + ' (tamper-evident)');
-  console.log('🪪 Employee ID:' + ' ' + aid);
+  console.log('🪪 Employee ID:' + ' ' + (aid ?? '(not selected: CN GB/Z 185 AID requires CN jurisdiction)'));
   console.log(
     '📊 Jurisdiction:' +
       ' ' +

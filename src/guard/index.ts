@@ -89,15 +89,16 @@ export interface DecisionObject {
     id: string;
     role: string;
     version: string;
-    aid: string;
-    algorithm_filing_no: string;
-    model_registration_id: string;
-    tool_registry_hash: string;
+    aid?: string;
+    algorithm_filing_no?: string;
+    model_registration_id?: string;
+    tool_registry_hash?: string;
+    known_limitations?: string[];
   };
-  model_id: string;
+  model_id?: string;
   context: Record<string, unknown>;
-  context_snapshot_hash: string;
-  sanitized_context: string;
+  context_snapshot_hash?: string;
+  sanitized_context?: string;
   rule_set_version: { id: string; timestamp: string };
   policies: Array<Record<string, unknown>>;
   evaluation: {
@@ -123,11 +124,11 @@ export interface DecisionObject {
     retention: { retention_until: string; retention_basis: string };
     hash: string;
   };
-  impact_assessment_id: string;
-  fairness_assessment: string;
-  autonomy_level: string;
-  confidence_score: number;
-  data_modification_expected: boolean;
+  impact_assessment_id?: string;
+  fairness_assessment?: string;
+  autonomy_level?: string;
+  confidence_score?: number;
+  data_modification_expected?: boolean;
   extensions: unknown[];
   /** Signature-mode fields: not output in hash mode (enabled after the signing layer lands) */
   signature?: string;
@@ -208,6 +209,10 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
 
   // Compliance profile
   const complianceProfile = getComplianceProfile();
+  // JURISDICTION field activation gate (RFC-002 §1.1 / SPEC §5.3): a JURISDICTION field is
+  // emitted only when its field path is declared in activated_fields; otherwise physically
+  // omitted (Omit over Null). CORE fields are always emitted.
+  const activated = new Set<string>(complianceProfile.activated_fields ?? []);
 
   // Chain + retention
   const chainId = `chain-${crypto
@@ -218,6 +223,23 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const chainSeq = input.step;
   const retention = computeRetention(complianceProfile, timestamp);
 
+  // Agent object — CORE fields (id/role/version) always present; JURISDICTION subfields
+  // (aid / tool_registry_hash / algorithm_filing_no / model_registration_id / known_limitations)
+  // emitted only when activated (SPEC §5.3 / RFC-002 §1.1).
+  const agentObj: Record<string, unknown> = {
+    id: agentDid,
+    role: agentRole,
+    version: PROVENANCE.version,
+  };
+  if (activated.has('agent.aid')) agentObj.aid = generateAID();
+  if (activated.has('agent.algorithm_filing_no'))
+    agentObj.algorithm_filing_no = PROVENANCE.algorithmFilingNo;
+  if (activated.has('agent.model_registration_id'))
+    agentObj.model_registration_id = PROVENANCE.modelRegistrationId;
+  if (activated.has('agent.tool_registry_hash')) agentObj.tool_registry_hash = toolRegistryHash;
+  if (activated.has('agent.known_limitations'))
+    agentObj.known_limitations = PROVENANCE.knownLimitations;
+
   // ── Assemble v1.5 flat-hash DO ──
   const recordWithoutHash: Record<string, unknown> = {
     spec: 'decision-object-v1.5',
@@ -226,22 +248,8 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     execution_trace_id: executionTraceId,
     timestamp,
     evaluation_duration_ms: evaluationDurationMs,
-    agent: {
-      id: agentDid,
-      role: agentRole,
-      version: PROVENANCE.version,
-      aid: generateAID(),
-      algorithm_filing_no: PROVENANCE.algorithmFilingNo,
-      model_registration_id: PROVENANCE.modelRegistrationId,
-      tool_registry_hash: toolRegistryHash,
-    },
-    model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || 'unknown',
+    agent: agentObj,
     context: contextObj,
-    context_snapshot_hash: contextSnapshotHash,
-    // PII sanitization not implemented yet — empty string (no fake placeholder).
-    // The DO context is already minimal (`tool.name`/`tool.args`); PII redaction
-    // of `tool.args` is a planned compliance-layer feature.
-    sanitized_context: '',
     rule_set_version: { id: ruleSetHash, timestamp },
     policies,
     evaluation: {
@@ -266,11 +274,20 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
       previous_hash: input.previousAuditHash ?? null,
       retention,
     },
-    impact_assessment_id: uuidv7(),
-    fairness_assessment: 'not_applicable',
-    autonomy_level: autonomyLevel,
-    confidence_score: confidenceScore,
-    data_modification_expected: dataModification,
+    // JURISDICTION fields (activated_fields-gated; omitted when not activated)
+    ...(activated.has('model_id')
+      ? { model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || 'unknown' }
+      : {}),
+    ...(activated.has('context_snapshot_hash') ? { context_snapshot_hash: contextSnapshotHash } : {}),
+    // PII sanitization not implemented yet — empty string (no fake placeholder).
+    // The DO context is already minimal (`tool.name`/`tool.args`); PII redaction
+    // of `tool.args` is a planned compliance-layer feature.
+    ...(activated.has('sanitized_context') ? { sanitized_context: '' } : {}),
+    ...(activated.has('impact_assessment_id') ? { impact_assessment_id: uuidv7() } : {}),
+    ...(activated.has('fairness_assessment') ? { fairness_assessment: 'not_applicable' } : {}),
+    ...(activated.has('autonomy_level') ? { autonomy_level: autonomyLevel } : {}),
+    ...(activated.has('confidence_score') ? { confidence_score: confidenceScore } : {}),
+    ...(activated.has('data_modification_expected') ? { data_modification_expected: dataModification } : {}),
     extensions: [],
   };
 
