@@ -81,7 +81,7 @@ export function endOfMonth(date: Date): Date {
 // ── Strict ISO 8601 date/datetime parsing (spec §7.3(f), UTC semantics) ──
 
 const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-const DATETIME_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})?$/;
+const DATETIME_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}:\d{2})?$/;
 
 /** Whether (year, month 1-12, day) is a real calendar date (rejects 2026-02-30 etc.). */
 function isRealDate(year: number, month: number, day: number): boolean {
@@ -92,9 +92,10 @@ function isRealDate(year: number, month: number, day: number): boolean {
 /**
  * Parse a date/datetime into a UTC `Date` with strict, deterministic ISO 8601 semantics.
  *
- * Accepted forms (matching erdl-formal's SMT encoding):
+ * Accepted forms (matching erdl-formal's SMT encoding, whole-second precision — fractional
+ * seconds are NOT part of the deterministic subset and are rejected):
  *   - date-only   `YYYY-MM-DD`                    -> UTC midnight
- *   - datetime    `YYYY-MM-DDTHH:MM:SS[.fraction]`  (no tz suffix -> UTC, §7.3(f))
+ *   - datetime    `YYYY-MM-DDTHH:MM:SS`            (no tz suffix -> UTC, §7.3(f))
  *   - datetime    `...Z` / `...±HH:MM`              (explicit zone, kept)
  *
  * Any other input (non-ISO strings such as `Jan 1 2026`, slash dates, or an invalid calendar date)
@@ -132,7 +133,7 @@ export function parseIsoDateStrict(value: unknown): Date | null {
   const se = Number(dt[6]);
   if (!isRealDate(y, m, d)) return null;
   if (h > 23 || mi > 59 || se > 59) return null;
-  const tz = dt[8];
+  const tz = dt[7];
   // No timezone suffix -> UTC (spec §7.3(f)); append Z so Date parses as UTC, never local.
   const canonical = tz === undefined ? `${s}Z` : s;
   const parsed = new Date(canonical);

@@ -322,7 +322,7 @@ describe('ExprTreeEvaluator — 算术 / 时间 / 聚合', () => {
     expect(ev.evaluate(minus5, ctx({})).value).toBe(1767288645000);
   });
   it('epoch_ms rejects non-ISO and invalid calendar dates (strict)', () => {
-    for (const bad of ['Jan 1 2026', '2026/01/01', '2026-02-30', '2026-13-01', '2026-01-01T25:00:00', 'not-a-date']) {
+    for (const bad of ['Jan 1 2026', '2026/01/01', '2026-02-30', '2026-13-01', '2026-01-01T25:00:00', 'not-a-date', '2026-01-01T12:30:45.123Z', '2026-01-01T12:30:45.5']) {
       const node: ExprNode = { type: 'epoch_ms', arg: { type: 'literal', value: bad } };
       expect(ev.evaluate(node, ctx({})).value).toBeNull();
     }
