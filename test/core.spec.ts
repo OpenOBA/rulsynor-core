@@ -84,7 +84,15 @@ describe('@openoba/rulsynor-core', () => {
     it('extensions []', () => expect((base() as any).extensions).toEqual([]));
     it('evaluation.temporal_state carries within/rate snapshots (RFC-002 §2.4)', () => {
       const do1 = buildDecisionObject({
-        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        input: {
+          runId: 't',
+          step: 0,
+          toolName: 'exec',
+          toolArgs: {},
+          context: {},
+          agentId: 'a',
+          sessionId: 's',
+        },
         decision: 'DENY',
         actionTaken: 'blocked',
         reason: 'rate limit',
@@ -94,7 +102,14 @@ describe('@openoba/rulsynor-core', () => {
         rules: [],
         evaluationDurationMs: 5,
         temporalState: [
-          { rule_id: 'sec-rate', operator: 'rate', field: 'tool.name', window_ms: 60000, count: 3, limit: 10 },
+          {
+            rule_id: 'sec-rate',
+            operator: 'rate',
+            field: 'tool.name',
+            window_ms: 60000,
+            count: 3,
+            limit: 10,
+          },
         ],
       });
       expect(do1.evaluation.temporal_state).toHaveLength(1);
@@ -112,12 +127,25 @@ describe('@openoba/rulsynor-core', () => {
     });
     it('evaluation.matched_rules carries canonical_tree (RFC-002 §2.1)', () => {
       const do1 = buildDecisionObject({
-        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        input: {
+          runId: 't',
+          step: 0,
+          toolName: 'exec',
+          toolArgs: {},
+          context: {},
+          agentId: 'a',
+          sessionId: 's',
+        },
         decision: 'DENY',
         actionTaken: 'blocked',
         reason: 'blocked',
         matchedRules: [
-          { ruleId: 'sec-001', decision: 'DENY', reason: 'blocked', canonicalTree: { eq: [{ field: 'tool.name' }, 'exec'] } },
+          {
+            ruleId: 'sec-001',
+            decision: 'DENY',
+            reason: 'blocked',
+            canonicalTree: { eq: [{ field: 'tool.name' }, 'exec'] },
+          },
         ],
         totalEvaluated: 1,
         totalMatched: 1,
@@ -138,7 +166,15 @@ describe('@openoba/rulsynor-core', () => {
 
     const build = () =>
       buildDecisionObject({
-        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        input: {
+          runId: 't',
+          step: 0,
+          toolName: 'exec',
+          toolArgs: {},
+          context: {},
+          agentId: 'a',
+          sessionId: 's',
+        },
         decision: 'ALLOW',
         actionTaken: 'allowed',
         reason: 'ok',

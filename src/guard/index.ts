@@ -278,7 +278,9 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     ...(activated.has('model_id')
       ? { model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || 'unknown' }
       : {}),
-    ...(activated.has('context_snapshot_hash') ? { context_snapshot_hash: contextSnapshotHash } : {}),
+    ...(activated.has('context_snapshot_hash')
+      ? { context_snapshot_hash: contextSnapshotHash }
+      : {}),
     // PII sanitization not implemented yet — empty string (no fake placeholder).
     // The DO context is already minimal (`tool.name`/`tool.args`); PII redaction
     // of `tool.args` is a planned compliance-layer feature.
@@ -287,7 +289,9 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     ...(activated.has('fairness_assessment') ? { fairness_assessment: 'not_applicable' } : {}),
     ...(activated.has('autonomy_level') ? { autonomy_level: autonomyLevel } : {}),
     ...(activated.has('confidence_score') ? { confidence_score: confidenceScore } : {}),
-    ...(activated.has('data_modification_expected') ? { data_modification_expected: dataModification } : {}),
+    ...(activated.has('data_modification_expected')
+      ? { data_modification_expected: dataModification }
+      : {}),
     extensions: [],
   };
 

@@ -23,11 +23,7 @@ import type { DecisionObject } from './guard/index.js';
 import { PlanParser } from './engine/plan-parser.js';
 import { resolveDomain, formatRagContext } from './knowledge/index.js';
 import type { ScoredFragment } from './knowledge/types.js';
-import {
-  parseRequestHumanSignal,
-  buildDoPayload,
-  advanceCorrectLoop,
-} from './preflight/index.js';
+import { parseRequestHumanSignal, buildDoPayload, advanceCorrectLoop } from './preflight/index.js';
 import type { CorrectLoopState } from './preflight/index.js';
 
 export interface DecisionObjectMeta {

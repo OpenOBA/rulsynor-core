@@ -112,7 +112,10 @@ interface RawDocument {
 
 /** Derive a machine-friendly rule id from its name (e.g. "SEC-001-refund-limit" -> "sec_001_refund_limit"). */
 function deriveId(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
 function mapCondition(c: RawCondition): RuleCondition {
