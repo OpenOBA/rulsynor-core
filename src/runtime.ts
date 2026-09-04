@@ -119,6 +119,7 @@ export interface RuntimeResult {
  *  when = toSExpr(ruleWhenToExpr(rule)) — pure conditions → S-expression (SPEC §12 external form);
  *  non-pure conditions (within/rate/pattern/keywords) return null → when omitted. */
 function toPolicyRules(compiledRules: RuleDefinition[]): Array<{
+  id: string;
   name: string;
   version?: number;
   when?: unknown;
@@ -129,6 +130,7 @@ function toPolicyRules(compiledRules: RuleDefinition[]): Array<{
   return compiledRules.map(r => {
     const whenExpr = ruleWhenToExpr(r);
     return {
+      id: r.id,
       name: r.name,
       ...(r.version !== undefined ? { version: r.version } : {}),
       ...(whenExpr !== null ? { when: toSExpr(whenExpr) } : {}),

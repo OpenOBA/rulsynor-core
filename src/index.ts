@@ -129,4 +129,5 @@ export { createOpenAiCompatibleLlm } from './llm.js';
 export type { LlmConfig, LlmMessage, LlmResponse, LlmToolSchema } from './llm.js';
 export { OpSemRegistry } from './engine/op-sem-registry.js';
 export { PlanParser } from './engine/plan-parser.js';
+export { ruleWhenToExpr, toSExpr, fromSExpr } from './engine/index.js';
 export type { ParsedPlan, ParsedPlanStep } from './engine/plan-parser.js';

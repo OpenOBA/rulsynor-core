@@ -29,6 +29,7 @@ export interface GuardInput {
 }
 
 export interface RuleDefinition {
+  id?: string;
   name: string;
   version?: number;
   when?: unknown;
@@ -165,7 +166,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
 
   // Policies — v1.5 shape (id/name/author_id/when/then/priority/ring/hash)
   const policies = rules.map(r => ({
-    id: r.name,
+    id: r.id ?? r.name,
     name: r.name,
     author_id: 'system',
     ...(r.when !== undefined ? { when: r.when } : {}),

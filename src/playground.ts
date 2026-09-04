@@ -7,6 +7,8 @@ import {
   loadPresetRules,
   toCompiledRules,
   extractNavigationGuide,
+  ruleWhenToExpr,
+  toSExpr,
 } from './index.js';
 
 const args = process.argv.slice(2);
@@ -68,7 +70,15 @@ const record = buildDecisionObject({
   matchedRules: result.matchedRules,
   totalEvaluated: result.totalEvaluated ?? evalRules.length,
   totalMatched: result.totalMatched ?? result.matchedRules.length,
-  rules: evalRules.map(r => ({ name: r.name, version: 1 })),
+  rules: evalRules.map(r => {
+    const whenExpr = ruleWhenToExpr(r);
+    return {
+      id: r.id,
+      name: r.name,
+      version: 1,
+      ...(whenExpr !== null ? { when: toSExpr(whenExpr) } : {}),
+    };
+  }),
   evaluationDurationMs: duration,
   temporalState: result.temporalState,
 }) as DecisionObject;

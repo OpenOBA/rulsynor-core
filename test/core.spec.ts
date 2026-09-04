@@ -158,6 +158,23 @@ describe('@openoba/rulsynor-core', () => {
       });
       expect(do1.evaluation.matched_rules[0]).not.toHaveProperty('ring');
     });
+    it('policies[].id aligns with matched_rules[].rule_id (P5 tree_snapshot gate)', () => {
+      const do1 = buildDecisionObject({
+        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        decision: 'DENY',
+        actionTaken: 'blocked',
+        reason: 'blocked',
+        matchedRules: [{ ruleId: 'sec_001', decision: 'DENY', canonicalTree: { eq: [{ field: 'tool.name' }, 'exec'] } }],
+        totalEvaluated: 1,
+        totalMatched: 1,
+        rules: [{ id: 'sec_001', name: 'SEC-001', version: 1, when: { eq: [{ field: 'tool.name' }, 'exec'] }, then: 'DENY', priority: 900, ring: 0 }],
+        evaluationDurationMs: 5,
+      });
+      const mr = do1.evaluation.matched_rules[0];
+      const p = do1.policies.find(pol => pol.id === mr.rule_id);
+      expect(p).toBeDefined();
+      expect((p as any).when).toEqual(mr.canonical_tree);
+    });
   });
 
   describe('Decision Object — JURISDICTION activation (RFC-002 §1.1 / SPEC §5.3)', () => {

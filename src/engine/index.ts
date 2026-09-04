@@ -21,4 +21,4 @@ export { renderGloss, renderDecisionTableGloss } from './expr-tree/gloss.js';
 export { deriveGradeFromTree } from './expr-tree/grade.js';
 export type { RuleGrade } from './expr-tree/grade.js';
 export { jsonWhenToExpr, ruleWhenToExpr } from './expr-tree/rule-to-expr.js';
-export { fromSExpr } from './expr-tree/s-expression.js';
+export { fromSExpr, toSExpr } from './expr-tree/s-expression.js';

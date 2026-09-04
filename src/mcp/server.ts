@@ -27,6 +27,8 @@ import {
   loadRulesFromDir,
   getFallbackDecision,
   toCompiledRules,
+  ruleWhenToExpr,
+  toSExpr,
 } from '../index.js';
 import { PROVENANCE } from '../provenance.js';
 import { ensureHome, resolvePaths } from '../config.js';
@@ -131,7 +133,15 @@ export function createMcpDeps(): McpDeps {
         matchedRules: result.matchedRules,
         totalEvaluated: result.totalEvaluated ?? compiled.length,
         totalMatched: result.totalMatched ?? result.matchedRules.length,
-        rules: compiled.map(r => ({ name: r.name, version: 1 })),
+        rules: compiled.map(r => {
+          const whenExpr = ruleWhenToExpr(r);
+          return {
+            id: r.id,
+            name: r.name,
+            version: 1,
+            ...(whenExpr !== null ? { when: toSExpr(whenExpr) } : {}),
+          };
+        }),
         evaluationDurationMs: Date.now() - startMs,
         temporalState: result.temporalState,
       });
