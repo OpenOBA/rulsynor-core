@@ -33,6 +33,11 @@
 - **ETH-001 言行一致失效**：`previous_promise` 未从计划派生，且 PlanParser 无法解析运行时 prompt 的 `op:` 标签
 - 质量门禁 34 条 0 warning（原 11 warning / 30 条）
 - **CORRECT 循环三处边缘缺陷（自查发现）**：① Agent 明示请求人工时人工信号优先于纠正循环；② 非 ALLOW/DENY/EMERGENCY_HALT 裁决结束序列时不再误报「进入下一轮」；③ 纠正未解决即退出不得伪装成 ALLOW（汇总改报 CORRECT）
+- **DO 字段对齐 RFC-002 v1.5 / SPEC v2.0 §5（上线前审计修复）**：`decision_id`/`execution_trace_id` 改 UUID v7；`evaluation.temporal_state` 接入（within/rate 窗口快照，RFC-002 §2.4）；`evaluation.matched_rules[].canonical_tree` 接入（matched rule 的 when 编译为 S-expression 树，RFC-002 §2.1）；JURISDICTION 字段按 `activated_fields` 裁剪（未激活物理省略，补 `agent.known_limitations`，SPEC §5.3）
+- **AID 改 28 位**（instanceId 8→6 位，SPEC §5.3「28 位 AID」）
+- **CN 法域激活字段对齐 erdl-vectors 向量**（补 model_id/confidence_score/fairness_assessment/impact_assessment_id，CN 现 12 字段）
+- **ERDL 规范副本 v2.0→v2.1 同步**（新增 correction/category/enabled 字段）
+- **`policies[].id` 对齐 `matched_rules[].rule_id`**：此前两者不一致（raw name vs deriveId），导致 RFC-002 P5 `tree_snapshot_divergence` 检测静默失效；现统一用 rule.id，mcp/playground 补齐 `when` 编译
 
 ### Security
 - 跨工具内容匹配规则显式 `tool.name` 约束（消除“匹配所有工具调用”的隐性越界）
