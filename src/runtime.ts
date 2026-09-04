@@ -318,6 +318,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
         totalMatched: evalResult.totalMatched ?? evalResult.matchedRules.length,
         rules: toPolicyRules(opts.compiledRules),
         evaluationDurationMs: Math.round(performance.now() - evalStart),
+        temporalState: evalResult.temporalState,
       });
 
       const auditHash = do1.audit.hash;

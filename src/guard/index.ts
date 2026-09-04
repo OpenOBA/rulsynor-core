@@ -46,6 +46,20 @@ export interface RuleMatch {
   ring?: number;
 }
 
+/**
+ * Window count snapshot for stateful operators (within/rate) — RFC-002 §2.4.
+ * Field structure frozen: { rule_id, operator, field, window_ms, count, limit? }.
+ * Enters the DO as `evaluation.temporal_state` (conditionally activated, Omit when empty).
+ */
+export interface TemporalStateEntry {
+  rule_id: string;
+  operator: 'within' | 'rate';
+  field: string;
+  window_ms: number;
+  count: number;
+  limit?: number;
+}
+
 export interface DecisionObjectInput {
   input: GuardInput;
   decision: string;
@@ -57,6 +71,8 @@ export interface DecisionObjectInput {
   rules: RuleDefinition[];
   evaluationDurationMs: number;
   modelId?: string;
+  /** Stateful-operator window snapshots (RFC-002 §2.4); omitted from the DO when empty. */
+  temporalState?: TemporalStateEntry[];
 }
 
 /** Strongly-typed Decision Object v1.5 — flat-hash scheme (erdl-do-v1.5-hash-flat), aligned to erdl-vectors authoritative vectors. */
@@ -86,6 +102,7 @@ export interface DecisionObject {
     matched_rules: Array<Record<string, unknown>>;
     total_evaluated: number;
     total_matched: number;
+    temporal_state?: TemporalStateEntry[];
   };
   result: {
     applied_rule: string | null;
@@ -129,6 +146,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     rules,
     evaluationDurationMs,
     modelId,
+    temporalState,
   } = opts;
   const timestamp = new Date().toISOString();
   const decisionId = uuidv7();
@@ -228,6 +246,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
       matched_rules: doMatchedRules,
       total_evaluated: totalEvaluated,
       total_matched: totalMatched,
+      ...(temporalState && temporalState.length > 0 ? { temporal_state: temporalState } : {}),
     },
     result: {
       applied_rule: appliedRule,

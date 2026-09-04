@@ -79,6 +79,34 @@ describe('@openoba/rulsynor-core', () => {
       expect((base() as any).execution_trace_id).toMatch(v7);
     });
     it('extensions []', () => expect((base() as any).extensions).toEqual([]));
+    it('evaluation.temporal_state carries within/rate snapshots (RFC-002 §2.4)', () => {
+      const do1 = buildDecisionObject({
+        input: { runId: 't', step: 0, toolName: 'exec', toolArgs: {}, context: {}, agentId: 'a', sessionId: 's' },
+        decision: 'DENY',
+        actionTaken: 'blocked',
+        reason: 'rate limit',
+        matchedRules: [],
+        totalEvaluated: 0,
+        totalMatched: 0,
+        rules: [],
+        evaluationDurationMs: 5,
+        temporalState: [
+          { rule_id: 'sec-rate', operator: 'rate', field: 'tool.name', window_ms: 60000, count: 3, limit: 10 },
+        ],
+      });
+      expect(do1.evaluation.temporal_state).toHaveLength(1);
+      expect(do1.evaluation.temporal_state?.[0]).toMatchObject({
+        rule_id: 'sec-rate',
+        operator: 'rate',
+        field: 'tool.name',
+        window_ms: 60000,
+        count: 3,
+        limit: 10,
+      });
+    });
+    it('evaluation.temporal_state omitted when empty (Omit over Null)', () => {
+      expect(Object.keys(base().evaluation)).not.toContain('temporal_state');
+    });
   });
 
   describe('Compliance', () => {

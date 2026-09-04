@@ -70,6 +70,7 @@ const record = buildDecisionObject({
   totalMatched: result.totalMatched ?? result.matchedRules.length,
   rules: evalRules.map(r => ({ name: r.name, version: 1 })),
   evaluationDurationMs: duration,
+  temporalState: result.temporalState,
 }) as DecisionObject;
 
 const aid = record.agent.aid;

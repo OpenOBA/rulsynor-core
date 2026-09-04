@@ -133,6 +133,7 @@ export function createMcpDeps(): McpDeps {
         totalMatched: result.totalMatched ?? result.matchedRules.length,
         rules: compiled.map(r => ({ name: r.name, version: 1 })),
         evaluationDurationMs: Date.now() - startMs,
+        temporalState: result.temporalState,
       });
       prevHash = doObj.audit.hash;
       store.recordAudit({
