@@ -161,54 +161,49 @@ rulsynor 将人力资源管理的成熟实践，映射到 AI Agent 治理之上�
 # rules/finance-team.erdl.yaml
 
 # 财务团队需要查生产库做报表——但要审批
-name: production-db-needs-approval
-version: 1
+name: SEC-020-production-db-approval
+description: "生产数据库访问需要审批。"
 category: workflow
-severity: high
-ring: 0                        # 0=最先评估, 3=最后评估
 priority: 500                  # 数字越小越先检查
+override: high
+ring: 2                        # 0=最先评估, 3=最后评估
 when:
-  conditionLogic: AND
+  logic: AND
   conditions:
-    - field: "toolName"
+    - field: "tool.name"
       operator: eq
       value: "exec"
-    - field: "toolArgs.command"
+    - field: "tool.args.command"
       operator: contains
       value: "PRODUCTION_DATABASE"
-  conditionLogic: AND
-then:
-  decision: REQUEST_HUMAN      # 不是 DENY——是"找你领导审批"
-  instruction: "生产数据库访问需要审批。"
-  alternative:                 # 告诉它正确的做法：
-    en: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"
-  correction: "把连接字符串改成 STAGING_DATABASE 然后重试。"
+then: REQUEST_HUMAN             # 不是 DENY——是"找你领导审批"
+message: "生产数据库访问需要审批。"
+alternative: "请用 STAGING_DATABASE。如果确实需要生产库，你的主管可以审批这条请求。"
+correction: "把连接字符串改成 STAGING_DATABASE 然后重试。"
 
 ---
 # 大批量写入是正常的批处理任务——告警就好，不拦截
-name: large-write-advisory
-version: 1
+name: CNV-001-large-write-advisory
+description: "大批量写入记录即可，不拦截。"
 category: convention
-severity: low
-ring: 3                        # 被动环——记录即可，不拦截
 priority: 300
+ring: 3                        # 被动环——记录即可，不拦截
 when:
-  conditionLogic: AND
+  logic: AND
   conditions:
-    - field: "toolName"
+    - field: "tool.name"
       operator: eq
       value: "write_file"
-    - field: "toolArgs.content"
+    - field: "tool.args.content"
       operator: length_gt
       value: 10485760          # 10MB
-then:
-  decision: ALLOW              # 放行——批处理任务
-  instruction: "大批量写入（>10MB）已记录。建议分块以提高可靠性。"
+then: ALLOW                     # 放行——批处理任务
+message: "大批量写入（>10MB）已记录。建议分块以提高可靠性。"
 ```
 
 **核心洞察**：规则不是阻碍工作的，规则定义的是工作的**正确方式**。
 
-**可用运算符**（30 种——28 种条件运算符 + 2 种修饰符 `within`/`rate`，Spec v2.0 §11）：`eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
+**可用运算符**（30 种——28 种条件运算符 + 2 种修饰符 `within`/`rate`，Spec v2.1 §5.2）：`eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
 
 **规则可以做的决策**：
 
@@ -217,9 +212,11 @@ then:
 | `ALLOW` | 放行，已记录 | 安全操作、批处理任务、已知模式 |
 | `DENY` | 不行。告诉你为什么，告诉你怎么办。 | 危险操作但有明确替代方案 |
 | `CORRECT` | 自动纠正并重试（最多 3 轮，每轮重新裁决；未解决 → 升级人工） | 路径写错、格式不对、可修复的错误 |
-| `NOTIFY` | 记录并放行，不中断 | 异常检测、阈值告警、合规事件 |
 | `QUARANTINE` | 沙箱执行，标记审查 | 可疑但有可能合法 |
+| `ROLLBACK` | 回滚上一步操作 | 不可逆副作用防护 |
 | `REQUEST_HUMAN` | 找人审批再执行 | 生产库操作、GDPR 删除、>$5K 交易 |
+| `ESCALATE` | 升级到更高权威 | 跨团队边界、策略例外 |
+| `DELEGATE` | 委派给其他 Agent/角色 | 专业任务转交 |
 | `EMERGENCY_HALT` | 立即停摆所有操作 | 凭证泄漏、SSRF 攻击 |
 
 **执行环**——哪些规则先触发：
@@ -240,26 +237,24 @@ then:
 模型返回一条可直接保存的规则：
 
 ```yaml
-name: block-destructive-rm
-version: 1
+name: SEC-001-block-destructive-rm
+description: "拦截破坏性的 rm -rf 命令。"
 category: security
-severity: critical
-ring: 0
 priority: 900
+override: critical
+ring: 0
 when:
-  conditionLogic: AND
+  logic: AND
   conditions:
-    - field: "toolName"
+    - field: "tool.name"
       operator: eq
       value: "exec"
-    - field: "toolArgs.command"
+    - field: "tool.args.command"
       operator: contains
       value: "rm -rf"
-then:
-  decision: DENY
-  instruction: "Destructive command blocked."
-  alternative:
-    en: "Use the read tool to inspect the target first, or request human approval."
+then: DENY
+message: "破坏性命令已拦截。"
+alternative: "请先用 read 工具检查目标，或请求人工审批。"
 ```
 
 把 [docs/RULE-PROMPT.md](docs/RULE-PROMPT.md) 中的提示词模板复制出来，粘贴到 ChatGPT、Claude 或任何大模型中，描述你的规则，把输出保存为 .erdl.yaml 即可。编译器在加载前会验证每条规则（ReDoS 安全、运算符白名单、必填字段）——部署前请务必人工复核。模型负责起草，规则手册由你定稿。
@@ -473,7 +468,7 @@ const profile = getComplianceProfile();
 // 每个 DO 携带这些字段 → 它们进入审计哈希 → 强制合规，不是口头合规
 ```
 
-**内置监管框架**：EU AI Act、GB/Z 185-2026（中国）、NIST AI RMF（美国）、COSO GenAI（通用）
+**内置监管框架**（14 框架目录中的 6 个，RFC-002 §5.2）：EU AI Act、GB/Z 185-2026（中国）、NIST AI RMF（美国）、COSO GenAI（通用）、LGPD（巴西）、DPDP（印度）
 
 ---
 
@@ -587,25 +582,34 @@ registry.register({
 | `@openoba/rulsynor-core/runtime` | runReActLoop, createToolExecutor |
 | `@openoba/rulsynor-core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
 
-### Decision Object — 25 字段
+### Decision Object — CORE 14 + JURISDICTION 15 字段
+
+**CORE 字段**（永久产出，`[FREEZE-1]` 冻结）：
 
 ```
 spec · decision_id · compliance_profile · execution_trace_id · timestamp
-evaluation_duration_ms · agent { id, role, version, aid, algorithm_filing_no,
-  model_registration_id, known_limitations, tool_registry_hash } · model_id
-context { tool.name, tool.args } · context_snapshot_hash · rule_set_version
-policies [{ name, version, hash }] · evaluation { total_evaluated, total_matched,
-  matched_rules } · result { decision, decision_type, reason, rules_matched }
+evaluation_duration_ms · agent { id, role, version } · context { tool.name, tool.args }
+rule_set_version · policies [{ name, version, hash }] · evaluation { total_evaluated,
+total_matched, matched_rules } · result { decision, decision_type, reason, rules_matched }
 human_oversight · audit { previous_hash, commitment, hash }
+```
+
+**JURISDICTION 字段**（仅当路径在合规画像 `activated_fields` 中才产出，否则物理省略——RFC-002 §1.1 / SPEC §5.3）：
+
+```
+model_id · agent.known_limitations · fairness_assessment · impact_assessment_id
+autonomy_level · data_modification_expected · context_snapshot_hash · sanitized_context
+confidence_score · signature · signing_key_id · agent.aid · agent.tool_registry_hash
+agent.algorithm_filing_no · agent.model_registration_id
 ```
 
 ### 环境变量
 
 | 变量 | 用途 | 默认值 |
 |------|------|------|
-| `RULSYNOR_JURISDICTIONS` | 合规辖区，逗号分隔：CN,EU,US,SG | `CN` |
-| `RULSYNOR_INDUSTRY` | 合规行业 | `financial-services` |
-| `RULSYNOR_RISK_LEVEL` | 风险等级 | `high` |
+| `RULSYNOR_JURISDICTIONS` | 合规辖区，逗号分隔：CN,EU,US,SG,BR,IN | （无 —— 未选择） |
+| `RULSYNOR_INDUSTRY` | 合规行业 | （无 —— 未选择） |
+| `RULSYNOR_RISK_LEVEL` | 风险等级 | （无 —— 未选择） |
 | `RULSYNOR_AUTONOMY_LEVEL` | 自主权 L1-L5 | `L2` |
 | `RULSYNOR_MODEL_ID` | DO 中记录的 LLM 模型 | `unknown` |
 | `RULSYNOR_AID_REGISTRAR` | AID 中的企业注册码 | `000001` |
@@ -622,8 +626,8 @@ human_oversight · audit { previous_hash, commitment, hash }
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| ERDL 规范 v2.0 | [docs/SPEC/erdl-spec.md](docs/SPEC/erdl-spec.md) | ERDL 语言规范（中文） |
-| ERDL 规范 v2.0 (EN) | [docs/SPEC/erdl-spec.en.md](docs/SPEC/erdl-spec.en.md) | ERDL 语言规范（英文） |
+| ERDL 规范 v2.1 | [docs/SPEC/erdl-spec.md](docs/SPEC/erdl-spec.md) | ERDL 语言规范（中文） |
+| ERDL 规范 v2.1 (EN) | [docs/SPEC/erdl-spec.en.md](docs/SPEC/erdl-spec.en.md) | ERDL 语言规范（英文） |
 | SPEC v2.0 | [docs/SPEC/spec-2.0.md](docs/SPEC/spec-2.0.md) | OpenOBA 职业化AI员工 开放规范（中文） |
 | SPEC v2.0 (EN) | [docs/SPEC/spec-2.0-en.md](docs/SPEC/spec-2.0-en.md) | OpenOBA 职业化AI员工 开放规范（英文） |
 | RFC 002 | [docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object 审计标准 v1.5（中文） |
@@ -631,6 +635,17 @@ human_oversight · audit { previous_hash, commitment, hash }
 跨实现测试向量集已独立维护于权威仓库：[`OpenOBA/erdl-vectors`](https://github.com/OpenOBA/erdl-vectors)。任何兼容的 ERDL 引擎均可基于已发布的向量独立自测。
 
 ---
+
+## 已知限制
+
+早期 alpha：确定性内核已对齐 ERDL 规范 v2.1 与 Decision Object v1.5 扁平哈希，但以下尚未完成：
+
+- **签名模式（ECDSA P-256）**：未实现。Decision Object 仅以哈希模式产出；`signature`/`signing_key_id` 省略（无占位值）。`risk_level=critical` 暂无法满足——合规验证器会报 `compliance_field_missing`（设计上 fail-close）。
+- **合规框架目录**：14 框架中已内置 6 个（RFC-002 §5.2）——EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI、LGPD、DPDP。
+- **三层激活**：仅实现法域层；行业条件层与风险条件层（除 `critical → signature` 外）待实现。
+- **PII 脱敏**：`sanitized_context` 激活时以空字符串产出——`tool.args` 的脱敏是规划中功能。
+- **AID**：以 OID `1.2.156.3088` 自生成，尚未在外部注册机构登记；`algorithm_filing_no` / `model_registration_id` 为 `NOT_FILED`（待中国网信办备案）。
+- **双语文档**：英文 + 中文；运行时通过 LLM 支持任意语言。
 
 ---
 
