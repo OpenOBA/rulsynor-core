@@ -6,7 +6,7 @@
 > **Status**: Final (v2.0) · Public release
 > **Aligned with**: RFC-002 (Decision Object v1.5 flat hash + signature layer) · 14-framework three-tier activation
 > **Version semantics**: This document is version **v2.0**; the Decision Object data model it defines is version **v1.5** (`preimage_version = "erdl-do-v1.5-hash-flat"`, FREEZE-1 frozen). The two are orthogonal version lines that evolve independently and must not be conflated.
-> **Related specifications**: This document builds on **ERDL** (Entity-Rule Definition Language) as its foundational language — ERDL carries the expression layer; the full language specification is in *[ERDL Language Specification v2.0](erdl-spec.md)*. Decision Object fields/hash/chain see RFC-002.
+> **Related specifications**: This document builds on **ERDL** (Entity-Rule Definition Language) as its foundational language — ERDL carries the expression layer; the full language specification is in *[ERDL Language Specification v2.1](erdl-spec.en.md)*. Decision Object fields/hash/chain see RFC-002.
 
 ---
 
@@ -166,7 +166,7 @@ Corresponding to the "five-in-one capability reinforcement" ring of §2.3 — fi
 
 ## 3. Expression Layer Protocol (Rule Engine)
 
-> **Relationship of this chapter to the ERDL specification**: The expression layer is carried by **ERDL** (Entity-Rule Definition Language). ERDL is the **foundational language** for expressing rules and behavior boundaries, and this document builds on it: ERDL defines how rules are deterministically expressed (the 34-node semantic kernel and its projections), while this document defines the compliance, trust, and lifecycle of the professionalized AI employee on top of it. This chapter is a **normative summary** of ERDL; the full language specification (canonical form, compile mapping, gloss rendering templates, rule governance) is in *[ERDL Language Specification v2.0](erdl-spec.md)*.
+> **Relationship of this chapter to the ERDL specification**: The expression layer is carried by **ERDL** (Entity-Rule Definition Language). ERDL is the **foundational language** for expressing rules and behavior boundaries, and this document builds on it: ERDL defines how rules are deterministically expressed (the 34-node semantic kernel and its projections), while this document defines the compliance, trust, and lifecycle of the professionalized AI employee on top of it. This chapter is a **normative summary** of ERDL; the full language specification (canonical form, compile mapping, gloss rendering templates, rule governance) is in *[ERDL Language Specification v2.1](erdl-spec.en.md)*.
 
 ### 3.1 Overall Architecture: One Semantic Kernel + Multiple Projections
 
@@ -570,7 +570,7 @@ Professionalized AI Employees evolve from "a single rule-abiding employee" to "c
 
 **Collaboration Dimensions**: vertical (power axis: report / manage) + horizontal (collaboration axis: delegate / relay / negotiate) + capability-boundary axis (skill → tool → protected resource, blocked on overreach).
 
-**Division of Labor**: transport layer carried by A2A; organizational behavior layer (who delegates to whom, on what basis, leaving what evidence) defined by ERDL. Full specification in *erdl-spec-v2.0* Part 10.
+**Division of Labor**: transport layer carried by A2A; organizational behavior layer (who delegates to whom, on what basis, leaving what evidence) defined by ERDL. Full specification in *erdl-spec-v2.1* Part 10.
 
 ---
 
