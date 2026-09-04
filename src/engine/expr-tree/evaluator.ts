@@ -26,6 +26,7 @@ import {
   getDate,
   getDay,
   endOfMonth,
+  parseIsoDateStrict,
 } from '../date-utils.js';
 import { enforceLimits } from './limits.js';
 import { ok, err, mergeWarnings, type EvalResult, type EvalWarning } from './eval-warning.js';
@@ -816,9 +817,9 @@ export class ExprTreeEvaluator {
 
   // ── Time (wall-clock read forbidden; as_of injected via context) ──
   private daysBetween(from: unknown, to: unknown, warnings: EvalWarning[]): EvalResult {
-    const d1 = from instanceof Date ? from.getTime() : new Date(String(from)).getTime();
-    const d2 = to instanceof Date ? to.getTime() : new Date(String(to)).getTime();
-    if (Number.isNaN(d1) || Number.isNaN(d2)) {
+    const d1 = parseIsoDateStrict(from);
+    const d2 = parseIsoDateStrict(to);
+    if (d1 === null || d2 === null) {
       warnings.push({
         kind: 'invalid_date',
         message: 'date parsing failed',
@@ -826,23 +827,21 @@ export class ExprTreeEvaluator {
       });
       return ok(null, warnings);
     }
-    return ok(Math.floor((d2 - d1) / 86400000), warnings);
+    return ok(Math.floor((d2.getTime() - d1.getTime()) / 86400000), warnings);
   }
 
   private epochMs(value: unknown, warnings: EvalWarning[]): EvalResult {
-    const t = value instanceof Date ? value.getTime() : new Date(String(value)).getTime();
-    if (Number.isNaN(t)) {
+    const d = parseIsoDateStrict(value);
+    if (d === null) {
       warnings.push({ kind: 'invalid_date', message: 'date parsing failed', nodeType: 'epoch_ms' });
       return ok(null, warnings);
     }
-    return ok(t, warnings);
+    return ok(d.getTime(), warnings);
   }
 
   /** Parse an arbitrary value into a Date; returns null when invalid */
   private toDate(value: unknown): Date | null {
-    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
-    const d = new Date(String(value ?? ''));
-    return Number.isNaN(d.getTime()) ? null : d;
+    return parseIsoDateStrict(value);
   }
 
   /** Time addition/subtraction: date_add{unit}, negative amount = backward. Year/month arithmetic is carried by UTC

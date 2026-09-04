@@ -1,11 +1,12 @@
 /**
  * ERDL expression tree — typed expression-tree kernel (SPEC v2.0 §10 SafeExpr expression engine)
  *
- * The semantic kernel is a typed expression tree. This file's TS discriminated union has 17 types:
+ * The semantic kernel is a typed expression tree. This file's TS discriminated union has 20 types:
  * parameterized nodes (compare 6 operators / string 4 operators / arith 5 operators /
  * quantifier 3 kinds / aggregate 5 functions) are merged into a single type, so the type count
- * is less than the S-expression semantic key count (35, see s-expression.ts).
- * The node set is frozen at spec level — pruning only, no expansion.
+ * is less than the S-expression semantic key count (38, see s-expression.ts).
+ * The node set is frozen at spec level [FREEZE-2] — additive-only: it may be extended, but
+ * existing nodes' semantics may not change (never pruned, never redefined).
  *
  * This file defines two views of the kernel: the [in-memory type representation] and the
  * [S-expression canonical serialization]:

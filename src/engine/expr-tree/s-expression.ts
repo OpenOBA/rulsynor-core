@@ -224,48 +224,13 @@ export function fromSExpr(input: unknown): ExprNode {
     };
   }
 
-  // Simple negative dual operators (not_in/not_contains/...) → leniently parse as not(xxx(...))
-  // The expression-tree canonical form uses not derivation, but the LLM may directly produce Simple
-  // operator names; normalized to a not tree here to avoid false rejection.
-  // Semantic boundary (E11 null propagation): not_in(x,list) when x is missing gives in→false, not→true,
-  // possibly an unintended allow; this semantics is defined by SPEC null propagation, must be consistent
-  // cross-implementation (determinism caveat, do not change the semantics).
-  if (key === 'not_in') {
-    if (!Array.isArray(val) || val.length !== 2)
-      throw new SExprParseError('not_in must have two operands');
-    return { type: 'not', arg: { type: 'in', left: fromSExpr(val[0]), right: fromSExpr(val[1]) } };
-  }
-  if (key === 'not_contains' || key === 'not_starts_with' || key === 'not_ends_with') {
-    if (!Array.isArray(val) || val.length !== 2)
-      throw new SExprParseError(`${key} must have two operands`);
-    const innerOp =
-      key === 'not_contains' ? 'contains' : key === 'not_starts_with' ? 'starts_with' : 'ends_with';
-    return {
-      type: 'not',
-      arg: {
-        type: 'string',
-        op: innerOp as StringOp,
-        left: fromSExpr(val[0]),
-        right: fromSExpr(val[1]),
-      },
-    };
-  }
-  if (key === 'not_exists') {
-    return { type: 'not', arg: { type: 'exists', arg: fromSExpr(val) } };
-  }
-  if (key === 'not_between') {
-    if (!Array.isArray(val) || val.length !== 3)
-      throw new SExprParseError('not_between must have three operands');
-    return {
-      type: 'not',
-      arg: {
-        type: 'between',
-        value: fromSExpr(val[0]),
-        min: fromSExpr(val[1]),
-        max: fromSExpr(val[2]),
-      },
-    };
-  }
+  // Simple negative dual operators (not_in/not_contains/not_starts_with/not_ends_with/
+  // not_exists/not_between) are Simple-projection operators (field + operator + value), NOT
+  // expression-tree nodes. simple-compiler.ts compiles them WITH an exists guard (spec §5.2).
+  // The Expression projection's canonical negation is the `not` node, so these keys are rejected
+  // here rather than leniently parsed to a bare not(...) — which would drop the exists guard and
+  // flip null propagation (a fail-open safety hole). Write { not: { in: [...] } } plus an explicit
+  // exists guard when field presence matters. Keeps the canonical tree unique (E7).
 
   if (STRING_OPS.includes(key as StringOp)) {
     if (!Array.isArray(val) || val.length !== 2)

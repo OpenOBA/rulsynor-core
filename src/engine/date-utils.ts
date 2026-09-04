@@ -77,3 +77,64 @@ export function getDay(date: Date): number {
 export function endOfMonth(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0));
 }
+
+// ── Strict ISO 8601 date/datetime parsing (spec §7.3(f), UTC semantics) ──
+
+const DATE_ONLY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATETIME_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})?$/;
+
+/** Whether (year, month 1-12, day) is a real calendar date (rejects 2026-02-30 etc.). */
+function isRealDate(year: number, month: number, day: number): boolean {
+  if (month < 1 || month > 12) return false;
+  return day >= 1 && day <= daysInMonthUtc(year, month - 1);
+}
+
+/**
+ * Parse a date/datetime into a UTC `Date` with strict, deterministic ISO 8601 semantics.
+ *
+ * Accepted forms (matching erdl-formal's SMT encoding):
+ *   - date-only   `YYYY-MM-DD`                    -> UTC midnight
+ *   - datetime    `YYYY-MM-DDTHH:MM:SS[.fraction]`  (no tz suffix -> UTC, §7.3(f))
+ *   - datetime    `...Z` / `...±HH:MM`              (explicit zone, kept)
+ *
+ * Any other input (non-ISO strings such as `Jan 1 2026`, slash dates, or an invalid calendar date)
+ * returns `null`, so callers record `invalid_date` instead of delegating to implementation-defined
+ * `Date` parsing. Removes the cross-timezone drift where a no-timezone datetime was previously
+ * parsed as *local* time.
+ */
+export function parseIsoDateStrict(value: unknown): Date | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value !== 'string') return null;
+  const s = value.trim();
+
+  const dateOnly = DATE_ONLY_RE.exec(s);
+  if (dateOnly) {
+    const y = Number(dateOnly[1]);
+    const m = Number(dateOnly[2]);
+    const d = Number(dateOnly[3]);
+    if (!isRealDate(y, m, d)) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+  }
+
+  const dt = DATETIME_RE.exec(s);
+  if (!dt) return null;
+  const y = Number(dt[1]);
+  const m = Number(dt[2]);
+  const d = Number(dt[3]);
+  const h = Number(dt[4]);
+  const mi = Number(dt[5]);
+  const se = Number(dt[6]);
+  if (!isRealDate(y, m, d)) return null;
+  if (h > 23 || mi > 59 || se > 59) return null;
+  const tz = dt[8];
+  // No timezone suffix -> UTC (spec §7.3(f)); append Z so Date parses as UTC, never local.
+  const canonical = tz === undefined ? `${s}Z` : s;
+  const parsed = new Date(canonical);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}

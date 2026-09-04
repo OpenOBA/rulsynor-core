@@ -11,41 +11,29 @@ import {
   SExprParseError,
 } from '../../src/engine/expr-tree/s-expression.js';
 
-describe('fromSExpr — negation dual operators', () => {
-  it('not_in → not(in(...))', () => {
-    const n = fromSExpr({ not_in: ['x', ['a', 'b']] });
+describe('fromSExpr — negation dual operators are rejected (canonical negation is `not`)', () => {
+  it('not_in / not_contains / not_starts_with / not_ends_with throw', () => {
+    expect(() => fromSExpr({ not_in: ['x', ['a', 'b']] })).toThrow(SExprParseError);
+    expect(() => fromSExpr({ not_contains: ['x', 'y'] })).toThrow(SExprParseError);
+    expect(() => fromSExpr({ not_starts_with: ['x', 'y'] })).toThrow(SExprParseError);
+    expect(() => fromSExpr({ not_ends_with: ['x', 'y'] })).toThrow(SExprParseError);
+  });
+
+  it('not_exists / not_between throw', () => {
+    expect(() => fromSExpr({ not_exists: { field: 'a' } })).toThrow(SExprParseError);
+    expect(() => fromSExpr({ not_between: ['x', 1, 5] })).toThrow(SExprParseError);
+  });
+
+  it('canonical { not: { in: [...] } } still parses to a not(in) tree', () => {
+    const n = fromSExpr({ not: { in: ['x', ['a', 'b']] } });
     expect(n.type).toBe('not');
     expect((n as { arg: { type: string } }).arg.type).toBe('in');
   });
 
-  it('not_contains → not(string contains)', () => {
-    const n = fromSExpr({ not_contains: ['x', 'y'] });
-    expect(n.type).toBe('not');
-    const inner = (n as { arg: { type: string; op: string } }).arg;
-    expect(inner.type).toBe('string');
-    expect(inner.op).toBe('contains');
-  });
-
-  it('not_starts_with → not(string starts_with)', () => {
-    const n = fromSExpr({ not_starts_with: ['x', 'y'] });
-    expect((n as { arg: { op: string } }).arg.op).toBe('starts_with');
-  });
-
-  it('not_ends_with → not(string ends_with)', () => {
-    const n = fromSExpr({ not_ends_with: ['x', 'y'] });
-    expect((n as { arg: { op: string } }).arg.op).toBe('ends_with');
-  });
-
-  it('not_exists → not(exists)', () => {
-    const n = fromSExpr({ not_exists: { field: 'a' } });
+  it('canonical { not: { exists: [...] } } still parses to a not(exists) tree', () => {
+    const n = fromSExpr({ not: { exists: { field: 'a' } } });
     expect(n.type).toBe('not');
     expect((n as { arg: { type: string } }).arg.type).toBe('exists');
-  });
-
-  it('not_between → not(between)', () => {
-    const n = fromSExpr({ not_between: ['x', 1, 5] });
-    expect(n.type).toBe('not');
-    expect((n as { arg: { type: string } }).arg.type).toBe('between');
   });
 });
 
