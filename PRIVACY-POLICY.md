@@ -35,7 +35,7 @@
 
 本政策适用于您与我们之间因以下行为产生的个人信息处理：
 
-1. **下载、安装、使用 Rulsynor 软件**（@openoba/rulsynor-core，MIT 许可）；
+1. **下载、安装、使用 Rulsynor 软件**（@openoba/rulsynor-core，BSL 1.1 许可）；
 2. **浏览 rulsynor-core GitHub 仓库**；
 3. **订阅项目公告**（如安全公告）；
 4. **提交反馈或咨询**；
@@ -221,7 +221,7 @@
 
 This policy applies to the processing of your personal information in the following scenarios:
 
-1. Downloading, installing, using Rulsynor software (@openoba/rulsynor-core, MIT license);
+1. Downloading, installing, using Rulsynor software (@openoba/rulsynor-core, BSL 1.1 license);
 2. Browsing the rulsynor-core GitHub repository;
 3. Subscribing to project announcements (e.g., security advisories);
 4. Submitting feedback or inquiries;

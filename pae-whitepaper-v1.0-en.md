@@ -52,7 +52,7 @@ Every capability claimed in this whitepaper has a corresponding open-source impl
 |---|---|---|---|
 | ERDL rule language specification | [OpenOBA/erdl-landing](https://github.com/OpenOBA/erdl-landing) (SPEC v2.0) | MIT | Independent implementation cross-verification |
 | Formal verification of the deterministic kernel | [OpenOBA/erdl-formal](https://github.com/OpenOBA/erdl-formal) | Apache-2.0 | SMT proofs (34 nodes, full coverage) |
-| Decision-evidence tamper-proof mechanism | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | Apache-2.0 | 301 verification vectors (78 cryptographic + 223 semantic); 1 independent Runner landed (norviq-go, Go, 107/107, 2026-09-01) |
+| Decision-evidence tamper-proof mechanism | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | CC0-1.0 (vectors) / Apache-2.0 (code) | 301 verification vectors (78 cryptographic + 223 semantic); 1 independent Runner landed (norviq-go, Go, 107/107, 2026-09-01) |
 | Seven-step method runtime (Alpha) | [OpenOBA/rulsynor-core](https://github.com/OpenOBA/rulsynor-core) | BSL 1.1 | Local build & run |
 | Community-edition full-stack Professionalized AI Employee runtime framework | [openoba.com](https://openoba.com) | In beta (not open-sourced) | Invitation-only beta |
 

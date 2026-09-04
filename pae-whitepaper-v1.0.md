@@ -52,7 +52,7 @@
 |---|---|---|---|
 | ERDL 规则语言规范 | [OpenOBA/erdl-landing](https://github.com/OpenOBA/erdl-landing)（SPEC v2.0） | MIT | 独立实现交叉验证 |
 | 确定性内核形式化验证 | [OpenOBA/erdl-formal](https://github.com/OpenOBA/erdl-formal) | Apache-2.0 | SMT 证明（34 节点全覆盖） |
-| 决策证据防篡改机制 | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | Apache-2.0 | 301 条验证向量（78 条密码学验证 + 223 条语义验证）；已有 1 个独立 Runner 落地（norviq-go，Go，107/107，2026-09-01） |
+| 决策证据防篡改机制 | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | CC0-1.0（向量）/ Apache-2.0（代码） | 301 条验证向量（78 条密码学验证 + 223 条语义验证）；已有 1 个独立 Runner 落地（norviq-go，Go，107/107，2026-09-01） |
 | 七步工作法运行时（Alpha） | [OpenOBA/rulsynor-core](https://github.com/OpenOBA/rulsynor-core) | BSL1.1 | 本地构建运行 |
 | 社区版全栈职业化AI员工运行时框架 | [openoba.com](https://openoba.com) | 内测中（未开源） | 内测邀请制 |
 
