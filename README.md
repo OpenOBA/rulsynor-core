@@ -428,15 +428,16 @@ const record = buildDecisionObject({
   matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: 'Read-only operation allowed.' }],
   totalEvaluated: 29,
   totalMatched: 1,
-  rules: rules.map(r => ({ name: r.name, version: 1 })),
+  rules: rules.map(r => ({ id: r.id, name: r.name, version: 1 })),
   evaluationDurationMs: 1,  // actual measurement (milliseconds)
 });
 
 // record.audit.hash            → "sha256:a1b2c3..." — immutable
 // record.audit.previous_hash   → previous DO's hash — chain verified
-// record.agent.aid             → "1.2.156.3088.1.000042.000003.a3f8c1"
-// record.compliance_profile    → EU AI Act + GB/Z 185 fields activated
 // record.execution_trace_id    → UUID linking all steps in this task
+// With RULSYNOR_JURISDICTIONS="CN,EU":
+//   record.agent.aid           → "1.2.156.3088.1.000042.000003.a3f8c1" (CN GB/Z 185)
+//   record.compliance_profile  → activated_fields for EU AI Act + GB/Z 185
 ```
 
 **Chain verification** — trace every decision from any point:

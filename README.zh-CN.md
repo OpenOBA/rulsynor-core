@@ -408,15 +408,16 @@ const record = buildDecisionObject({
   matchedRules: [{ ruleId: 'allow-readonly', decision: 'ALLOW', reason: '只读操作允许。' }],
   totalEvaluated: 29,
   totalMatched: 1,
-  rules: rules.map(r => ({ name: r.name, version: 1 })),
+  rules: rules.map(r => ({ id: r.id, name: r.name, version: 1 })),
   evaluationDurationMs: 1,  // 实际测量值（毫秒）
 });
 
 // record.audit.hash            → "sha256:a1b2c3..." — 不可变
 // record.audit.previous_hash   → 上一条 DO 的哈希 — 链已验证
-// record.agent.aid             → "1.2.156.3088.1.000042.000003.a3f8c120"
-// record.compliance_profile    → EU AI Act + GB/Z 185 字段已激活
 // record.execution_trace_id    → 串联此任务所有步骤的 UUID
+// 设置 RULSYNOR_JURISDICTIONS="CN,EU" 后：
+//   record.agent.aid           → "1.2.156.3088.1.000042.000003.a3f8c1"（CN GB/Z 185）
+//   record.compliance_profile  → EU AI Act + GB/Z 185 字段已激活
 ```
 
 **链验证**——从任意节点追溯：
