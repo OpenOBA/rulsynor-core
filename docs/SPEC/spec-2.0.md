@@ -440,15 +440,15 @@ Grade 决定审计强度与可重算性声明；Grade 元数据走扩展字段�
 
 | # | 字段 | 类型 | 激活条件（作用于合规需求） |
 |---|------|------|----------|
-| 15 | `model_id` | string | EU AI Act / NIST |
+| 15 | `model_id` | string | EU AI Act / NIST / CN |
 | 16 | `agent.known_limitations` | string[] | EU AI Act（模型已知局限声明） |
-| 17 | `fairness_assessment` | string | EU AI Act / NIST / Colorado |
-| 18 | `impact_assessment_id` | UUID | EU AI Act / ISO 42001 |
+| 17 | `fairness_assessment` | string | EU AI Act / NIST / Colorado / CN |
+| 18 | `impact_assessment_id` | UUID | EU AI Act / ISO 42001 / CN |
 | 19 | `autonomy_level` | string | EU AI Act / CN / SG MGF |
 | 20 | `data_modification_expected` | boolean | EU AI Act / CN / HIPAA / PCI DSS / 信通院 |
 | 21 | `context_snapshot_hash` | string | EU AI Act / CN（含 PII / 跨 Agent） |
 | 22 | `sanitized_context` | string | EU AI Act / CN（GDPR 合规） |
-| 23 | `confidence_score` | integer | EU AI Act / NIST（0~100） |
+| 23 | `confidence_score` | integer | EU AI Act / NIST / CN（0~100） |
 | 24 | `signature` | string (Base64url) | critical 决策（ECDSA P-256） |
 | 25 | `signing_key_id` | string | 配套 signature，标识验签公钥版本 |
 | 26 | `agent.aid` | string | CN GB/Z 185（28 位 AID） |

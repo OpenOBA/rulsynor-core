@@ -336,7 +336,7 @@ export function generateAID(): string {
     .createHash('sha256')
     .update(`${process.env['HOSTNAME'] || 'localhost'}-${process.pid}`)
     .digest('hex')
-    .slice(0, 8);
+    .slice(0, 6);
   return `${PROVENANCE.aidOidPrefix}.1.${registrarId}.${requesterId}.${instanceId}`;
 }
 

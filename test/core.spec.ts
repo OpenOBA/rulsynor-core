@@ -203,9 +203,11 @@ describe('@openoba/rulsynor-core', () => {
       expect(do1.data_modification_expected).toBe(false);
       expect(do1.autonomy_level).toBeDefined();
       expect(do1.context_snapshot_hash).toMatch(/^sha256:/);
-      // CN does NOT activate model_id/confidence_score/fairness_assessment/impact_assessment_id
-      expect(do1.model_id).toBeUndefined();
-      expect(do1.confidence_score).toBeUndefined();
+      // CN now also activates model_id/confidence_score/fairness_assessment/impact_assessment_id (SPEC §5.3)
+      expect(do1.model_id).toBeDefined();
+      expect(typeof do1.confidence_score).toBe('number');
+      expect(do1.fairness_assessment).toBeDefined();
+      expect(do1.impact_assessment_id).toBeDefined();
     });
 
     it('EU → agent carries known_limitations, no CN fields', () => {
@@ -298,7 +300,7 @@ describe('@openoba/rulsynor-core', () => {
 
   describe('AID', () => {
     it('OID format', () =>
-      expect(generateAID()).toMatch(/^1\.2\.156\.3088\.1\.\d+\.\d+\.[a-f0-9]{8}$/));
+      expect(generateAID()).toMatch(/^1\.2\.156\.3088\.1\.\d+\.\d+\.[a-f0-9]{6}$/));
   });
 
   describe('Provenance', () => {
