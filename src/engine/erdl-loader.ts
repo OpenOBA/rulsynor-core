@@ -1,7 +1,7 @@
 /**
  * ERDL - Document Loader (YAML -> RuleDefinition[]).
  *
- * Parses an `*.erdl.yaml` document (ERDL language spec v2.0 §2.1 top-level format)
+ * Parses an `*.erdl.yaml` document (ERDL language spec v2.1 §2.1 top-level format)
  * and maps it to `RuleDefinition[]` objects ready for evaluation. This is the canonical
  * forward half of the parse/evaluate pipeline: `RuleYamlSerializer` emits YAML, this
  * loader reads it back.
@@ -32,7 +32,7 @@ import type {
   RuleDefinition,
 } from './rule-definition.js';
 
-/** Document-level metadata (ERDL language spec v2.0 §2.2). */
+/** Document-level metadata (ERDL language spec v2.1 §2.2). */
 export interface ErdlMetadata {
   name: string;
   description?: string;
@@ -205,12 +205,9 @@ function mapRule(raw: RawRule, defaultCategory: RuleCategory): RuleDefinition {
 /**
  * Parse an ERDL YAML document string into `RuleDefinition[]`.
  *
- * NOTE on `correction`: the language spec v2.0 §7.0.3 output contract requires
- * `primary_correction` for CORRECT decisions, and the product spec DO maps
- * `matched_rules[].correction`. The language spec §4.1 rule-field table omits a
- * `correction` field (it lists `message`/`instruction`/`alternative` but not
- * `correction`) — a spec gap tracked for amendment. Until then, this loader reads an
- * optional rule-level `correction` field directly so CORRECT rules carry their fix text.
+ * NOTE on `correction`: added to the language spec in v2.1 (§4.1 rule-field table).
+ * The v2.0 spec omitted it (a gap now closed). This loader reads the rule-level
+ * `correction` field so CORRECT rules carry their fix text.
  */
 export function parseErdlDocument(yamlText: string): ErdlDocument {
   const raw = yaml.load(yamlText) as RawDocument | null;

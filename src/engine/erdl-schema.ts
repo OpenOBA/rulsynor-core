@@ -12,12 +12,12 @@
  * the constants** (`typeof X[number]`) — a second union type or string array MUST NOT
  * be written elsewhere. All consumers MUST import from this file.
  *
- * Authority anchors (SPEC master erdl-spec-v2.0.md):
- *  - §11.1 L1250-1264: 30 operators = 28 condition operators + 2 condition modifiers
- *  - §11.4 L1283-1304: 28 condition operators → expression-tree compile mapping
+ * Authority anchors (ERDL language spec v2.1):
+ *  - §5.2 + 附录 B: 30 operators = 28 condition operators + 2 condition modifiers
+ *  - §5.2: 28 condition operators → expression-tree compile mapping
  *    (13 direct + 6 via-not + 9 length/count composite)
- *  - §27.5 L1820-1836: 13 base decision types (the result.decision value domain)
- *  - §10.1 L1059-1076: 34 semantic nodes (10 groups, FREEZE-2)
+ *  - §6 + 附录 C: 13 base decision types (the result.decision value domain)
+ *  - §5.3 + 附录 A: 34 semantic nodes (10 groups, FREEZE-2)
  *
  * Freeze level: operator/node sets are `[FREEZE-2]` (additive-only, no semantic change);
  * the 13-decision value domain enters the audit chain with the DO.
@@ -28,10 +28,10 @@
  */
 
 // ═══════════════════════════════════════════════════════════════
-// 1. Operators (SPEC §11.1: 28 conditions + 2 modifiers = 30)
+// 1. Operators (SPEC §5.2: 28 conditions + 2 modifiers = 30)
 // ═══════════════════════════════════════════════════════════════
 
-/** Comparison family (6) (§11.1) */
+/** Comparison family (6) (§5.2) */
 export const OP_COMPARE = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte'] as const;
 /** List family (2) */
 export const OP_LIST = ['in', 'not_in'] as const;
@@ -54,7 +54,7 @@ export const OP_RANGE = ['between', 'not_between'] as const;
 /** Count family (4) */
 export const OP_COUNT = ['count_gt', 'count_gte', 'count_lt', 'count_lte'] as const;
 
-/** 28 condition operators (compiled into the expression-tree evaluator, §11.4) */
+/** 28 condition operators (compiled into the expression-tree evaluator, §5.2) */
 export const CONDITION_OPERATORS = [
   ...OP_COMPARE,
   ...OP_LIST,
@@ -127,7 +127,7 @@ export const OPERATOR_ALIASES: Readonly<Record<string, ConditionOperator>> = Obj
   neq: 'ne',
 });
 
-/** §11.4 compile-destination classification (used by vectors and docs to self-verify "no dangling") */
+/** §5.2 compile-destination classification (used by vectors and docs to self-verify "no dangling") */
 export const OP_COMPILE_DIRECT = [
   ...OP_COMPARE,
   'in',
@@ -160,10 +160,10 @@ export function normalizeOperatorName(op: string | undefined | null): ConditionO
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2. Decisions (SPEC §27.5: 13 base decisions = DO result.decision value domain)
+// 2. Decisions (SPEC §6 + 附录 C: 13 base decisions = DO result.decision value domain)
 // ═══════════════════════════════════════════════════════════════
 
-/** 13 base decision types (the **only** value domain allowed into DO `result.decision`, §27.5 authoritative enum) */
+/** 13 base decision types (the **only** value domain allowed into DO `result.decision`, §6 + 附录 C authoritative enum) */
 export const DO_DECISIONS = [
   'ALLOW',
   'DENY',
@@ -221,7 +221,7 @@ export const BLOCKING_DECISIONS = ['DENY', 'CORRECT', 'REQUEST_HUMAN', 'EMERGENC
 export type DODecision = (typeof DO_DECISIONS)[number];
 export type Decision = (typeof ALL_DECISIONS)[number];
 
-/** Whether a value may enter the DO result.decision (§27.5 value-domain gate) */
+/** Whether a value may enter the DO result.decision (§6 value-domain gate) */
 export function isDODecision(v: unknown): v is DODecision {
   return typeof v === 'string' && (DO_DECISIONS as readonly string[]).includes(v);
 }
@@ -287,13 +287,13 @@ export const OCCUPATION_CATEGORIES = ['review'] as const;
 export type OccupationCategory = (typeof OCCUPATION_CATEGORIES)[number];
 
 // ═══════════════════════════════════════════════════════════════
-// 4. 34 semantic nodes (SPEC §10.1, FREEZE-2) — countable per group, no dangling
+// 4. 34 semantic nodes (SPEC §5.3, FREEZE-2) — countable per group, no dangling
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * 34 semantic nodes listed per group (10 groups). The relationship to the 20 discriminant
  * types in `expr-tree/node-types.ts` is "semantic node ↔ type projection" (parameterized
- * nodes merged), not a count contradiction (§10.1).
+ * nodes merged), not a count contradiction (§5.3).
  */
 export const SEMANTIC_NODES = Object.freeze({
   Values: ['field', 'var', 'literal'],
@@ -356,9 +356,9 @@ export const SCHEMA_COUNTS = Object.freeze({
 
 /** SPEC alignment baseline (editing this file MUST re-check the SPEC master line numbers) */
 export const SPEC_BASELINE = Object.freeze({
-  spec: 'erdl-spec-v2.0',
-  operators: '§11.1 L1250-1264 / §11.4 L1283-1304',
-  decisions: '§27.5 L1820-1836',
-  nodes: '§10.1 L1059-1076',
+  spec: 'erdl-spec-v2.1',
+  operators: '§5.2 + 附录 B (30 = 28 + 2)',
+  decisions: '§6 + 附录 C (13)',
+  nodes: '§5.3 + 附录 A (34 nodes, 10 groups)',
   temporalSemantics: 'RFC-002 §2.4 + semantics decided 2026-08-27',
 });

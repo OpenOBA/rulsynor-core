@@ -1,11 +1,13 @@
-# ERDL 规范 v2.0
+# ERDL 规范 v2.1
 （Entity-Rule Definition Language · 实体规则定义语言）
 
-> **权威源声明（2026-08-31 · 全线统一）**：本文件为 ERDL 语言规范的**副本**，权威源为 erdl 仓库 `erdl-spec.md`；规范性事实以权威源为准。
+> **权威源声明（2026-09-04 · 同步 v2.1）**：本文件为 ERDL 语言规范的**副本**，权威源为 erdl 仓库 `erdl-spec.md`；规范性事实以权威源为准。
 
-> **状态**：v2.0 
-> **版本语义**：本文档（ERDL 语言规范）版本为 **v2.0**；规则文件顶层 `protocol: "erdl/v2"`（协议标识，固定值）与 `version: "2.0.0"`（规则格式版本）为独立版本标识，与本文档版本互不混同。
+> **状态**：v2.1 · 定稿
+> **日期**：2026-09-03
+> **版本语义**：本文档（ERDL 语言规范）版本为 **v2.1**；规则文件顶层 `protocol: "erdl/v2"`（协议标识，固定值）与 `version: "2.1.0"`（规则格式版本）为独立版本标识，与本文档版本互不混同。
 > **作者**：唐启鑫
+> **商标**：ERDL™ 是深圳市秒镜科技有限公司的商标。
 > **定位**：ERDL（Entity-Rule Definition Language，实体规则定义语言）是一种以 YAML/JSON 承载的**声明式规则定义格式**，用于精确表达实体结构与行为规则。本规范**独立且中立**——仅定义格式本身，不依赖任何特定实现或上层框架；其确定性求值与规范化形式支持跨实现逐字节验证。在 ERDL 中，**规则决定一切**：规则既是语义的载体，也是执行的边界、审计的证据与治理的事实。
 > **规范语言**：本文档中 **MUST / MUST NOT / SHOULD / SHOULD NOT / MAY** 按 [RFC 2119] 解释。
 
@@ -32,7 +34,7 @@ ERDL（Entity-Rule Definition Language，实体规则定义语言）是一种以
 
 ### 1.3 ERDL 在 AI 治理层面的价值
 
-AI 治理的核心难题，不是模型能否给出答案，Agent能否执行，而是概率性输出如何满足用户、监管、审计与追责所要求的确定性边界。ERDL 以 YAML/JSON 承载声明式规则，将实体结构、行为约束和处置动作固化为可验证的确定性规则层，使 AI 的「应当如何行动」从训练假设转变为可检查对象。
+AI 治理的核心难题，不是模型能否给出答案，而是概率性输出如何满足监管、审计与追责所要求的确定性边界。ERDL 以 YAML/JSON 承载声明式规则，将实体结构、行为约束和处置动作固化为可验证的确定性规则层，使 AI 的「应当如何行动」从训练假设转变为可检查对象。
 
 **从信任到验证**：传统治理依赖对齐评估或事后解释，难以证明某次具体决策遵循了哪些约束。ERDL 将约束表达为 `when → then` 规则，每次求值绑定 canonical_tree 快照与结果哈希，可独立重算、逐字节跨实现复核。治理方不再只是相信模型「被正确训练」，而是可以验证某次行为是否命中规则、命中哪条规则、为何得到该结果。
 
@@ -66,7 +68,7 @@ AI 治理的核心难题，不是模型能否给出答案，Agent能否执行，
 
 ```yaml
 protocol: "erdl/v2"       # 协议标识，固定值
-version: "2.0.0"          # 规则格式版本
+version: "2.1.0"          # 规则格式版本
 metadata: { ... }         # 文档级元数据（见 §2.2）
 rules: [ ... ]            # 规则列表（见 §4）
 ```
@@ -104,6 +106,26 @@ metadata:
 - 文件 MUST 以 `protocol: "erdl/v2"` 开头；
 - 版本兼容：同一 `protocol` 大版本内，新增约束对存量规则 SHOULD Non-breaking（加载时 Warning 而非 Error）；跨大版本（如 erdl/v1 → erdl/v2）为 breaking change，不适用向后兼容承诺。例外：`when:"true"` + 拦截性 `then` 在任何版本均拒绝加载（Error）。
 
+### 2.4 解析与求值概览
+
+一个 ERDL 文档从文件到决策结果，走固定的五步管线。理解这条管线，即可理解 ERDL 如何被「解析」与「求值」：
+
+| 步骤 | 动作 | 输入 → 输出 | 依据 |
+|------|------|-----------|------|
+| ① 加载 | 读入规则文档 | `*.erdl.yaml` → 结构化对象 | §2.1–§2.3 |
+| ② 校验 | 加载时类型检查 | 结构化对象 → 合法文档（拒绝非法） | E5 |
+| ③ 编译 | 三种书写形态归一化 | 合法文档 → 表达式树（canonical_tree） | E7、§8.2 |
+| ④ 求值 | 树对输入事实逐节点判定 | 表达式树 + fact → 决策 | §7 |
+| ⑤ 输出 | 生成求值证据 | 决策 → 可哈希、可重算的求值结果 | E6、§8 |
+
+- **① 加载**：读入 `*.erdl.yaml`，按 §2.3 格式约定解析（YAML 与 JSON 等价，无损互转）。
+- **② 校验**：加载时类型检查——字段顺序、必填、枚举值、`when`/`expr` 互斥等；违规拒绝加载。
+- **③ 编译**：Simple / Expression / 决策表 MUST 编译到同一表达式树（E7），生成规范化树（§8.2）。
+- **④ 求值**：表达式树对输入事实逐节点判定（§7）。树是纯函数（E1）；`within`/`rate` 的状态由 `temporal_state` 受控注入。
+- **⑤ 输出**：产出决策结果，绑定 canonical_tree 快照与结果哈希（E6），可独立重算、逐字节验证。
+
+> 输入事实（fact）与求值结果（output）的完整契约见 §7.0。
+
 ---
 
 ## 3. Entity 定义
@@ -129,26 +151,33 @@ Rule 是 ERDL 的核心单元：`Rule = Metadata + When（条件）+ Then（动�
 
 ### 4.1 字段定义
 
-`rules[]` 子字段顺序 MUST 固定为：`name` → `description` → `priority` → `override` → `ring` → `when` → `then` → `message` → `instruction` → `unless`。
+`rules[]` 子字段顺序 MUST 固定为：`name` → `description` → `category` → `priority` → `override` → `ring` → `enabled` → `when` → `then` → `message` → `instruction` → `correction` → `unless` → `explanation` → `alternative` → `legal_basis` → `source_text`。
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|:---:|------|
 | `name` | string | MUST | 规则唯一标识，格式 `[CAT]-[NNN]-描述` |
 | `description` | string | MUST | 人读描述 |
+| `category` | string | MAY | 规则级分类；缺省继承 `metadata.category`（见 §2.2），允许同一文档内混合分类 |
 | `priority` | integer | MUST | 数字越小越优先（见 §7.1） |
 | `override` | string | SHOULD | 覆盖级别：critical > high > normal > low（默认 normal） |
 | `ring` | integer | SHOULD | 执行环：0 内核 / 1 恢复 / 2 审批 / 3 建议 |
+| `enabled` | boolean | MAY | 规则启用标志（默认 true）；false 时求值跳过该规则 |
 | `when` | object | MUST | 触发条件（见 §5） |
 | `then` | string | MUST | 决策类型（见 §6） |
 | `message` | string | SHOULD | 决策消息（拦截性 then MUST 非空） |
 | `instruction` | string | MAY | 建议指令（ALLOW + instruction 场景） |
+| `correction` | string | MAY | 纠正文本（CORRECT 决策；求值输出的 `primary_correction` 来源，见 §7.0.3） |
 | `unless` | object/null | MAY | 豁免条件块（可选） |
+| `explanation` | string / object | MAY | 双语解释（规则为何存在、防止何种危害） |
+| `alternative` | string / object | MAY | 被拦截时建议的替代动作 |
+| `legal_basis` | string | MAY | 法规依据（条款引用） |
+| `source_text` | string | MAY | 所依据法规的原文摘录 |
 
 ### 4.2 完整示例
 
 ```yaml
 protocol: "erdl/v2"
-version: "2.0.0"
+version: "2.1.0"
 metadata:
   name: "my-first-rule-set"
   description: "允许读文件操作"
@@ -309,7 +338,7 @@ rows:
 gloss 是从树**确定性生成**的自然语言表述：
 
 ```yaml
-gloss: "当（售价 − 成本）÷ 售价 小于 15% 时，需人工审批"   # 引擎生成，lint 强制一致
+gloss: "当（售价 减 成本）除以 售价 小于 15% 时，需人工审批"   # 引擎生成，lint 强制一致
 ```
 
 **五条不变量（全部 MUST）**：
@@ -322,7 +351,7 @@ gloss: "当（售价 − 成本）÷ 售价 小于 15% 时，需人工审批"   
 | G4 | gloss 为渲染产物（不进哈希），展示时实时 `render(树)` 呈现 |
 | G5 | Simple 规则同样生成 gloss（编译为树后渲染）——阅读层不分层 |
 
-**gloss 渲染模板**（逐节点，中英双语，V-GLOSS 向量预期值基准；`{A}`/`{B}`/`{C}` 为子表达式递归渲染结果）：
+**gloss 渲染模板**（逐节点，中英双语；`{A}`/`{B}`/`{C}` 为子表达式递归渲染结果）：
 
 | 节点 | 中文模板 | English template |
 |------|---------|------------------|
@@ -343,7 +372,7 @@ gloss: "当（售价 − 成本）÷ 售价 小于 15% 时，需人工审批"   
 | `match` | `{A} 匹配正则 {B}` | `{A} matches regex {B}` |
 | `starts_with` | `{A} 以 {B} 开头` | `{A} starts with {B}` |
 | `ends_with` | `{A} 以 {B} 结尾` | `{A} ends with {B}` |
-| `exists` | `{A} 存在` | `{A} exists` |
+| `exists` | `{A} 已发生` | `{A} exists` |
 | `length` | `{A} 的长度` | `the length of {A}` |
 | `between` | `{A} 介于 {B} 与 {C} 之间` | `{A} is between {B} and {C}` |
 | `all` | `{A} 中每一项均满足：{B}` | `every item in {A} satisfies: {B}` |
@@ -364,6 +393,8 @@ gloss: "当（售价 − 成本）÷ 售价 小于 15% 时，需人工审批"   
 | `aggregate(avg)` | `{A} 的平均值` | `the average of {A}` |
 | `aggregate(min)` | `{A} 的最小值` | `the minimum of {A}` |
 | `aggregate(max)` | `{A} 的最大值` | `the maximum of {A}` |
+
+> **`exists` 布尔字段特例**：当字段名匹配 `is_*`/`has_*`（布尔字段约定）时，`exists` 渲染为 `{A} 为"是"`（中文）/ `{A} is true`（英文），而非 `{A} 已发生`/`{A} exists`——布尔字段存在即真，避免「是否已告知 已发生」这类别扭表达。
 
 ---
 
@@ -390,6 +421,68 @@ gloss: "当（售价 − 成本）÷ 售价 小于 15% 时，需人工审批"   
 ---
 
 ## 7. 求值语义
+
+### 7.0 求值概览
+
+求值 = 表达式树（规则编译产物）对**输入事实**（fact）逐节点判定的纯函数过程（E1）。本节定义求值的输入契约、算法步骤与输出契约，供实现者与使用者对齐。
+
+#### 7.0.1 输入契约（事实对象）
+
+求值输入是一个**事实对象**（fact），承载规则作用主体的当前状态，以 Entity（§3）为命名空间：
+
+```yaml
+fact:
+  tool:                 # Entity: tool
+    name: "issue_refund"
+    args: { amount: 8000, order_id: "O1024" }
+  context:              # 自由上下文字段（规则以 context.* 引用）
+    country: "CN"
+    role: "operator"
+  # 其他 Entity：agent / task / workflow / human / guardian（按需提供）
+```
+
+- 字段引用（`tool.name`、`context.amount`、`tool.args.amount`）按事实对象的键路径解析（§3）；
+- `as_of`（求值时刻，UTC）与 `temporal_state`（within/rate 滑动窗口状态）由引擎注入，属受控外部输入（E1）；
+- 缺失字段按 E11 空值传播处理（§7.3(a)）。
+
+#### 7.0.2 求值算法
+
+```
+输入：规则集 rules[] + 事实对象 fact
+输出：决策结果（见 7.0.3）
+
+1. 排序：按 priority 从小到大（值越小越优先）
+2. 分组：按 ring 从 0 到 3 顺序执行（0 内核 → 1 恢复 → 2 审批 → 3 建议）
+3. 每个 ring 内，按序求值每条规则：
+   a. unless 豁免先于 when 判定——命中豁免则记录后跳过该规则
+   b. 编译后的 when 表达式树对 fact 逐节点求值（true / false / 错误）
+   c. 首命中：每个 ring 内 first-match-wins（命中即短路该 ring）
+   d. override：仅 DENY → ALLOW 方向覆盖，不得覆盖到更不安全状态（§7.1）
+4. 兜底：无规则命中 → metadata.decision（fallback 决策，§2.2）
+5. 汇总：产出 decision + matched_rules + 证据（canonical_tree / hash / eval_trace）
+```
+
+- 求值错误按 E12 分 tier 折叠：tier≤2 及 Guard 上下文 fail-close，tier 3–5 折叠为 false；
+- `EMERGENCY_HALT` 命中即短路；`DENY` 不短路——继续求值以判断是否有 override ALLOW 覆盖。
+
+#### 7.0.3 输出契约（求值结果）
+
+求值结果 MUST 包含以下字段：
+
+| 字段 | 说明 |
+|------|------|
+| `decision` | 最终决策（§6 枚举之一，或 fallback 决策） |
+| `matched_rules` | 命中的规则（按求值顺序） |
+| `unless_exemptions` | 被 unless 豁免的规则（单独记录，不计入 matched_rules） |
+| `primary_instruction` | 首要指令（ALLOW + instruction 场景） |
+| `primary_reason` | 首要理由（DENY 等拦截场景） |
+| `primary_explanation` | 首要解释（可中英双语） |
+| `primary_correction` | 纠正文本（CORRECT 决策；来源为规则字段 `correction`，见 §4.1） |
+| `total_evaluated` | 求值的规则总数 |
+| `total_matched` | 命中的规则总数 |
+| `temporal_state` | within/rate 滑动窗口状态快照（无命中时省略） |
+
+> 求值证据（canonical_tree 快照、结果哈希、eval_trace）为可独立重算的派生产物（§8.2、E6）——canonical_tree 进哈希，eval_trace 不进哈希（§8.3）。
 
 ### 7.1 优先级与冲突解决
 
@@ -541,13 +634,69 @@ ERDL 的集成目标，是把关键判断从模型推理、框架代码或口头
 
 ## 10. 示例与一致性验证
 
-### 10.1 完整示例
+### 10.1 Quick Start（快速上手）
+
+一个最小 ERDL 文档 + 一次求值，走完「写 → 加载 → 求值 → 得结果」全链路（管线见 §2.4）。
+
+**第一步 · 写规则**（`refund.erdl.yaml`）：
+
+```yaml
+protocol: "erdl/v2"
+version: "2.1.0"
+metadata:
+  name: "refund-guard"
+  description: "退款金额管控"
+  category: coding
+  decision: ALLOW
+rules:
+  - name: "SEC-001-refund-limit"
+    description: "退款超过 5000 需人工审批"
+    priority: 10
+    when:
+      logic: AND
+      conditions:
+        - field: "tool.name"
+          operator: eq
+          value: "issue_refund"
+        - field: "tool.args.amount"
+          operator: gt
+          value: 5000
+    then: REQUEST_HUMAN
+    message: "退款金额超过 5000，需人工审批"
+```
+
+**第二步 · 加载 + 校验 + 编译**：解析 YAML，校验通过后把 `when` 编译为表达式树（§2.4 步骤①②③）。
+
+**第三步 · 求值**：给定事实对象：
+
+```yaml
+fact:
+  tool:
+    name: "issue_refund"
+    args: { amount: 8000 }
+```
+
+规则 `SEC-001` 命中（`tool.name == "issue_refund"` 且 `amount > 5000`）。
+
+**第四步 · 结果**：
+
+```yaml
+decision: REQUEST_HUMAN
+matched_rules: ["SEC-001-refund-limit"]
+primary_reason: "退款金额超过 5000，需人工审批"
+total_evaluated: 1
+total_matched: 1
+```
+
+若输入改为 `amount: 100`，规则不命中，走 `metadata.decision` fallback → `decision: ALLOW`。
+
+### 10.2 完整示例
 
 见 §4.2（Simple 规则）与 §5.3（Expression 规则）、§5.4（决策表）。
 
-### 10.2 一致性验证
+### 10.3 一致性验证
 
-本规范的语义 MUST 由可独立重算的测试向量证明。表达层向量（V-ENGINE 201 条 + V-GLOSS/V-PROJ 22 条）随本规范发布，覆盖：34 节点 × 4 场景（正常/边界/异常/空值）、E1-E12 语义、Simple 30 运算符编译映射、gloss 渲染模板。
+本规范的语义 MUST 由可独立重算的测试向量证明。表达层向量（V-ENGINE / V-GLOSS / V-PROJ）覆盖：34 节点 × 4 场景（正常/边界/异常/空值）、E1-E12 语义、Simple 30 运算符编译映射、gloss 渲染模板。
 
 **五步验证法**：加载向量输入 → 生成表达式树 → 重算求值结果 → 与答案对比 → 判定一致。
 
@@ -617,7 +766,43 @@ ERDL 的集成目标，是把关键判断从模型推理、框架代码或口头
 | B | Expression 树 | 高，eval_trace MUST |
 | C | 含函数委派 | 分层，C 级不得冒充纯文本可重算 |
 
-含函数委派的规则（Grade C）MUST 在 gloss 中显式标记「含不可重算的函数委派」；函数委派的调用输入 + 输出哈希 MUST 纳入签名模式的原像。
+含函数委派的规则（Grade C）MUST 在 gloss 中显式标记「含不可重算的函数委派」；函数委派的调用输入 + 输出哈希 MUST 纳入结果哈希的原像。
+
+---
+
+## 附录 E · 术语表
+
+| 术语 | 一句话定义 |
+|------|-----------|
+| Entity（实体） | 规则作用的主体类型（agent/tool/task/workflow/human/guardian），字段引用的命名空间（§3） |
+| Rule（规则） | `when → then` 决策单元 |
+| when | 规则触发条件（编译为表达式树） |
+| then | 规则命中后的决策类型（§6） |
+| tier | 规则层级 0–5，由低到高表示约束强度；tier 0–2 用 Simple，≥3 可用 Expression |
+| ring | 执行环 0–3（内核/恢复/审批/建议），求值按环序执行 |
+| override | 覆盖级别 critical > high > normal > low，仅允许 DENY → ALLOW 方向 |
+| 表达式树 | 求值语义内核（34 节点，10 组），三种书写形态编译归一化到它 |
+| canonical_tree | 规范化树，唯一哈希、唯一重算的基准对象（§8.2） |
+| gloss | 从树确定性生成的自然语言可读投影（§5.5） |
+| eval_trace | 逐节点求值轨迹（可重算派生产物，不进哈希，E6） |
+| eval_warnings | 求值过程中的非致命警告（E3） |
+| temporal_state | within/rate 滑动窗口状态（有状态算子） |
+| as_of | 引擎注入的求值时刻（UTC，E9） |
+| 事实对象（fact） | 求值输入，承载 Entity 当前状态（§7.0.1） |
+| fallback 决策 | 无规则命中时 metadata.decision 的兜底裁决（§2.2） |
+| NFC | Unicode 规范化形式 C（字符串归一，E10） |
+| ReDoS | 正则拒绝服务攻击；match 节点 MUST 步数上限防护（§7.3(d)） |
+| half-even | 银行家舍入（ROUND_HALF_EVEN），E2 定点小数输出舍入 |
+| 空值传播 | 字段缺失统一返回 false 的安全失败语义（E11） |
+
+---
+
+## 修订历史
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v2.1 | 2026-09-03 | §4.1 新增 `category`（规则级覆盖）、`enabled`（启用标志）、`correction`（CORRECT 纠偏文本）三个可选字段，补全字段表与固定顺序；§7.0.3 补 `primary_correction` 来源交叉引用。协议 `erdl/v2` 不变；规则格式版本 2.0.0 → 2.1.0（新增可选字段，Non-breaking） |
+| v2.0 | 2026-08-30 | 定稿 |
 
 ---
 
@@ -627,4 +812,4 @@ ERDL 的集成目标，是把关键判断从模型推理、框架代码或口头
 
 ---
 
-*© 2026 深圳市秒镜科技有限公司 · 保留所有权利*
+*© 2026 深圳市秒镜科技有限公司 · MIT License*

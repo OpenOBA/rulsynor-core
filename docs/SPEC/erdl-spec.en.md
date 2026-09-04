@@ -1,11 +1,13 @@
-# ERDL Specification v2.0
+# ERDL Specification v2.1
 （Entity-Rule Definition Language · 实体规则定义语言）
 
-> **Authority note (2026-08-31 · full-line alignment)**: This file is a **copy**; the authoritative source is the erdl repo `erdl-spec.en.md`. Normative facts follow the authority.
+> **Authority note (2026-09-04 · synced to v2.1)**: This file is a **copy**; the authoritative source is the erdl repo `erdl-spec.en.md`. Normative facts follow the authority.
 
-> **Status**: v2.0 · Public release
-> **Version semantics**: this document (the ERDL language specification) is version **v2.0**; the top-level `protocol: "erdl/v2"` (protocol identifier, fixed value) and `version: "2.0.0"` (rule-format version) are independent version identifiers, not to be conflated with the document version.
+> **Status**: v2.1 · Final
+> **Date**: 2026-09-03
+> **Version semantics**: this document (the ERDL language specification) is version **v2.1**; the top-level `protocol: "erdl/v2"` (protocol identifier, fixed value) and `version: "2.1.0"` (rule-format version) are independent version identifiers, not to be conflated with the document version.
 > **Author**: Tang Qixin（唐启鑫）
+> **Trademark**: ERDL™ is a trademark of Shenzhen Miaojing Technology Co., Ltd.
 > **Positioning**: ERDL (Entity-Rule Definition Language) is a **declarative rule definition format**, carried in YAML/JSON, for precisely expressing entity structures and behavior rules. This specification is **independent and neutral** — it defines only the format itself, depending on no particular implementation or upper-layer framework; its deterministic evaluation and canonical form support byte-for-byte cross-implementation verification. In ERDL, **rules decide everything**: rules are the carrier of semantics, the boundary of execution, the evidence of audit, and the fact of governance.
 > **Conformance language**: **MUST / MUST NOT / SHOULD / SHOULD NOT / MAY** in this document are interpreted per [RFC 2119].
 
@@ -66,7 +68,7 @@ An ERDL document (`*.erdl.yaml`) consists of four top-level fields, whose order 
 
 ```yaml
 protocol: "erdl/v2"       # protocol identifier, fixed value
-version: "2.0.0"          # rule-format version
+version: "2.1.0"          # rule-format version
 metadata: { ... }         # document-level metadata (see §2.2)
 rules: [ ... ]            # rule list (see §4)
 ```
@@ -104,6 +106,26 @@ metadata:
 - The file MUST begin with `protocol: "erdl/v2"`;
 - Version compatibility: within the same `protocol` major version, new constraints SHOULD be non-breaking for existing rules (a Warning at load, not an Error); a cross-major-version change (e.g. erdl/v1 → erdl/v2) is a breaking change and is not covered by the backward-compatibility promise. Exception: `when:"true"` combined with a blocking `then` is rejected at load in any version (Error).
 
+### 2.4 Parsing and Evaluation Overview
+
+An ERDL document moves from file to decision result through a fixed five-step pipeline. Understanding this pipeline is understanding how ERDL is "parsed" and "evaluated":
+
+| Step | Action | Input → Output | Basis |
+|------|--------|----------------|-------|
+| ① Load | Read the rule document | `*.erdl.yaml` → structured object | §2.1–§2.3 |
+| ② Validate | Load-time type checking | structured object → valid document (reject invalid) | E5 |
+| ③ Compile | Normalize the three writing forms | valid document → expression tree (canonical_tree) | E7, §8.2 |
+| ④ Evaluate | Judge the tree node-by-node against the fact | expression tree + fact → decision | §7 |
+| ⑤ Emit | Produce evaluation evidence | decision → hashable, recomputable result | E6, §8 |
+
+- **① Load**: read `*.erdl.yaml` and parse it per the §2.3 format conventions (YAML and JSON are equivalent, losslessly interchangeable).
+- **② Validate**: load-time type checking — field order, required fields, enum values, `when`/`expr` mutual exclusion, etc.; violations are rejected at load.
+- **③ Compile**: Simple / Expression / Decision Table MUST compile to the same expression tree (E7), producing the canonical tree (§8.2).
+- **④ Evaluate**: the expression tree judges the input fact node-by-node (§7). The tree is a pure function (E1); the state of `within`/`rate` is injected under control via `temporal_state`.
+- **⑤ Emit**: produce the decision result, bound to the canonical_tree snapshot and the result hash (E6), independently recomputable and byte-for-byte verifiable.
+
+> The full contracts for the input fact and the evaluation output are in §7.0.
+
 ---
 
 ## 3. Entity Definition
@@ -129,26 +151,33 @@ Rule is the core unit of ERDL: `Rule = Metadata + When (condition) + Then (actio
 
 ### 4.1 Field Definitions
 
-The `rules[]` sub-field order MUST be fixed: `name` → `description` → `priority` → `override` → `ring` → `when` → `then` → `message` → `instruction` → `unless`.
+The `rules[]` sub-field order MUST be fixed: `name` → `description` → `category` → `priority` → `override` → `ring` → `enabled` → `when` → `then` → `message` → `instruction` → `correction` → `unless` → `explanation` → `alternative` → `legal_basis` → `source_text`.
 
 | Field | Type | Required | Description |
 |------|------|:---:|------|
 | `name` | string | MUST | Unique rule identifier, format `[CAT]-[NNN]-description` |
 | `description` | string | MUST | Human-readable description |
+| `category` | string | MAY | Rule-level category; defaults to `metadata.category` (see §2.2), allows mixed categories within one document |
 | `priority` | integer | MUST | Smaller number = higher precedence (see §7.1) |
 | `override` | string | SHOULD | Override level: critical > high > normal > low (default normal) |
 | `ring` | integer | SHOULD | Execution ring: 0 kernel / 1 recovery / 2 approval / 3 advisory |
+| `enabled` | boolean | MAY | Rule enable flag (default true); `false` skips the rule during evaluation |
 | `when` | object | MUST | Trigger condition (see §5) |
 | `then` | string | MUST | Decision type (see §6) |
 | `message` | string | SHOULD | Decision message (blocking `then` MUST be non-empty) |
 | `instruction` | string | MAY | Advisory instruction (for the ALLOW + instruction case) |
+| `correction` | string | MAY | Correction text (CORRECT decision; source of the evaluation output `primary_correction`, see §7.0.3) |
 | `unless` | object/null | MAY | Exemption condition block (optional) |
+| `explanation` | string / object | MAY | Bilingual explanation (why the rule exists and what harm it prevents) |
+| `alternative` | string / object | MAY | Suggested alternative action when blocked |
+| `legal_basis` | string | MAY | Legal basis (citation of the regulation clause) |
+| `source_text` | string | MAY | Excerpt of the original regulation text |
 
 ### 4.2 Complete Example
 
 ```yaml
 protocol: "erdl/v2"
-version: "2.0.0"
+version: "2.1.0"
 metadata:
   name: "my-first-rule-set"
   description: "Allow file read operations"
@@ -309,7 +338,7 @@ Compile rules (E7): ① each row's `when` condition group compiles to logical AN
 gloss is natural-language text **deterministically generated** from the tree:
 
 ```yaml
-gloss: "when (sale price − cost) ÷ sale price is less than 15%, human approval is required"   # engine-generated, lint-enforced
+gloss: "when (sale price minus cost) divided by sale price is less than 15%, human approval is required"   # engine-generated, lint-enforced
 ```
 
 **Five invariants (all MUST)**:
@@ -322,7 +351,7 @@ gloss: "when (sale price − cost) ÷ sale price is less than 15%, human approva
 | G4 | gloss is a render product (does not enter the hash); displayed via live `render(tree)` |
 | G5 | Simple rules also generate gloss (rendered after compiling to a tree) — the reading layer is uniform |
 
-**gloss rendering templates** (per node, V-GLOSS vector expected-value baseline; `{A}`/`{B}`/`{C}` are recursive render results of sub-expressions):
+**gloss rendering templates** (per node, bilingual; `{A}`/`{B}`/`{C}` are recursive render results of sub-expressions):
 
 | Node | English template |
 |------|------------------|
@@ -365,6 +394,8 @@ gloss: "when (sale price − cost) ÷ sale price is less than 15%, human approva
 | `aggregate(min)` | `the minimum of {A}` |
 | `aggregate(max)` | `the maximum of {A}` |
 
+> **`exists` boolean-field special case**: when the field name matches `is_*`/`has_*` (boolean-field convention), `exists` renders as `{A} is true` instead of `{A} exists` — boolean fields are true when present, avoiding awkward phrasing (e.g. "has been notified exists").
+
 ---
 
 ## 6. `then` Decision Types
@@ -390,6 +421,68 @@ The value of `then` MUST belong to the following 13 decision types:
 ---
 
 ## 7. Evaluation Semantics
+
+### 7.0 Evaluation Overview
+
+Evaluation = the pure-function process (E1) by which the expression tree (the compiled product of rules) judges the **input fact** node by node. This section defines the evaluation input contract, the algorithm steps, and the output contract, to align implementers and users.
+
+#### 7.0.1 Input Contract (Fact Object)
+
+The evaluation input is a **fact object** carrying the current state of the rule's subject entities, namespaced by Entity (§3):
+
+```yaml
+fact:
+  tool:                 # Entity: tool
+    name: "issue_refund"
+    args: { amount: 8000, order_id: "O1024" }
+  context:              # free-form context fields (referenced by rules as context.*)
+    country: "CN"
+    role: "operator"
+  # other Entities: agent / task / workflow / human / guardian (provided as needed)
+```
+
+- field references (`tool.name`, `context.amount`, `tool.args.amount`) resolve by key path on the fact object (§3);
+- `as_of` (the evaluation moment, UTC) and `temporal_state` (the within/rate sliding-window state) are injected by the engine and are controlled external inputs (E1);
+- a missing field is handled by the E11 null propagation (§7.3(a)).
+
+#### 7.0.2 Evaluation Algorithm
+
+```
+Input: rule set rules[] + fact object fact
+Output: the decision result (see 7.0.3)
+
+1. Sort: by priority ascending (smaller = higher priority)
+2. Group: execute rings in order 0 to 3 (0 kernel → 1 recovery → 2 approval → 3 advice)
+3. Within each ring, evaluate each rule in order:
+   a. the unless exemption is judged before when — on exemption, record and skip the rule
+   b. the compiled when expression tree judges fact node-by-node (true / false / error)
+   c. first-match-wins within each ring (a match short-circuits that ring)
+   d. override: only the DENY → ALLOW direction, never to a less-safe state (§7.1)
+4. Fallback: no rule matched → metadata.decision (fallback decision, §2.2)
+5. Summarize: produce decision + matched_rules + evidence (canonical_tree / hash / eval_trace)
+```
+
+- evaluation errors fold by tier per E12: tier ≤ 2 and Guard contexts fail-close, tier 3–5 fold to false;
+- `EMERGENCY_HALT` short-circuits on match; `DENY` does not short-circuit — evaluation continues to judge whether an override ALLOW covers it.
+
+#### 7.0.3 Output Contract (Evaluation Result)
+
+The evaluation result MUST contain the following fields:
+
+| Field | Description |
+|-------|-------------|
+| `decision` | the final decision (one of the §6 enum, or the fallback decision) |
+| `matched_rules` | the matched rules (in evaluation order) |
+| `unless_exemptions` | rules exempted via unless (recorded separately, not counted in matched_rules) |
+| `primary_instruction` | the primary instruction (ALLOW + instruction scenario) |
+| `primary_reason` | the primary reason (DENY and other blocking scenarios) |
+| `primary_explanation` | the primary explanation (may be bilingual) |
+| `primary_correction` | the correction text (CORRECT decision; sourced from the rule field `correction`, see §4.1) |
+| `total_evaluated` | the total number of rules evaluated |
+| `total_matched` | the total number of rules matched |
+| `temporal_state` | the within/rate sliding-window state snapshot (omitted when nothing matched) |
+
+> The evaluation evidence (canonical_tree snapshot, result hash, eval_trace) are independently recomputable derived products (§8.2, E6) — canonical_tree enters the hash, eval_trace does not (§8.3).
 
 ### 7.1 Precedence and Conflict Resolution
 
@@ -541,13 +634,69 @@ The integration goal of ERDL is to extract critical decisions from model inferen
 
 ## 10. Examples and Conformance Verification
 
-### 10.1 Complete Examples
+### 10.1 Quick Start
+
+A minimal ERDL document plus one evaluation, walking the full "write → load → evaluate → get result" chain (pipeline in §2.4).
+
+**Step 1 · Write the rule** (`refund.erdl.yaml`):
+
+```yaml
+protocol: "erdl/v2"
+version: "2.1.0"
+metadata:
+  name: "refund-guard"
+  description: "Refund amount control"
+  category: coding
+  decision: ALLOW
+rules:
+  - name: "SEC-001-refund-limit"
+    description: "Refunds over 5000 require human approval"
+    priority: 10
+    when:
+      logic: AND
+      conditions:
+        - field: "tool.name"
+          operator: eq
+          value: "issue_refund"
+        - field: "tool.args.amount"
+          operator: gt
+          value: 5000
+    then: REQUEST_HUMAN
+    message: "Refund amount over 5000, human approval required"
+```
+
+**Step 2 · Load + validate + compile**: parse the YAML, validate it, then compile `when` into an expression tree (§2.4 steps ①②③).
+
+**Step 3 · Evaluate**: given the fact object:
+
+```yaml
+fact:
+  tool:
+    name: "issue_refund"
+    args: { amount: 8000 }
+```
+
+Rule `SEC-001` matches (`tool.name == "issue_refund"` and `amount > 5000`).
+
+**Step 4 · Result**:
+
+```yaml
+decision: REQUEST_HUMAN
+matched_rules: ["SEC-001-refund-limit"]
+primary_reason: "Refund amount over 5000, human approval required"
+total_evaluated: 1
+total_matched: 1
+```
+
+If the input is changed to `amount: 100`, the rule does not match, and the `metadata.decision` fallback applies → `decision: ALLOW`.
+
+### 10.2 Complete Examples
 
 See §4.2 (Simple rule), §5.3 (Expression rule), and §5.4 (Decision Table).
 
-### 10.2 Conformance Verification
+### 10.3 Conformance Verification
 
-The semantics of this specification MUST be proven by independently recomputable test vectors. The expression-layer vectors (V-ENGINE 201 + V-GLOSS/V-PROJ 22) are published with this specification, covering: 34 nodes × 4 scenarios (normal/boundary/exception/empty), E1–E12 semantics, the Simple 30-operator compile mapping, and gloss rendering templates.
+The semantics of this specification MUST be proven by independently recomputable test vectors. The expression-layer vectors (V-ENGINE / V-GLOSS / V-PROJ) cover: 34 nodes × 4 scenarios (normal/boundary/exception/empty), E1–E12 semantics, the Simple 30-operator compile mapping, and gloss rendering templates.
 
 **Five-step verification**: load vector input → generate expression tree → recompute evaluation result → compare with the answer → judge consistency.
 
@@ -617,7 +766,43 @@ For scenarios explicitly excluded by the kernel but genuinely needed, function d
 | B | Expression tree | high, eval_trace MUST |
 | C | with function delegation | layered, Grade C MUST NOT pose as plain-text recomputable |
 
-Rules with function delegation (Grade C) MUST explicitly mark "contains non-recomputable function delegation" in gloss; the delegated function's call input + output hash MUST enter the signature mode's preimage.
+Rules with function delegation (Grade C) MUST explicitly mark "contains non-recomputable function delegation" in gloss; the delegated function's call input + output hash MUST enter the result hash's preimage.
+
+---
+
+## Appendix E · Glossary
+
+| Term | One-line definition |
+|------|---------------------|
+| Entity | a rule subject type (agent/tool/task/workflow/human/guardian), the namespace for field references (§3) |
+| Rule | a `when → then` decision unit |
+| when | a rule's trigger condition (compiled to an expression tree) |
+| then | the decision type after a rule matches (§6) |
+| tier | rule level 0–5, low to high for constraint strength; tier 0–2 uses Simple, ≥3 may use Expression |
+| ring | execution ring 0–3 (kernel/recovery/approval/advice); evaluation runs in ring order |
+| override | override level critical > high > normal > low; only the DENY → ALLOW direction is allowed |
+| expression tree | the evaluation semantic kernel (34 nodes, 10 groups); all three writing forms compile to it |
+| canonical_tree | the canonical tree, the sole basis for hashing and recomputation (§8.2) |
+| gloss | the natural-language readable projection deterministically generated from the tree (§5.5) |
+| eval_trace | the node-level evaluation trace (recomputable derived product, does not enter the hash, E6) |
+| eval_warnings | non-fatal warnings during evaluation (E3) |
+| temporal_state | the within/rate sliding-window state (stateful operators) |
+| as_of | the evaluation moment injected by the engine (UTC, E9) |
+| fact object | the evaluation input carrying the current state of entities (§7.0.1) |
+| fallback decision | the metadata.decision fallback verdict when no rule matches (§2.2) |
+| NFC | Unicode Normalization Form C (string normalization, E10) |
+| ReDoS | regular-expression denial of service; the match node MUST guard against step explosion (§7.3(d)) |
+| half-even | banker's rounding (ROUND_HALF_EVEN), the E2 fixed-point output rounding |
+| null propagation | the safe-failure semantics of returning false uniformly for missing fields (E11) |
+
+---
+
+## Revision History
+
+| Version | Date | Changes |
+|------|------|------|
+| v2.1 | 2026-09-03 | §4.1 adds three optional fields — `category` (rule-level override), `enabled` (enable flag), `correction` (CORRECT fix text) — completing the field table and fixed order; §7.0.3 adds the `primary_correction` source cross-reference. Protocol `erdl/v2` unchanged; rule-format version 2.0.0 → 2.1.0 (additive optional fields, non-breaking) |
+| v2.0 | 2026-08-30 | Finalized |
 
 ---
 
@@ -627,4 +812,4 @@ Rules with function delegation (Grade C) MUST explicitly mark "contains non-reco
 
 ---
 
-*© 2026 Shenzhen Miaojing Technology Co., Ltd. · All rights reserved*
+*© 2026 Shenzhen Miaojing Technology Co., Ltd. · MIT License*
