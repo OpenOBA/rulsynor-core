@@ -112,18 +112,20 @@ const result = evaluator.evaluate(rules, {
 
 ---
 
-## The Business Case: AI Agents Without Governance Are a Liability
+## Why PAE?
 
-AI's efficiency is visible to every business — but it can wreck a project on a single ambiguous prompt, drift off-course in a long-running task, or amplify a mistake by blindly executing wrong instructions.
+A raw Agent is capability without accountability. **Trusting AI is not the problem — the problem is that the capability being trusted has no one accountable for it.** The pragmatic answer is to attach that capability to an employee: **AI + Human = the smallest employee unit — the human wields the capability, and the human is the subject of responsibility**.
 
-It's like a new hire fresh into the workplace — eager to perform, but unfamiliar with your company's processes, culture, and lacking basic professional ethics. Train them. Treat them like you'd treat any new employee.
+| | AI Employee = Agent (market definition) | Professionalized AI Employee (this category) |
+|------|------|------|
+| Definition dimension | Technical form: can AI work alone? | Organizational identity: is AI + Human on the roster, and accountable? |
+| Who the employee is | AI (no human subject) | A real employee; AI is their capability |
+| Entry threshold | None; any vendor can affix a label | A complete employment relationship (six elements present) |
+| Governance approach | Binary: lock down or trust | Tiered: probation → tiered authorization → performance evaluation |
+| Responsibility for failure | No one to hold accountable | Auditable throughout; attributable to specific employees and decision points |
+| Relationship with the organization | Loose, one-off | Certified, headcounted, promotable, inheritable |
 
-> **Hire**: Give it an AID, then teach it the first lesson of professional life: honesty.
-> **Train**: Use when/then rules to define its responsibilities, workflows, what to do, and who to report to.
-> **Record**: Every action automatically generates a Decision Object (14 CORE + 15 JURISDICTION fields, activated-field gated) — JCS + SHA-256 sealed. Traceable internally, verifiable by third parties.
-> **Evaluate**: Continuously refine rules based on actual performance — grant autonomy to those who earn it, retrain those who stumble. Quarterly reviews, just like managing a human team.
-
-Following HR best practices: **Hire → Train → Certify → Badge → Deploy → Audit → Review**. Professionalize your Agent — make it a responsible employee, not a black-box tool.
+rulsynor-core is the deterministic core that professionalizes this smallest unit — following HR best practice: **Hire → Train → Certify → Badge → Deploy → Audit → Review**. It turns your Agent into a responsible employee, not a black-box tool. Full argument: [Professionalized AI Employee whitepaper](./pae-whitepaper-v1.0-en.md).
 
 ---
 
@@ -561,47 +563,24 @@ registry.register({
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────┐
-│           YOUR AGENT                     │
-│           (LangChain / MCP / DIY)        │
-│                                         │
-│  LLM generates tool_call               │
-│         │                               │
-│         ▼                               │
-│  ┌──────────────────────────┐           │
-│  │         GUARD             │           │
-│  │                          │           │
-│  │  Ring 0 → Ring 3         │           │
-│  │  34 preset + your rules  │           │
-│  │  30 operators / 34 nodes │           │
-│  │  within / rate trackers  │           │
-│  │  CORRECT auto-retry      │           │
-│  │  Guidance for LLM        │           │
-│  └────────┬─────────────────┘           │
-│           │                             │
-│     ┌─────┴──────┐                      │
-│     ▼            ▼                      │
-│  ALLOW        DENY/CORRECT/             │
-│  (execute)    HUMAN/QUARANTINE          │
-│     │         (guided recovery)         │
-│     │            │                      │
-│     ▼            ▼                      │
-│  ┌──────────────────────────┐           │
-│  │     DECISION OBJECT       │           │
-│  │     14 CORE + 15 JUR      │           │
-│  │     JCS + SHA-256         │           │
-│  │     previous_hash chain   │           │
-│  │     Compliance profile    │           │
-│  └──────────────────────────┘           │
-│                                         │
-│  Result: traceable, verifiable Agent work │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["Your Agent<br/>(LangChain / MCP / DIY)"] --> B["LLM generates tool_call"]
+    B --> G["GUARD<br/>Ring 0 → Ring 3<br/>34 preset + your rules<br/>30 operators / 34 nodes<br/>within / rate trackers<br/>CORRECT auto-retry<br/>Guidance for LLM"]
+    G -->|ALLOW<br/>(execute)| X["Execute"]
+    G -->|DENY / CORRECT /<br/>HUMAN / QUARANTINE<br/>(guided recovery)| Y["Guided recovery"]
+    X --> D
+    Y --> D
+    D["DECISION OBJECT<br/>14 CORE + 15 JUR<br/>JCS + SHA-256<br/>previous_hash chain<br/>Compliance profile"]
+    D --> R["Result: traceable, verifiable Agent work"]
 ```
 
 ---
 
 ## API Reference
+
+<details>
+<summary>Expand the full API reference</summary>
 
 ### Core (`@openoba/rulsynor-core`)
 
@@ -671,6 +650,8 @@ agent.algorithm_filing_no · agent.model_registration_id
 | `RULSYNOR_MODEL_ID` | LLM model in DO | `unknown` |
 | `RULSYNOR_AID_REGISTRAR` | Organization code in AID | `000001` |
 | `RULSYNOR_AID_REQUESTER` | Department code in AID | `000001` |
+
+</details>
 
 ---
 

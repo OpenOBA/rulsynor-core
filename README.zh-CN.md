@@ -50,7 +50,8 @@ npm install -g @openoba/rulsynor-core
 rulsynor demo --tool=exec --cmd="rm -rf /"   # → DENY
 
 # ③ 配置模型 + API key，然后对话（key 只进环境变量，从不落库）
-export RULSYNOR_API_KEY=***            # 任意 OpenAI 兼容服务\ rulsynor setup --model gpt-4o-mini --base-url https://api.openai.com/v1
+export RULSYNOR_API_KEY=***            # 任意 OpenAI 兼容服务
+rulsynor setup --model gpt-4o-mini --base-url https://api.openai.com/v1
 rulsynor chat                                # 7 步：理解意图→制定计划→组装依据→推理决策→规则把关→执行操作→审计落链
 
 # ④ 自己写规则（文档：docs/RULE-AUTHORING.md）
@@ -79,18 +80,20 @@ rulsynor mcp   # stdio：rulsynor_guard_evaluate / rulsynor_rules_list / rulsyno
 
 ---
 
-## 商业命题：缺乏治理的 AI Agent，是企业尚未引爆的运营风险
+## 为什么是 PAE？
 
-AI 的效率，每一家企业都看得见，但经常会因为一段模糊的提示词而破坏成果，在一个长任务中偏离方向，在错误的执行中放大错误。
+一个裸 Agent 只有能力、没有责任主体。**信任 AI 没有问题，问题是被信任的能力没有人负责。** 务实的答案，是把这份能力附着到员工身上：**AI + 人 = 最小员工单元——人掌握能力，人是责任主体**。
 
-就象一个初入职场的新人，渴望表现自己，但它并不熟悉企业的制度、流程、缺乏基本的职业道德。培训，象对待一名新员工一样。
+| | AI员工=Agent（市场定义） | AI + 人 的职业化AI员工（本品类） |
+|------|------|------|
+| 定义维度 | 技术形态：AI 能否单独干活？ | 组织身份：AI + 人 是否在册、是否可问责？ |
+| 员工是谁 | AI（无人承担主体） | 真实的员工，AI 是他的能力 |
+| 准入门槛 | 无，任何厂商可贴标 | 完整雇佣关系（六要素齐备） |
+| 治理方式 | 二元：锁死或信任 | 分级：试用期 → 分级授权 → 绩效考核 |
+| 失败责任 | 无人可问责 | 全程可审计，可归因到具体员工与决策点 |
+| 与组织的关系 | 松散、一次性 | 有证书、有编制、可晋升、可传承 |
 
-> 雇佣它：给它一个AID，然后给它上职业化路上的第一课：诚实
-> 培训它：用when/then句式告诉它，岗位职责、流程、该怎么做、向谁汇报。
-> 记录它：每一步操作自动生成 JCS + SHA-256 密封的决策对象（14 CORE + 15 JURISDICTION 字段）——内审可回溯、第三方可独立验证。
-> 考核它：基于实际表现持续优化规则——表现好的放权，反复出错的回炉。像带团队一样持续迭代。
-
-对标人力资源管理的最佳实践：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 总结**。将Agent职业化，象对待人类员工一样成为承担职责的主体。
+rulsynor-core 就是把这个最小单元「职业化」的确定性内核——对标人力资源最佳实践：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 总结**。让 Agent 成为担责的员工，而不是黑盒工具。完整论证：[《职业化AI员工白皮书》](./pae-whitepaper-v1.0.md)。
 
 ---
 
@@ -155,10 +158,6 @@ npx @openoba/rulsynor-core --tool=read --path="README.md"
 # 写入系统目录 — 被拦截
 npx @openoba/rulsynor-core --tool=write_file --path="/etc/cron.d/x"
 ```
-
-> 💡 以上演示的是单次工具调用的 CLI 评估（不包含 LLM）。
-> 如需完整的 ReAct Agent + Guard + 审计链体验，请看
-> [`examples/agent-demo.ts`](examples/agent-demo.ts) — `npx tsx examples/agent-demo.ts "你的任务"`
 
 > 💡 以上演示的是单次工具调用的 CLI 评估（不包含 LLM）。
 > 如需完整的 ReAct Agent + Guard + 审计链体验，请看
@@ -545,47 +544,24 @@ registry.register({
 
 ## 架构图
 
-```
-┌─────────────────────────────────────────┐
-│          你的 Agent                      │
-│          (LangChain / MCP / 自定义)      │
-│                                         │
-│  LLM 生成 tool_call                     │
-│         │                               │
-│         ▼                               │
-│  ┌──────────────────────────┐           │
-│  │         GUARD             │           │
-│  │                          │           │
-│  │  环 0 → 环 3             │           │
-│  │  34 条预设 + 你的规则    │           │
-│  │  30 运算符 / 34 节点     │           │
-│  │  within / rate 追踪      │           │
-│  │  CORRECT 自动重试        │           │
-│  │  Guidance 引导 LLM       │           │
-│  └────────┬─────────────────┘           │
-│           │                             │
-│     ┌─────┴──────┐                      │
-│     ▼            ▼                      │
-│  ALLOW        DENY/CORRECT/             │
-│  （执行）     HUMAN/QUARANTINE           │
-│     │         （引导恢复）               │
-│     │            │                      │
-│     ▼            ▼                      │
-│  ┌──────────────────────────┐           │
-│  │     DECISION OBJECT       │           │
-│  │     14 CORE + 15 JUR      │           │
-│  │     JCS + SHA-256         │           │
-│  │     previous_hash 链      │           │
-│  │     合规剖面              │           │
-│  └──────────────────────────┘           │
-│                                         │
-│  结果：可追溯、可验证的 Agent 工作        │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["你的 Agent<br/>(LangChain / MCP / 自定义)"] --> B["LLM 生成 tool_call"]
+    B --> G["GUARD<br/>环 0 → 环 3<br/>34 条预设 + 你的规则<br/>30 运算符 / 34 节点<br/>within / rate 追踪<br/>CORRECT 自动重试<br/>Guidance 引导 LLM"]
+    G -->|ALLOW<br/>（执行）| X["执行"]
+    G -->|DENY / CORRECT /<br/>HUMAN / QUARANTINE<br/>（引导恢复）| Y["引导恢复"]
+    X --> D
+    Y --> D
+    D["DECISION OBJECT<br/>14 CORE + 15 JUR<br/>JCS + SHA-256<br/>previous_hash 链<br/>合规剖面"]
+    D --> R["结果：可追溯、可验证的 Agent 工作"]
 ```
 
 ---
 
 ## API 参考
+
+<details>
+<summary>展开完整 API 参考</summary>
 
 ### 核心导出（`@openoba/rulsynor-core`）
 
@@ -655,8 +631,7 @@ agent.algorithm_filing_no · agent.model_registration_id
 | `RULSYNOR_AID_REGISTRAR` | AID 中的企业注册码 | `000001` |
 | `RULSYNOR_AID_REQUESTER` | AID 中的部门码 | `000001` |
 
----
-
+</details>
 
 ---
 
