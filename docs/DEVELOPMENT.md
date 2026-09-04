@@ -6,7 +6,7 @@
 
 ## 架构总览
 
-rulsynor-core 采用**单一求值核心**（Spec v2.0 §10 E7：Simple 与 Expression 编译到同一核心，禁止两个求值器）。
+rulsynor-core 采用**单一求值核心**（Spec v2.1 §7.2 E7：Simple 与 Expression 编译到同一核心，禁止两个求值器）。
 
 ```
 ERDL 规则（YAML / S-expression）
@@ -46,7 +46,7 @@ ERDL 规则（YAML / S-expression）
 4. **叶子折叠（E11）**：比较节点把 Missing 折叠为 `false`；布尔算子两值；`exists` 是唯一感知字段存在性的算子。
 5. **定点小数（E2）**：scale=14 + half-even，中间 128 位有理数，仅输出节点舍入。
 6. **first-match-wins**：规则按 Ring（0 优先）→ priority（小优先）排序，首个命中即止。
-7. **只读时序检查**：`evaluate()` 只读 within/rate 计数，计数经 `commitTemporal()` 在 ALLOW 后提交。
+7. **时序计数**：within/rate 计数由 GuardStateManager 维护，`evaluate()` 内自动检查（`checkRate`）并记录（`recordRate`）；窗口快照进 `evaluation.temporal_state`（RFC-002 §2.4）。
 8. **审计哈希原像**：`audit.hash` / `signature` / `signing_key_id` 排除在原像外；其余（含 `audit.previous_hash` / `audit.commitment` / `extensions`）参与哈希。
 
 ---
@@ -120,7 +120,7 @@ test/
 
 ### 环境要求
 
-- Node.js ≥ 20
+- Node.js ≥ 22.13.0
 - pnpm（本项目用 pnpm，`pnpm-lock.yaml`）
 
 ### 初始化
@@ -139,7 +139,7 @@ pnpm test
 |------|------|
 | `pnpm run build` | tsc 编译 + 复制规则 YAML 到 dist/ |
 | `pnpm run typecheck` | 仅类型检查（`tsc --noEmit`） |
-| `pnpm test` | 跑全部 615 测试 |
+| `pnpm test` | 跑全部 640 测试 |
 | `pnpm run dev` | 监听模式 |
 | `pnpm run lint` | ESLint（严格规则） |
 | `pnpm run format` | Prettier 自动修复 |
@@ -158,7 +158,7 @@ pnpm test
 
 ### 运算符与节点（FREEZE-2 冻结）
 
-34 节点 / 30 运算符**已冻结**（Spec v2.0 §10.1 `[FREEZE-2]`）——已发布节点不改语义、不减配。新增节点走**版本升级 + 破坏性变更审批**，不在当前基线内随时增补。
+34 节点 / 30 运算符**已冻结**（Spec v2.1 §5.3 `[FREEZE-2]`）——已发布节点不改语义、不减配。新增节点走**版本升级 + 破坏性变更审批**，不在当前基线内随时增补。
 
 若确需新增节点，路径为：
 
@@ -177,7 +177,7 @@ pnpm test
 3. `runtime.ts` — 工具执行分发 switch
 4. README 决策表 + 测试用例
 
-> 决策类型是「单一事实源」的一部分，改动必须同步 `SCHEMA_COUNTS` + SPEC §27.5。
+> 决策类型是「单一事实源」的一部分，改动必须同步 `SCHEMA_COUNTS` + SPEC §6。
 
 ### 新增合规法域
 
@@ -220,8 +220,7 @@ const sm = new GuardStateManager(clock);
 const ev = new Evaluator(sm);
 
 for (let i = 0; i < 3; i++) {
-  ev.evaluate(ctx, rules);
-  ev.commitTemporal(ctx, rules);
+  ev.evaluate(ctx, rules);  // 计数在求值时自动记录
 }
 const result = ev.evaluate(ctx, rules);  // 第 4 次触发 within/rate DENY
 expect(result.decision).toBe('DENY');
