@@ -72,7 +72,7 @@ npm publish          # 正式版
 |------|------|---------|
 | 类型检查 | `pnpm run typecheck` | TS 类型错误 |
 | Lint | `pnpm run lint` | 代码规范 + `as any`/`ts-ignore` 违规 |
-| 测试 | `pnpm test` | 555 测试回归 |
+| 测试 | `pnpm test` | 639 测试回归 |
 | 构建 | `pnpm run build` | tsc 编译 + 规则产物复制 |
 | 格式 | `pnpm run format:check` | Prettier 格式漂移 |
 

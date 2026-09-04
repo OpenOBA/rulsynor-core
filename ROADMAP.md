@@ -19,8 +19,8 @@
 - [x] GB/Z 185 AID 生成 + 导航引导 + 纠偏环 + REQUEST_HUMAN 解析
 - [x] Minimal Chat Runtime（ReAct 环 + Guard + 工具执行）
 - [x] Playground CLI
-- [x] 555 测试 · 覆盖率 76%（语句）
-- [x] MIT · 零框架依赖（仅 json-canonicalize + js-yaml）
+- [x] 639 测试
+- [x] BSL 1.1 · 零框架依赖（仅 json-canonicalize + js-yaml）
 
 ## 0.1.0-beta（下一步 · beta 阶段）
 

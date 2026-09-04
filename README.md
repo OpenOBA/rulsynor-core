@@ -101,7 +101,7 @@ It's like a new hire fresh into the workplace — eager to perform, but unfamili
 
 > **Hire**: Give it an AID, then teach it the first lesson of professional life: honesty.
 > **Train**: Use when/then rules to define its responsibilities, workflows, what to do, and who to report to.
-> **Record**: Every action automatically generates a 25-field Decision Object — JCS + SHA-256 sealed. Traceable internally, verifiable by third parties.
+> **Record**: Every action automatically generates a Decision Object (14 CORE + 15 JURISDICTION fields, activated-field gated) — JCS + SHA-256 sealed. Traceable internally, verifiable by third parties.
 > **Evaluate**: Continuously refine rules based on actual performance — grant autonomy to those who earn it, retrain those who stumble. Quarterly reviews, just like managing a human team.
 
 Following HR best practices: **Hire → Train → Certify → Badge → Deploy → Audit → Review**. Professionalize your Agent — make it a responsible employee, not a black-box tool.
@@ -114,7 +114,7 @@ Following HR best practices: **Hire → Train → Certify → Badge → Deploy �
 
 - **Before execution**: Guard evaluates every tool call against rules you define — ring-sorted, sub-millisecond
 - **When mistakes happen**: Navigation Guide tells the LLM why, what to do instead, and auto-corrects fixable errors — the correction goes back to the agent, which re-issues and is re-adjudicated (CORRECT loop, max 3 rounds, then human escalation)
-- **After every decision**: A 25-field Decision Object is cryptographically sealed — JCS-canonicalized, SHA-256 hashed, chain-linked
+- **After every decision**: A Decision Object (14 CORE + 15 JURISDICTION fields) is cryptographically sealed — JCS-canonicalized, SHA-256 hashed, chain-linked
 - **For compliance**: Jurisdiction-aware fields auto-activate (EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI)
 - **For trust**: Every employee has a badge (AID). Every Decision Object is independently verifiable with no SDK.
 
@@ -197,53 +197,49 @@ Rules are ERDL YAML. Each rule says: under these conditions, guide the Agent tow
 # rules/finance-team.erdl.yaml
 
 # Finance team needs production DB access for reports — but with approval
-name: production-db-needs-approval
-version: 1
+name: SEC-020-production-db-approval
+description: "Production database access requires approval."
 category: workflow
-severity: high
-ring: 0
 priority: 500
+override: high
+ring: 2
 when:
-  conditionLogic: AND
+  logic: AND
   conditions:
-    - field: "toolName"
+    - field: "tool.name"
       operator: eq
       value: "exec"
-    - field: "toolArgs.command"
+    - field: "tool.args.command"
       operator: contains
       value: "PRODUCTION_DATABASE"
-then:
-  decision: REQUEST_HUMAN
-  instruction: "Production database access requires approval."
-  alternative:
-    en: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
-  correction: "Change connection string to STAGING_DATABASE and retry."
+then: REQUEST_HUMAN
+message: "Production database access requires approval."
+alternative: "Use STAGING_DATABASE. If you need production, your manager can approve this request."
+correction: "Change connection string to STAGING_DATABASE and retry."
 
 ---
 # Large writes happen in batch jobs — warn, don't block
-name: large-write-advisory
-version: 1
+name: CNV-001-large-write-advisory
+description: "Large file writes are logged, not blocked."
 category: convention
-severity: low
-ring: 3
 priority: 300
+ring: 3
 when:
-  conditionLogic: AND
+  logic: AND
   conditions:
-    - field: "toolName"
+    - field: "tool.name"
       operator: eq
       value: "write_file"
-    - field: "toolArgs.content"
+    - field: "tool.args.content"
       operator: length_gt
       value: 10485760
-then:
-  decision: ALLOW
-  instruction: "Large file write (>10MB) logged. Consider chunking for reliability."
+then: ALLOW
+message: "Large file write (>10MB) logged. Consider chunking for reliability."
 ```
 
 **The key insight**: rules don't block work. They define *how* work gets done.
 
-**Available operators** (30 — 28 condition operators + 2 modifiers `within`/`rate`, Spec v2.0 §11): `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
+**Available operators** (30 — 28 condition operators + 2 modifiers `within`/`rate`, Spec v2.1 §5.2): `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `contains`, `not_contains`, `match`, `starts_with`, `ends_with`, `not_starts_with`, `not_ends_with`, `exists`, `not_exists`, `length_gt`/`gte`/`lt`/`lte`/`eq`, `between`, `not_between`, `count_gt`/`gte`/`lt`/`lte`
 
 **Decisions your rules can make**:
 
@@ -252,9 +248,11 @@ then:
 | `ALLOW` | Go ahead, logged | Safe operations, batch jobs, known patterns |
 | `DENY` | Stop. Here's why. Here's how to fix it. | Dangerous operations with clear alternatives |
 | `CORRECT` | Auto-correct and retry (max 3 rounds; each retry re-adjudicated; unresolved → human escalation) | Wrong path, wrong format, fixable mistakes |
-| `NOTIFY` | Log and continue — no interruption | Anomaly detected, threshold alert, compliance event |
 | `QUARANTINE` | Run in sandbox, flag for review | Suspicious but possibly legitimate |
+| `ROLLBACK` | Revert the last operation | Irreversible-side-effect guard |
 | `REQUEST_HUMAN` | Ask a person before proceeding | Production DB, GDPR delete, >$5K transactions |
+| `ESCALATE` | Escalate to a higher authority | Cross-team boundary, policy exception |
+| `DELEGATE` | Delegate to another agent/role | Specialized task handoff |
 | `EMERGENCY_HALT` | Stop everything immediately | Credential leak, SSRF to internal IPs |
 
 **Execution Rings** — which rules fire first:
@@ -275,26 +273,24 @@ You don't need to know YAML to write rules. Describe what you want in plain lang
 The LLM returns a rule ready to save:
 
 ```yaml
-name: block-destructive-rm
-version: 1
+name: SEC-001-block-destructive-rm
+description: "Block destructive rm -rf commands."
 category: security
-severity: critical
-ring: 0
 priority: 900
+override: critical
+ring: 0
 when:
-  conditionLogic: AND
+  logic: AND
   conditions:
-    - field: "toolName"
+    - field: "tool.name"
       operator: eq
       value: "exec"
-    - field: "toolArgs.command"
+    - field: "tool.args.command"
       operator: contains
       value: "rm -rf"
-then:
-  decision: DENY
-  instruction: "Destructive command blocked."
-  alternative:
-    en: "Use the read tool to inspect the target first, or request human approval."
+then: DENY
+message: "Destructive command blocked."
+alternative: "Use the read tool to inspect the target first, or request human approval."
 ```
 
 Copy the prompt template from [`docs/RULE-PROMPT.md`](docs/RULE-PROMPT.md), paste it into ChatGPT, Claude, or any other LLM, describe your rules, and save the output as `.erdl.yaml`. The compiler validates every rule (ReDoS safety, operator whitelist, required fields) before it loads — and you should always review generated rules before deploying them. The LLM writes the draft; you own the rulebook.
@@ -410,7 +406,7 @@ const state = advanceCorrectLoop(
 
 ### 5. Audit — Every decision, verifiable
 
-Every evaluation — ALLOW, DENY, CORRECT, anything — produces a 25-field Decision Object. JCS-canonicalized (RFC 8785), SHA-256 hashed. The record is tamper-evident and verifiable by anyone, with no SDK:
+Every evaluation — ALLOW, DENY, CORRECT, anything — produces a Decision Object (14 CORE + 15 JURISDICTION fields, activated-field gated). JCS-canonicalized (RFC 8785), SHA-256 hashed. The record is tamper-evident and verifiable by anyone, with no SDK:
 
 ```typescript
 import { buildDecisionObject } from '@openoba/rulsynor-core';
@@ -508,7 +504,7 @@ const profile = getComplianceProfile();
 // Every DO carries these fields → they enter the audit hash → enforced, not claimed
 ```
 
-**Built-in frameworks**: EU AI Act, GB/Z 185-2026 (CN), NIST AI RMF (US), COSO GenAI (ALL)
+**Built-in frameworks** (6 of the 14-framework catalog, RFC-002 §5.2): EU AI Act, GB/Z 185-2026 (CN), NIST AI RMF (US), COSO GenAI (ALL), LGPD (BR), DPDP (IN)
 
 ---
 
@@ -573,7 +569,7 @@ registry.register({
 │     ▼            ▼                      │
 │  ┌──────────────────────────┐           │
 │  │     DECISION OBJECT       │           │
-│  │     25 fields             │           │
+│  │     14 CORE + 15 JUR      │           │
 │  │     JCS + SHA-256         │           │
 │  │     previous_hash chain   │           │
 │  │     Compliance profile    │           │
@@ -595,7 +591,7 @@ registry.register({
 | `GuardStateManager` | Stateful `within`/`rate` counter manager |
 | `ExprTreeEvaluator` | Expression-tree evaluator (34 nodes / 30 operators) |
 | `safeRegExp()` | ReDoS-protected regex constructor |
-| `buildDecisionObject(opts)` | Build 25-field JCS+SHA-256 Decision Object (return type: `DecisionObject`) |
+| `buildDecisionObject(opts)` | Build JCS+SHA-256 Decision Object (return type: `DecisionObject`) |
 | `generateAID()` | Generate Agent Identity Code (OID 1.2.156.3088) |
 | `getComplianceProfile()` | Jurisdiction-aware compliance auto-configuration |
 | `loadPresetRules()` | Load 34 built-in ERDL YAML rules |
@@ -622,16 +618,26 @@ registry.register({
 | `@openoba/rulsynor-core/runtime` | runReActLoop, createToolExecutor |
 | `@openoba/rulsynor-core/preflight` | advanceCorrectLoop, parseRequestHumanSignal, assignAbArm |
 
-### Decision Object — 25 fields
+### Decision Object — CORE 14 + JURISDICTION 15 fields
+
+**CORE fields** (always emitted, `[FREEZE-1]` frozen):
 
 ```
 spec · decision_id · compliance_profile · execution_trace_id · timestamp
-evaluation_duration_ms · agent { id, role, version, aid, algorithm_filing_no,
-  model_registration_id, known_limitations, tool_registry_hash } · model_id
-context { tool.name, tool.args } · context_snapshot_hash · rule_set_version
-policies [{ name, version, hash }] · evaluation { total_evaluated, total_matched,
-  matched_rules } · result { decision, decision_type, reason, rules_matched }
+evaluation_duration_ms · agent { id, role, version } · context { tool.name, tool.args }
+rule_set_version · policies [{ name, version, hash }] · evaluation { total_evaluated,
+total_matched, matched_rules } · result { decision, decision_type, reason, rules_matched }
 human_oversight · audit { previous_hash, commitment, hash }
+```
+
+**JURISDICTION fields** (emitted only when their path is in the compliance profile's
+`activated_fields`; otherwise physically omitted — RFC-002 §1.1 / SPEC §5.3):
+
+```
+model_id · agent.known_limitations · fairness_assessment · impact_assessment_id
+autonomy_level · data_modification_expected · context_snapshot_hash · sanitized_context
+confidence_score · signature · signing_key_id · agent.aid · agent.tool_registry_hash
+agent.algorithm_filing_no · agent.model_registration_id
 ```
 
 ### Environment Variables
@@ -654,8 +660,8 @@ This package bundles the normative reference specifications:
 
 | Document | Path | Description |
 |------|------|------|
-| ERDL Spec v2.0 | [`docs/SPEC/erdl-spec.md`](docs/SPEC/erdl-spec.md) | ERDL language specification (Chinese) |
-| ERDL Spec v2.0 (EN) | [`docs/SPEC/erdl-spec.en.md`](docs/SPEC/erdl-spec.en.md) | ERDL language specification (English) |
+| ERDL Spec v2.1 | [`docs/SPEC/erdl-spec.md`](docs/SPEC/erdl-spec.md) | ERDL language specification (Chinese) |
+| ERDL Spec v2.1 (EN) | [`docs/SPEC/erdl-spec.en.md`](docs/SPEC/erdl-spec.en.md) | ERDL language specification (English) |
 | SPEC v2.0 | [`docs/SPEC/spec-2.0.md`](docs/SPEC/spec-2.0.md) | OpenOBA Professionalized AI Employee open spec (Chinese) |
 | SPEC v2.0 (EN) | [`docs/SPEC/spec-2.0-en.md`](docs/SPEC/spec-2.0-en.md) | OpenOBA Professionalized AI Employee open spec (English) |
 | RFC 002 | [`docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md`](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object audit standard v1.5 (Chinese) |
@@ -671,7 +677,30 @@ The cross-implementation test vector set lives in its own authoritative reposito
 - [`CHANGELOG.md`](CHANGELOG.md) — change log (Keep a Changelog)
 - [`ROADMAP.md`](ROADMAP.md) — version roadmap
 
-> **Current status**: `0.1.0-alpha` — engine aligned to Spec v2.0 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
+> **Current status**: `0.1.0-alpha` — engine aligned to OpenOBA SPEC v2.0 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
+
+---
+
+## Known Limitations
+
+Early alpha: the deterministic core is aligned to ERDL Spec v2.1 and Decision
+Object v1.5 flat-hash, but the following are not yet complete:
+
+- **Signature mode (ECDSA P-256)**: not implemented. Decision Objects are emitted in
+  hash mode only; `signature`/`signing_key_id` are omitted (no placeholder).
+  `risk_level=critical` cannot yet be satisfied — a conforming verifier reports
+  `compliance_field_missing` (fail-closed by design).
+- **Compliance framework catalog**: 6 of the 14 frameworks (RFC-002 §5.2) are built
+  in — EU AI Act, GB/Z 185, NIST AI RMF, COSO GenAI, LGPD, DPDP.
+- **Three-layer activation**: only the jurisdiction layer is implemented; the
+  industry condition layer and risk condition layer (beyond `critical → signature`)
+  are pending.
+- **PII sanitization**: `sanitized_context` is emitted as an empty string when
+  activated — redaction of `tool.args` is a planned feature.
+- **AID**: self-generated under OID `1.2.156.3088`, not yet registered with an
+  external registration authority; `algorithm_filing_no` / `model_registration_id`
+  are `NOT_FILED` pending China CAC filing.
+- **Bilingual docs**: English + Chinese; the runtime supports any language via the LLM.
 
 ---
 
