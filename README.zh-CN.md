@@ -64,7 +64,7 @@ AI 的效率，每一家企业都看得见，但经常会因为一段模糊的�
 
 > 雇佣它：给它一个AID，然后给它上职业化路上的第一课：诚实
 > 培训它：用when/then句式告诉它，岗位职责、流程、该怎么做、向谁汇报。
-> 记录它：每一步操作自动生成 JCS + SHA-256 密封的 25 字段 Decision Object——内审可回溯、第三方可独立验证。
+> 记录它：每一步操作自动生成 JCS + SHA-256 密封的决策对象（14 CORE + 15 JURISDICTION 字段）——内审可回溯、第三方可独立验证。
 > 考核它：基于实际表现持续优化规则——表现好的放权，反复出错的回炉。像带团队一样持续迭代。
 
 对标人力资源管理的最佳实践：**招聘 → 培训 → 考核 → 发证 → 上岗 → 审计 → 总结**。将Agent职业化，象对待人类员工一样成为承担职责的主体。
@@ -78,7 +78,7 @@ AI 的效率，每一家企业都看得见，但经常会因为一段模糊的�
 - **上岗前**：用when/then句式写成ERDL YAML格式的培训教材，人类秒懂、机器可读，Agent遵守。
 - **执行前**：Guard 评估每次工具调用——按环排序，亚毫秒级，first-match-wins
 - **出错时**：Navigation Guide 告诉 LLM 为什么、怎么改，并自动纠正可修复的错误——纠偏指引回注 Agent，重新发起、重新裁决（CORRECT 循环，最多 3 轮，未解决升级人工）
-- **决策后**：每条决策生成 25 字段 Decision Object，JCS 规范化 + SHA-256 加密密封，哈希链串联
+- **决策后**：每条决策生成决策对象（14 CORE + 15 JURISDICTION 字段），JCS 规范化 + SHA-256 加密密封，哈希链串联
 - **合规层**：辖区感知字段自动激活（EU AI Act、GB/Z 185、NIST AI RMF、COSO GenAI）
 - **可信层**：每个员工有工牌（AID）。每条 Decision Object 可零 SDK 独立验证。
 
@@ -386,7 +386,7 @@ const state = advanceCorrectLoop(
 
 ### 五、审计 —— 每一步，可验证
 
-每一次评估——ALLOW、DENY、CORRECT 都算——生成一个 25 字段决策对象。JCS 规范化（RFC 8785），SHA-256 哈希。记录不可篡改，任何人可独立验证，无需 SDK：
+每一次评估——ALLOW、DENY、CORRECT 都算——生成一个决策对象（14 CORE + 15 JURISDICTION 字段）。JCS 规范化（RFC 8785），SHA-256 哈希。记录不可篡改，任何人可独立验证，无需 SDK：
 
 ```typescript
 import { buildDecisionObject } from '@openoba/rulsynor-core';
@@ -462,7 +462,7 @@ const aid = generateAID();
 //   RULSYNOR_AID_REGISTRAR=000042   — 你的企业
 //   RULSYNOR_AID_REQUESTER=000003   — 你的部门
 
-// AID = 1.2.156.3088.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH}
+// AID = 1.2.156.3088.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH}（28 位）
 // AID 进入审计哈希 — 伪造它就会断裂审计链
 ```
 
@@ -549,7 +549,7 @@ registry.register({
 │     ▼            ▼                      │
 │  ┌──────────────────────────┐           │
 │  │     DECISION OBJECT       │           │
-│  │     25 字段               │           │
+│  │     14 CORE + 15 JUR      │           │
 │  │     JCS + SHA-256         │           │
 │  │     previous_hash 链      │           │
 │  │     合规剖面              │           │
@@ -571,7 +571,7 @@ registry.register({
 | `GuardStateManager` | `within`/`rate` 有状态计数器管理 |
 | `ExprTreeEvaluator` | 表达式树求值器（34 节点 / 30 运算符） |
 | `safeRegExp()` | ReDoS 防护的正则构造器 |
-| `buildDecisionObject(opts)` | 构建 25 字段 JCS+SHA-256 决策对象（返回类型：`DecisionObject`） |
+| `buildDecisionObject(opts)` | 构建 JCS+SHA-256 决策对象（14 CORE + 15 JURISDICTION 字段，返回类型：`DecisionObject`） |
 | `generateAID()` | 生成 Agent 身份标识码（OID 1.2.156.3088） |
 | `getComplianceProfile()` | 辖区感知的合规自动配置 |
 | `loadPresetRules()` | 加载 34 条内置 ERDL YAML 规则 |

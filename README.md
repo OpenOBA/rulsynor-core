@@ -482,7 +482,7 @@ const aid = generateAID();
 //   RULSYNOR_AID_REGISTRAR=000042   — your organization
 //   RULSYNOR_AID_REQUESTER=000003   — your department
 
-// AID = 1.2.156.3088.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH}
+// AID = 1.2.156.3088.1.{REGISTRAR}.{REQUESTER}.{INSTANCE_HASH} (28 digits)
 // The AID enters the audit hash — forging it breaks the chain.
 ```
 

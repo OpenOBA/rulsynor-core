@@ -173,7 +173,7 @@ JCS (RFC 8785 §3.2.2.3) serializes JSON numbers based on the IEEE 754 double-pr
 
 8. ⚠️ **CORE/JURISDICTION Numeric Canonicalization**: Numeric values in CORE and JURISDICTION fields that participate in JCS serialization MUST follow these rules: (a) integers (e.g., `evaluation_duration_ms`, `policies[].version`, `ring`, `confidence_score`) MUST use native integer serialization without a decimal point; (b) any value requiring fractional precision (e.g., normalized ratios) MUST use minimal-representation string form (`"0.95"` not `"0.950"`, `"1"` not `"1.0"`); (c) NaN, Infinity, scientific notation, leading/trailing whitespace, and leading zeros are prohibited. This constraint is independent of Constraint 6 — Constraint 6 governs business data fidelity in the extensions zone; Constraint 8 governs deterministic serialization of CORE/JURISDICTION fields participating in JCS hashing.
 
-> Language-specific JCS preprocessing guidelines (Python integer precision, Go `json.Marshal` trailing `.0`, Java `BigDecimal`, Rust `serde_json`, etc.) are detailed in the [Runner's Guide](docs/RUNNERS-GUIDE.md) §9 "Language Binding Considerations".
+> Language-specific JCS preprocessing guidelines (Python integer precision, Go `json.Marshal` trailing `.0`, Java `BigDecimal`, Rust `serde_json`, etc.) are detailed in the Runner's Guide §9 "Language Binding Considerations".
 
 ### 3.2 End-to-End JCS
 

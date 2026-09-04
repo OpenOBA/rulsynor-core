@@ -1899,7 +1899,7 @@ Decision Object 与 9 大监管框架的逐字段对齐详见 Decision Object v1
 
 验证基准由独立仓库 **erdl-vectors** 维护：
 
-> **仓库**：[github.com/erdl-vectors](https://github.com/erdl-vectors) — MIT 许可，独立于任何单一实现维护。
+> **仓库**：github.com/erdl-vectors — MIT 许可，独立于任何单一实现维护。
 > **当前权威版本：v1.3（已冻结）**。所有先前版本（v1.0, v1.1, v1.2）均已归档。
 
 **v1.3 向量集**（文件：`decision-object-vectors-v1.3.json`）：

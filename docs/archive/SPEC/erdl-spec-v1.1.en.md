@@ -1914,7 +1914,7 @@ The neutrality of this standard is proven through independent verification:
 
 The verification baseline is maintained by the standalone **erdl-vectors** repository:
 
-> **Repository**: [github.com/erdl-vectors](https://github.com/erdl-vectors) — MIT Licensed, maintained independently of any single implementation.
+> **Repository**: github.com/erdl-vectors — MIT Licensed, maintained independently of any single implementation.
 > **Current authoritative version: v1.3 (frozen)**. All prior versions (v1.0, v1.1, v1.2) are archived.
 
 **v1.3 Vector Set** (file: `decision-object-vectors-v1.3.json`):
@@ -1964,7 +1964,7 @@ A conformant implementation **MUST** execute the following six-step verification
 > - **L2 Verified Compatible**: L1 + at least two independent implementations with byte-identical AV hashes
 
 Verification results **SHOULD** be submitted to the erdl-vectors repository for public record.
-repository ([github.com/erdl-vectors](https://github.com/erdl-vectors))
+repository (github.com/erdl-vectors)
 for public record.
 
 ---

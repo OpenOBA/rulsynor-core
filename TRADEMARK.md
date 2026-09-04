@@ -1,7 +1,5 @@
 # OpenOBA Trademark Policy
 
-> Full policy (Chinese master + English reference): [TRADEMARK.md](./TRADEMARK.md)
->
 > Version: 1.0 | Effective: 2026-06-10
 > Trademark Holder: Shenzhen Miaojing Technology Co., Ltd.
 
@@ -59,4 +57,4 @@ Response within 5 business days.
 
 People's Republic of China (Trademark Law, Anti-Unfair Competition Law).
 
-For the complete policy including licensing applications, domain disputes, and protection measures, see the [full Trademark Policy](./TRADEMARK.md).
+For licensing applications beyond permitted use, see the [Trademark License Agreement](./TRADEMARK-LICENSE.md).

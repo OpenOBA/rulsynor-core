@@ -174,7 +174,7 @@ JCS (RFC 8785 §3.2.2.3) 基于 IEEE 754 双精度规范序列化 JSON number。
 
 8. ⚠️ **CORE/JURISDICTION 数值规范化**：参与 JCS 序列化的 CORE 和 JURISDICTION 字段中的数值 MUST 遵循以下规则：(a) 整数（`evaluation_duration_ms`、`policies[].version`、`ring`、`confidence_score` 等）MUST 使用不包含小数点的原生整数序列化；(b) 任何需要小数精度的值（如规范化比例）MUST 使用最小表示法的字符串形式（`"0.95"` 而非 `"0.950"`，`"1"` 而非 `"1.0"`）；(c) 禁止 NaN、Infinity、科学计数法表示、前后空格、前导零。此约束独立于约束 6——约束 6 管理 extensions 区域的业务数据保真度，约束 8 管理参与 JCS 哈希的 CORE/JURISDICTION 字段的确定性序列化。
 
-> 各语言实现 JCS 的具体预处理指南（Python 整数精度、Go `json.Marshal` 尾部 `.0`、Java `BigDecimal`、Rust `serde_json` 等）详见 [Runner's Guide](docs/RUNNERS-GUIDE.md) §9 "语言绑定注意事项"。
+> 各语言实现 JCS 的具体预处理指南（Python 整数精度、Go `json.Marshal` 尾部 `.0`、Java `BigDecimal`、Rust `serde_json` 等）详见 Runner's Guide §9 "语言绑定注意事项"。
 
 ### 3.2 全链路 JCS
 
