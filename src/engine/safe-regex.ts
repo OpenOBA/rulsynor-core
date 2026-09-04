@@ -40,6 +40,59 @@ export class SafeRegExpError extends Error {
 }
 
 /**
+ * Detect non-regular regex constructs that JS RegExp accepts but which are
+ * outside the ERDL safe-regex subset (RE2-class regular languages): backreferences
+ * and lookaround. These break cross-implementation determinism (their semantics
+ * depend on backtracking order) and cannot be expressed by the SMT verifier
+ * (erdl-formal), so the "proven over all inputs" claim would not hold for them.
+ *
+ * Other non-regular constructs are already rejected by the JS RegExp parser itself
+ * (SyntaxError) and therefore covered by safeRegExp's try-catch wrapper:
+ *   atomic groups (?>, possessive quantifiers *+ ++ ?+, conditionals (?(, and
+ *   inline flags (?i) (JS RegExp does not support inline flags at all).
+ *
+ * This is a character-level scan, not a naive regex match, so escaped
+ * metacharacters (\\(, \\1) and character classes ([...]) are not misread.
+ */
+function findNonRegularConstruct(pattern: string): string | null {
+  let inClass = false;
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === '\\') {
+      const next = pattern[i + 1];
+      if (next === undefined) break; // trailing backslash: let RegExp throw
+      if (!inClass && next >= '1' && next <= '9') {
+        return `backreference \\${next} is not allowed (non-regular construct)`;
+      }
+      if (!inClass && next === 'k' && pattern[i + 2] === '<') {
+        return 'named backreference \\k<name> is not allowed (non-regular construct)';
+      }
+      i++; // skip the escaped character
+      continue;
+    }
+    if (inClass) {
+      if (c === ']') inClass = false;
+      continue;
+    }
+    if (c === '[') { inClass = true; continue; }
+    if (c === '(' && pattern[i + 1] === '?') {
+      const kind = pattern[i + 2];
+      if (kind === '=' || kind === '!') {
+        return `lookahead (?${kind} is not allowed (non-regular construct)`;
+      }
+      if (kind === '<') {
+        const after = pattern[i + 3];
+        if (after === '=' || after === '!') {
+          return `lookbehind (?<${after} is not allowed (non-regular construct)`;
+        }
+        // (?<name>...) is a named capturing group — regular, allowed
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Statically analyze a regex pattern's safety. Returns null on pass, otherwise the rejection reason.
  * Unified exit: shared by safeRegExp() and the rule-load-time quality gate,
  * keeping "load-time blocking" and "runtime construction" judgments consistent.
@@ -51,6 +104,11 @@ export function analyzePattern(pattern: string): string | null {
 
   if (pattern.length > REGEX_MAX_LENGTH) {
     return `pattern exceeds ${REGEX_MAX_LENGTH} chars (got ${pattern.length})`;
+  }
+
+  const nonRegular = findNonRegularConstruct(pattern);
+  if (nonRegular) {
+    return nonRegular;
   }
 
   if (NESTED_QUANTIFIER.test(pattern)) {

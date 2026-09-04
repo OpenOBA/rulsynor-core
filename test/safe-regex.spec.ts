@@ -97,6 +97,50 @@ describe('safeRegExp', () => {
     });
   });
 
+  // 非正则构造拒绝：反向引用 + 环视（跨实现确定性 + SMT 可表达性，对齐 erdl-landing spec §7.3(d)）
+  describe('non-regular constructs (backref / lookaround)', () => {
+    it('rejects numeric backreference (a)\\1', () => {
+      expect(() => safeRegExp('(a)\\1')).toThrow(SafeRegExpError);
+    });
+
+    it('rejects leading backreference \\1(a)', () => {
+      expect(() => safeRegExp('\\1(a)')).toThrow(SafeRegExpError);
+    });
+
+    it('rejects named backreference \\k<name>', () => {
+      expect(() => safeRegExp('\\k<name>')).toThrow(SafeRegExpError);
+    });
+
+    it('rejects lookahead (?=a)', () => {
+      expect(() => safeRegExp('(?=a)b')).toThrow(SafeRegExpError);
+    });
+
+    it('rejects negative lookahead (?!a)', () => {
+      expect(() => safeRegExp('(?!a)b')).toThrow(SafeRegExpError);
+    });
+
+    it('rejects lookbehind (?<=a)', () => {
+      expect(() => safeRegExp('(?<=a)b')).toThrow(SafeRegExpError);
+    });
+
+    it('rejects negative lookbehind (?<!a)', () => {
+      expect(() => safeRegExp('(?<!a)b')).toThrow(SafeRegExpError);
+    });
+
+    it('accepts escaped backslash-digit \\\\1 (literal, not a backref)', () => {
+      expect(() => safeRegExp('\\\\1')).not.toThrow();
+    });
+
+    it('accepts named group and non-capturing group (regular)', () => {
+      expect(() => safeRegExp('(?<name>abc)')).not.toThrow();
+      expect(() => safeRegExp('(?:abc)')).not.toThrow();
+    });
+
+    it('rejects inline (?i) via JS parser', () => {
+      expect(() => safeRegExp('(?i)abc')).toThrow(SafeRegExpError);
+    });
+  });
+
   describe('safeTest input bound (E4 工程等价)', () => {
     it('matches within bound', () => {
       expect(safeTest(/password/, 'the password is here')).toBe(true);
