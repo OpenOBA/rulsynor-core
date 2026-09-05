@@ -38,6 +38,7 @@
 - **CN 法域激活字段对齐 erdl-vectors 向量**（补 model_id/confidence_score/fairness_assessment/impact_assessment_id，CN 现 12 字段）
 - **ERDL 规范副本 v2.0→v2.1 同步**（新增 correction/category/enabled 字段）
 - **`policies[].id` 对齐 `matched_rules[].rule_id`**：此前两者不一致（raw name vs deriveId），导致 RFC-002 P5 `tree_snapshot_divergence` 检测静默失效；现统一用 rule.id，mcp/playground 补齐 `when` 编译
+- **catch-all（空条件）ALLOW 永不复写显式 DENY（§7.1 第 6 条）**：`evaluator.ts` 的 ALLOW 分支此前缺 catch-all 守护——带 `override: critical/high` 的空条件 ALLOW 会跨 ring 改写显式 DENY（兑底兜底放行吞噬显式拦截）。现与 DENY 分支对称：catch-all ALLOW 在已有决议（`!== 'PASS'`）时被 pop，仅在无显式命中时作兜底生效。对齐 erdl-landing `evaluator.ts` 与 spec §7.1 第 6 条（新增）。
 
 ### Security
 - 跨工具内容匹配规则显式 `tool.name` 约束（消除“匹配所有工具调用”的隐性越界）

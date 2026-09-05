@@ -726,3 +726,97 @@ describe('within/rate 状态累积行为（业界限流/去重语义）', () => 
     );
   });
 });
+
+describe('ERDL Evaluator — §7.1 item 6 catch-all (empty-condition) resolution', () => {
+  function emptyRule(overrides: Partial<RuleDefinition> = {}): RuleDefinition {
+    return {
+      id: 'CATCHALL-001',
+      name: 'Catch-all',
+      description: 'fallback rule',
+      category: 'custom',
+      conditions: [],
+      conditionLogic: 'AND',
+      action: { decision: 'ALLOW' },
+      priority: 100,
+      enabled: true,
+      ...overrides,
+    };
+  }
+
+  it('catch-all ALLOW does NOT override an explicit DENY (relax direction)', () => {
+    const ev = new Evaluator();
+    const rules = [
+      makeRule({
+        id: 'explicit-deny',
+        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        action: { decision: 'DENY', reason: 'explicit block', ring: 0 },
+        priority: 10,
+      }),
+      emptyRule({
+        id: 'catchall-allow',
+        override: 'critical',
+        action: { decision: 'ALLOW', ring: 3 },
+        priority: 20,
+      }),
+    ];
+    expect(ev.evaluate(rules, { 'tool.name': 'exec' }).decision).toBe('DENY');
+  });
+
+  it('catch-all ALLOW acts as fallback when nothing explicit matches', () => {
+    const ev = new Evaluator();
+    const rules = [
+      makeRule({
+        id: 'explicit-other',
+        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'delete_file' }],
+        action: { decision: 'DENY', reason: 'block delete', ring: 0 },
+        priority: 10,
+      }),
+      emptyRule({
+        id: 'catchall-allow',
+        override: 'critical',
+        action: { decision: 'ALLOW', ring: 3 },
+        priority: 20,
+      }),
+    ];
+    expect(ev.evaluate(rules, { 'tool.name': 'exec' }).decision).toBe('ALLOW');
+  });
+
+  it('catch-all DENY does NOT override an explicit ALLOW (existing, unchanged)', () => {
+    const ev = new Evaluator();
+    const rules = [
+      makeRule({
+        id: 'explicit-allow',
+        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        action: { decision: 'ALLOW', ring: 0 },
+        priority: 10,
+      }),
+      emptyRule({
+        id: 'catchall-deny',
+        override: 'critical',
+        action: { decision: 'DENY', reason: 'fallback block', ring: 3 },
+        priority: 20,
+      }),
+    ];
+    expect(ev.evaluate(rules, { 'tool.name': 'exec' }).decision).toBe('ALLOW');
+  });
+
+  it('explicit override ALLOW still overrides an explicit DENY (non-catch-all, unchanged)', () => {
+    const ev = new Evaluator();
+    const rules = [
+      makeRule({
+        id: 'explicit-deny',
+        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        action: { decision: 'DENY', reason: 'explicit block', ring: 0 },
+        priority: 10,
+      }),
+      makeRule({
+        id: 'explicit-allow-override',
+        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        override: 'critical',
+        action: { decision: 'ALLOW', ring: 3 },
+        priority: 20,
+      }),
+    ];
+    expect(ev.evaluate(rules, { 'tool.name': 'exec' }).decision).toBe('ALLOW');
+  });
+});

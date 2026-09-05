@@ -226,6 +226,15 @@ export class Evaluator {
         }
 
         if (match.decision === 'ALLOW') {
+          // §7.1 item 6: an empty-condition (catch-all) ALLOW MUST NOT rewrite
+          // the decision established by an explicit-condition rule — regardless
+          // of override. A fallback ALLOW only takes effect when nothing is set
+          // yet (PASS sentinel).
+          const isCatchAllAllow = !rule.conditions || rule.conditions.length === 0;
+          if (isCatchAllAllow && finalDecision !== 'PASS') {
+            allMatched.pop();
+            continue;
+          }
           // override ALLOW covers prior DENY → ALLOW (safe direction, cross-Ring)
           if (overrideEnables(rule) && finalDecision === 'DENY') {
             finalDecision = 'ALLOW';
