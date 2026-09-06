@@ -13,11 +13,11 @@
  * be written elsewhere. All consumers MUST import from this file.
  *
  * Authority anchors (ERDL language spec v2.1):
- *  - §5.2 + 附录 B: 30 operators = 28 condition operators + 2 condition modifiers
+ *  - §5.2 + Appendix B: 30 operators = 28 condition operators + 2 condition modifiers
  *  - §5.2: 28 condition operators → expression-tree compile mapping
  *    (13 direct + 6 via-not + 9 length/count composite)
- *  - §6 + 附录 C: 13 base decision types (the result.decision value domain)
- *  - §5.3 + 附录 A: 34 semantic nodes (10 groups, FREEZE-2)
+ *  - §6 + Appendix C: 13 base decision types (the result.decision value domain)
+ *  - §5.3 + Appendix A: 34 semantic nodes (10 groups, FREEZE-2)
  *
  * Freeze level: operator/node sets are `[FREEZE-2]` (additive-only, no semantic change);
  * the 13-decision value domain enters the audit chain with the DO.
@@ -120,7 +120,7 @@ export function operatorValueShape(op: string): OperatorValueShape | null {
 /**
  * Lenient parse aliases (historical compatibility; NOT new operators).
  * After normalization they MUST fall within CONDITION_OPERATORS. SPEC §5.2
- * registers these two aliases (宽容别名): matches→match, neq→ne.
+ * registers these two aliases (lenient aliases): matches→match, neq→ne.
  */
 export const OPERATOR_ALIASES: Readonly<Record<string, ConditionOperator>> = Object.freeze({
   matches: 'match',
@@ -160,10 +160,10 @@ export function normalizeOperatorName(op: string | undefined | null): ConditionO
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2. Decisions (SPEC §6 + 附录 C: 13 base decisions = DO result.decision value domain)
+// 2. Decisions (SPEC §6 + Appendix C: 13 base decisions = DO result.decision value domain)
 // ═══════════════════════════════════════════════════════════════
 
-/** 13 base decision types (the **only** value domain allowed into DO `result.decision`, §6 + 附录 C authoritative enum) */
+/** 13 base decision types — the ONLY value domain allowed into DO `result.decision` (§6 + Appendix C authoritative enum). FROZEN (FREEZE-2): do not extend without a spec upgrade. */
 export const DO_DECISIONS = [
   'ALLOW',
   'DENY',
@@ -180,13 +180,13 @@ export const DO_DECISIONS = [
   'GUIDE',
 ] as const;
 
-/** WORKFLOW state-machine substates (not independent decision types, not counted in 13) */
+/** WORKFLOW state-machine substates — NOT decision types; not counted in the frozen 13; never enter DO `result.decision`. */
 export const WORKFLOW_SUBSTATES = ['WORKFLOW_WAITING', 'WORKFLOW_PROGRESS'] as const;
-/** 4 internal reasoning actions (do not enter the DO) */
+/** Engine-internal reasoning actions — NOT decision types; never enter the DO. */
 export const INTERNAL_REASONING = ['STRATEGIZE', 'AUDIT', 'CALCULATE', 'VALIDATE'] as const;
-/** Internal state (does not enter the DO) */
+/** Engine-internal state marker — NOT a decision type; never enters the DO. */
 export const INTERNAL_STATES = ['PASS'] as const;
-/** rulsynor extension (post-audit pipeline; outside the SPEC 13) */
+/** rulsynor-only extension (post-audit pipeline) — NOT a decision type; outside the frozen SPEC 13. */
 export const RULSYNOR_EXTENSIONS = ['CENSOR'] as const;
 
 /** All decision identifiers the engine can flow internally (21 = 13 + 2 substates + 4 reasoning + 1 state + 1 extension) */
@@ -361,8 +361,8 @@ export const SCHEMA_COUNTS = Object.freeze({
 /** SPEC alignment baseline (editing this file MUST re-check the SPEC master line numbers) */
 export const SPEC_BASELINE = Object.freeze({
   spec: 'erdl-spec-v2.1',
-  operators: '§5.2 + 附录 B (30 = 28 + 2)',
-  decisions: '§6 + 附录 C (13)',
-  nodes: '§5.3 + 附录 A (34 nodes, 10 groups)',
+  operators: '§5.2 + Appendix B (30 = 28 + 2)',
+  decisions: '§6 + Appendix C (13)',
+  nodes: '§5.3 + Appendix A (34 nodes, 10 groups)',
   temporalSemantics: 'RFC-002 §2.4 + semantics decided 2026-08-27',
 });
