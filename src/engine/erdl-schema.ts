@@ -215,8 +215,12 @@ export const GUARD_ALLOWED_DECISIONS = [
   'ALLOW', // Ring 3 exception
 ] as const;
 
-/** Blocking decisions (quality-gate wild-when-with-blocking-then etc. judge by this) */
-export const BLOCKING_DECISIONS = ['DENY', 'CORRECT', 'REQUEST_HUMAN', 'EMERGENCY_HALT'] as const;
+/** Blocking decisions (quality-gate wild-when-with-blocking-then etc. judge by this).
+ *  6 = DENY + its action variants ROLLBACK/QUARANTINE + CORRECT + REQUEST_HUMAN + EMERGENCY_HALT.
+ *  Consolidated 2026-09-06: ROLLBACK/QUARANTINE reclassified as restrictive (blocking)
+ *  polarity (SPEC §6), so an unconditional `when:true` + ROLLBACK/QUARANTINE is as unsafe
+ *  as `when:true` + DENY and must be rejected the same way. */
+export const BLOCKING_DECISIONS = ['DENY', 'CORRECT', 'REQUEST_HUMAN', 'EMERGENCY_HALT', 'ROLLBACK', 'QUARANTINE'] as const;
 
 export type DODecision = (typeof DO_DECISIONS)[number];
 export type Decision = (typeof ALL_DECISIONS)[number];

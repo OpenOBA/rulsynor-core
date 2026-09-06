@@ -52,9 +52,9 @@ function overrideEnables(rule: RuleDefinition): boolean {
 // short-circuit (handled before the §7.1 gate). Consolidated 2026-09-06 —
 // previously only DENY was treated as tightening; ROLLBACK/QUARANTINE fell into
 // the accumulate branch and could never override ALLOW.
-const BLOCKING_DECISIONS: ReadonlySet<string> = new Set(['DENY', 'ROLLBACK', 'QUARANTINE']);
-function isBlocking(decision: string): boolean {
-  return BLOCKING_DECISIONS.has(decision);
+const RESTRICTIVE_DECISIONS: ReadonlySet<string> = new Set(['DENY', 'ROLLBACK', 'QUARANTINE']);
+function isRestrictive(decision: string): boolean {
+  return RESTRICTIVE_DECISIONS.has(decision);
 }
 
 export class Evaluator {
@@ -222,7 +222,7 @@ export class Evaluator {
         // - CORRECT/NOTIFY/REQUEST_HUMAN/… + non-override → pop
         // - DENY/ROLLBACK/QUARANTINE: always let through
         if (finalDecision !== 'PASS') {
-          const isTerminating = isBlocking(match.decision);
+          const isTerminating = isRestrictive(match.decision);
           const isAllowAccumulation = match.decision === 'ALLOW' && finalDecision === 'ALLOW';
           if (!overrideEnables(rule) && !isTerminating && !isAllowAccumulation) {
             allMatched.pop();
@@ -232,7 +232,7 @@ export class Evaluator {
 
         if (match.decision === 'ALLOW') {
           // override ALLOW covers a prior restrictive decision → ALLOW (safe, cross-Ring)
-          if (overrideEnables(rule) && finalDecision !== 'PASS' && isBlocking(finalDecision)) {
+          if (overrideEnables(rule) && finalDecision !== 'PASS' && isRestrictive(finalDecision)) {
             finalDecision = 'ALLOW';
             lastDecisionRing = ring;
             finalInstruction = match.instruction;
@@ -277,12 +277,12 @@ export class Evaluator {
           };
         }
 
-        if (isBlocking(match.decision)) {
+        if (isRestrictive(match.decision)) {
           // SPEC v2.0 §9: a higher-ring restrictive decision (DENY/ROLLBACK/QUARANTINE)
           // can override a lower-ring ALLOW; within same ring, a restrictive decision
           // does NOT override ALLOW (unsafe direction; same-ring override restrictive
           // after ALLOW → popped).
-          if (finalDecision === 'PASS' || isBlocking(finalDecision)) {
+          if (finalDecision === 'PASS' || isRestrictive(finalDecision)) {
             finalDecision = match.decision;
             lastDecisionRing = ring;
             finalReason = match.reason;
