@@ -43,8 +43,11 @@ export async function runAudit(args: string[]): Promise<void> {
     }
 
     if (sub === 'show') {
-      const prefix = args[1];
+      let prefix = args[1];
       if (!prefix) throw new Error('usage: rulsynor audit show <hash-prefix>');
+      // Accept prefixes with or without the "sha256:" scheme — audit list shows the
+      // full "sha256:<hex>" hash, but users often copy just the hex part.
+      if (!prefix.startsWith('sha256:')) prefix = 'sha256:' + prefix;
       const rec = store.getAuditByHashPrefix(prefix);
       if (!rec) {
         throw new Error(`No unique audit record matches "${prefix}" (0 matches or ambiguous).`);
