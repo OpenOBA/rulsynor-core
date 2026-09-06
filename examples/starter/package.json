@@ -8,7 +8,7 @@
     "dev": "tsx watch index.ts"
   },
   "dependencies": {
-    "@openoba/rulsynor-core": "^0.1.0-alpha"
+    "@openoba/rulsynor-core": "^0.1.0-alpha.1"
   },
   "devDependencies": {
     "tsx": "^4.0.0"

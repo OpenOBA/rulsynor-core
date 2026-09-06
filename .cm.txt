@@ -1,0 +1,4 @@
+chore: bump to 0.1.0-alpha.1 + add badges
+
+- version 0.1.0-alpha -> 0.1.0-alpha.1 (package.json + docs + starter dep)
+- README badges: add downloads, node >= 22.13, deterministic

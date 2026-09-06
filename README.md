@@ -1,10 +1,13 @@
 # Rulsynor Core
 
 [![npm](https://img.shields.io/npm/v/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
+[![Downloads](https://img.shields.io/npm/dm/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
 [![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
 [![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
 [![Vectors](https://img.shields.io/badge/vectors-317%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.13-brightgreen)]()
+[![Deterministic](https://img.shields.io/badge/deterministic-by_construction-2ea44f)]()
 
 > **Rules Decide Everything.**
 >
@@ -610,7 +613,7 @@ The cross-implementation test vector set lives in its own authoritative reposito
 - [`CHANGELOG.md`](CHANGELOG.md) — change log (Keep a Changelog)
 - [`ROADMAP.md`](ROADMAP.md) — version roadmap
 
-> **Current status**: `0.1.0-alpha` — engine aligned to ERDL Spec v2.1 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
+> **Current status**: `0.1.0-alpha.1` — engine aligned to ERDL Spec v2.1 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
 
 ---
 
