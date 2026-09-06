@@ -9,3 +9,7 @@ test/*.bak
 src/**/*.js
 
 .workbuddy/
+
+# 本地临时文件（不进开源仓库）
+Git-readme.md
+run-chat.ps1
