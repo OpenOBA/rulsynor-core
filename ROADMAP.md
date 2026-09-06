@@ -1,7 +1,7 @@
 # Roadmap — @openoba/rulsynor-core
 
 > 版本路线遵循 [`VERSIONING.md`](./VERSIONING.md) 的生命周期阶段。
-> 当前主线：**0.1.x**（引擎已对齐 Spec v2.0，DO v1.5 迁移中）。
+> 当前主线：**0.1.x**（引擎已对齐 ERDL Spec v2.1，DO 哈希模式已 v1.5，签名模式待完成）。
 
 ---
 
@@ -19,12 +19,12 @@
 - [x] GB/Z 185 AID 生成 + 导航引导 + 纠偏环 + REQUEST_HUMAN 解析
 - [x] Minimal Chat Runtime（ReAct 环 + Guard + 工具执行）
 - [x] Playground CLI
-- [x] 639 测试
+- [x] 655 测试
 - [x] BSL 1.1 · 零框架依赖（仅 json-canonicalize + js-yaml）
 
 ## 0.1.0-beta（下一步 · beta 阶段）
 
-- [ ] **Decision Object v1.5 对齐**（当前 v1.3 口径 → v1.5 扁平哈希链，对齐 RFC-002）
+- [ ] **Decision Object 签名模式**（哈希模式已对齐 v1.5 flat-hash；签名模式 ECDSA P-256 待完成，对齐 RFC-002 §10）
 - [ ] 软件版本全生命周期管理落地（VERSIONING/RELEASING 已就位，补齐 CI 自动化发布）
 - [ ] CI：GitHub Actions（lint/test/build 门禁 + npm 自动发布）
 - [ ] 覆盖率提升至 80%+（补边界/异常分支）

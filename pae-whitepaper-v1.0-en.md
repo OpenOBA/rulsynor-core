@@ -38,7 +38,7 @@ This whitepaper offers a category-level answer to this wave of failure:
 
 **Professionalized AI Employee — an AI Employee under the human-resource management system.** Here, "AI Employee" means the smallest employee unit composed of AI + Human: the human is the subject of responsibility, AI is the component of capability. The landing position of the AI Agent must be made explicit: it does not onboard alone, nor bears responsibility alone; it enters the organization as the employee's capability, following the human — organizational identity, role, and duties belong to the employee, and so does responsibility. But capability does not escape assessment: the AI Agent undergoes pre-employment assessment together with the employee, and is certified to work together with the employee. The entire tenure is auditable; the trust level rises or falls with evaluation results; and its experience can be inherited by the organization upon retirement.
 
-This whitepaper defines the Professionalized AI Employee category and provides the first complete engineering implementation: the ERDL specification, the formal verification tool, 301 cross-implementation audit verification vectors, and the runtime framework are all open-sourced, while the governance infrastructure is in closed beta. Enterprises can apply for internal testing today; independent developers can verify today.
+This whitepaper defines the Professionalized AI Employee category and provides the first complete engineering implementation: the ERDL specification, the formal verification tool, 317 cross-implementation audit verification vectors, and the runtime framework are all open-sourced, while the governance infrastructure is in closed beta. Enterprises can apply for internal testing today; independent developers can verify today.
 
 **Core claim: one of the ways out for agent adoption is to refer to the human-resource management framework and build a professionalized AI employee employment system.** Enterprises that can entrust critical business to AI over the long term are necessarily those that fold AI into accountable employees and manage them under a complete employment system.
 
@@ -50,9 +50,9 @@ Every capability claimed in this whitepaper has a corresponding open-source impl
 
 | Whitepaper claim | Open-source implementation | License | Verification method |
 |---|---|---|---|
-| ERDL rule language specification | [OpenOBA/erdl-landing](https://github.com/OpenOBA/erdl-landing) (SPEC v2.0) | MIT | Independent implementation cross-verification |
+| ERDL rule language specification | [OpenOBA/erdl-landing](https://github.com/OpenOBA/erdl-landing) (SPEC v2.1) | MIT | Independent implementation cross-verification |
 | Formal verification of the deterministic kernel | [OpenOBA/erdl-formal](https://github.com/OpenOBA/erdl-formal) | Apache-2.0 | SMT proofs (34 nodes, full coverage) |
-| Decision-evidence tamper-proof mechanism | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | CC0-1.0 (vectors) / Apache-2.0 (code) | 301 verification vectors (78 cryptographic + 223 semantic); 1 independent Runner landed (norviq-go, Go, 107/107, 2026-09-01) |
+| Decision-evidence tamper-proof mechanism | [OpenOBA/erdl-vectors](https://github.com/OpenOBA/erdl-vectors) | CC0-1.0 (vectors) / Apache-2.0 (code) | 317 verification vectors (78 cryptographic + 239 semantic); 2 independent Runners landed (norviq-go Go / concordia-python Python) |
 | Seven-step method runtime (Alpha) | [OpenOBA/rulsynor-core](https://github.com/OpenOBA/rulsynor-core) | BSL 1.1 | Local build & run |
 | Community-edition full-stack Professionalized AI Employee runtime framework | [openoba.com](https://openoba.com) | In beta (not open-sourced) | Invitation-only beta |
 
@@ -471,7 +471,7 @@ Our answer is a methodological principle:
 
 ### 7.1 The Verification Vector System
 
-"Neutrality is measured" materializes into 301 independently recomputable verification vectors, spanning two layers — the decision-evidence layer and the expression-kernel layer. The two layers use different verification paradigms: the decision-evidence layer is cryptographic verification (tamper resistance, recomputing JCS + SHA-256 hashes), and the expression-kernel layer is semantic verification (correctness, evaluating per the specification and comparing results).
+"Neutrality is measured" materializes into 317 independently recomputable verification vectors, spanning two layers — the decision-evidence layer and the expression-kernel layer. The two layers use different verification paradigms: the decision-evidence layer is cryptographic verification (tamper resistance, recomputing JCS + SHA-256 hashes), and the expression-kernel layer is semantic verification (correctness, evaluating per the specification and comparing results).
 
 **Decision-evidence layer · 78 vectors** (`decision-object-vectors-v1.5.json`) — covering the tamper resistance and compliance of the Decision Object:
 
@@ -484,7 +484,7 @@ Our answer is a methodological principle:
 | Result tamper (G) | 14 | Verdict / structure tamper |
 | Compliance fields (V-COMP) | 32 | Jurisdiction-activated field completeness |
 
-**Expression-kernel layer · 223 vectors** (`v-engine-vectors.json`) — covering the deterministic evaluation of the expression tree:
+**Expression-kernel layer · 239 vectors** (`v-engine-vectors.json`) — covering the deterministic evaluation of the expression tree:
 
 | Category | Count | Coverage |
 |---|---|---|
@@ -494,7 +494,7 @@ Our answer is a methodological principle:
 | Natural-language Gloss | 16 | Bidirectional rendering consistency |
 | Projection | 6 | Multi-projection consistency |
 
-**Independent-recomputation requirement for the expression-kernel layer**: an independent implementation must parse the expression tree per ERDL SPEC v2.0 and execute evaluation, matching the expected value and type field-by-field — this is not a unit test of some implementation, but a semantic cross-check against the public specification.
+**Independent-recomputation requirement for the expression-kernel layer**: an independent implementation must parse the expression tree per ERDL SPEC v2.1 and execute evaluation, matching the expected value and type field-by-field — this is not a unit test of some implementation, but a semantic cross-check against the public specification.
 
 Each vector is a "given input → expected output" recomputable assertion. Take an expression-kernel vector:
 
@@ -561,7 +561,7 @@ Self-declaration does not constitute trust. Every piece of decision evidence of 
 2. **Tamper-proof and non-repudiable**: evidence, once produced, is fixed by cryptographic mechanisms — it cannot be altered, deleted, or repudiated;
 3. **Usable by many parties**: the same evidence serves enterprise internal audit for walkthrough testing, third-party audit for independent verification, and regulatory review for compliance mapping.
 
-To this end we have established a public, verifiable benchmark: **301 verification vectors, spanning two verification paradigms** — the decision-evidence layer 78 (V-DO-v15, cryptographic verification) and the expression-kernel layer 223 (V-ENGINE/V-GLOSS/V-PROJ, semantic verification), both layers fully released, with signing-layer vectors released progressively thereafter — covering behavioral-boundary expression, decision-evidence tamper resistance, compliance fields, business scenarios, and multi-party audit perspectives. Any third party can independently recompute against the public specification — **capable of fooling humans, but not of fooling mathematics.**
+To this end we have established a public, verifiable benchmark: **317 verification vectors, spanning two verification paradigms** — the decision-evidence layer 78 (V-DO-v15, cryptographic verification) and the expression-kernel layer 239 (V-ENGINE/V-GLOSS/V-PROJ, semantic verification), both layers fully released, with signing-layer vectors released progressively thereafter — covering behavioral-boundary expression, decision-evidence tamper resistance, compliance fields, business scenarios, and multi-party audit perspectives. Any third party can independently recompute against the public specification — **capable of fooling humans, but not of fooling mathematics.**
 
 ### 7.4 External Evidence: Independent Third-Party Verification
 
@@ -691,7 +691,7 @@ npm run verify
 npm run verify:vengine
 ```
 
-`verify:vengine` evaluates each of the 223 expression-kernel vectors per ERDL SPEC v2.0 and compares them against expected values — Step 3 verifies the cryptographic layer (tamper resistance), and this step verifies the semantic layer (correctness); only when both are run is verification complete.
+`verify:vengine` evaluates each of the 239 expression-kernel vectors per ERDL SPEC v2.1 and compares them against expected values — Step 3 verifies the cryptographic layer (tamper resistance), and this step verifies the semantic layer (correctness); only when both are run is verification complete.
 
 **Step 4 · Launch the Alpha runtime (private beta, 1 minute; command current as of 2026-09-01)**
 
