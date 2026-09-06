@@ -555,6 +555,9 @@ export class ExprTreeEvaluator {
         // E10: NFC-normalize before string comparison (precomposed é equals decomposed e+´)
         const ls = typeof left === 'string' ? normalizeNfc(left) : left;
         const rs = typeof right === 'string' ? normalizeNfc(right) : right;
+        // SPEC §7.3(a): a type-mismatched comparison returns false (no implicit conversion).
+        // Without this guard `false != 100` would evaluate to true via JS `!==` (fail-open).
+        if (typeof ls !== typeof rs) return false;
         const eq = ls === rs;
         return op === 'eq' ? eq : !eq;
       }
