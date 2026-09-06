@@ -39,14 +39,16 @@ rulsynor-core's determinism is not a standalone claim — it's verified by three
 | Layer | Repo | Role | Status |
 |---|---|---|---|
 | **Language** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl` (MIT) | Declarative deterministic rule language — "rules decide everything": 34-node kernel / 30 operators / 13 decisions | v2.1 · on npm |
-| **Tests** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors) (vectors CC0 / code Apache) | Cross-implementation byte-level verification: 301 frozen vectors; 78 audit-layer vectors byte-verified by 2 independent runners (Go / Python) | v1.5 |
-| **Proof** | [erdl-formal](https://github.com/OpenOBA/erdl-formal) (Apache-2.0) | Z3/SMT formal verification: 34-node coverage + E1–E12 — lifts "tested determinism" to "proven over all inputs" | v0.1.2 · on PyPI |
+| **Tests** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors) (vectors CC0 / code Apache) | Cross-implementation byte-level verification: 317 frozen vectors; 78 audit-layer vectors byte-verified by 2 independent runners (Go / Python) | v1.5 |
+| **Proof** | [erdl-formal](https://github.com/OpenOBA/erdl-formal) (Apache-2.0) | Z3/SMT formal verification: 34-node coverage + E1–E12 — lifts "tested determinism" to "proven over all inputs" | v0.1.19 · on PyPI |
 
 **In one line**: the language defines rules, the vectors prove "implementations agree", the formal verifier proves "every input is safe" — determinism, from claim → measurement → proof.
 
 ---
 
 ## Installation & Quick Start
+
+> Full user guide: [docs/USER-GUIDE.md](docs/USER-GUIDE.md).
 
 **rulsynor-core is a complete, download-and-go runtime** — not just a library:
 chat with the full 7-step method, author your own rules, integrate via MCP, and
