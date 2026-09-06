@@ -1,0 +1,6 @@
+chore: move spec-2.0 and archive docs out of repo
+
+- docs/SPEC/spec-2.0*.md (PAE spec, drifted from code — no time to realign)
+- docs/archive/ (historical RFC-001 / SPEC v1.1 / vectors v1.3)
+
+Moved to _archived-specs/ outside the repo; will re-add after realignment.
