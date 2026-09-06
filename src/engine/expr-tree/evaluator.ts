@@ -870,7 +870,17 @@ export class ExprTreeEvaluator {
       });
       return ok(null, warnings);
     }
-    const int = Number(toDecimalString(n, 0));
+    // SPEC v2.1 §7.3(f): amount MUST be an integer (a duration is an integer unit;
+    // half-even rounding of "add 1.5 months" has no business meaning).
+    if (n.den !== 1n) {
+      warnings.push({
+        kind: 'type_mismatch',
+        message: `date_add step must be an integer, got ${toDecimalString(n)}`,
+        nodeType: 'date_add',
+      });
+      return ok(null, warnings);
+    }
+    const int = Number(n.num);
     switch (unit) {
       case 'years':
         return ok(addYears(d, int), warnings);
