@@ -201,6 +201,15 @@ pnpm test
 - 删除字段：破坏既有审计链，仅允许 major 版本升级 + 迁移文档。
 - JCS 原像在 `buildDecisionObject()` 内计算，改动删除逻辑必须同步审计验证测试。
 
+### 新增 CLI 命令
+
+1. `src/cli/index.ts` — `switch (cmd)` 加 `case '<cmd>'`，`await import('./<command>.js')` 分发；同步 `HELP` 字符串
+2. `src/cli/<command>.ts` — 新建命令模块，导出 `runXxx(args)`（参考 `audit.ts` 的 `runAudit`）
+3. `src/cli/flags.ts` — 若命令有新 flag，加解析（`parseFlag`）
+4. `test/` — 补命令回归测试
+
+> 命令遵守 CORE 边界：审计只读、导出/下载为商业版能力；API key 仅从环境读、从不落盘。
+
 ---
 
 ## 测试策略

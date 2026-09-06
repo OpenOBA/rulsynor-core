@@ -193,3 +193,9 @@ cloud.openoba.com（云端中台，写端 + 账户/订阅单一事实源）
 > 本文档是 rulsynor-core 正式版架构与开源边界的权威来源。
 > 任何偏离必须经 Henry 和唐浩然共同确认并更新。
 > 唐浩然 · OpenOBA AI 执行官 · 2026-08-29
+
+## 参见
+
+- [DEVELOPMENT.md](DEVELOPMENT.md) — 本地开发与扩展点
+- [API.md](API.md) — 引擎公开 API
+- [SPEC/erdl-spec.md](SPEC/erdl-spec.md) — ERDL 语言规范

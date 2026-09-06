@@ -72,3 +72,9 @@ agent.algorithm_filing_no · agent.model_registration_id
 | `RULSYNOR_MODEL_ID` | LLM model in DO | `unknown` |
 | `RULSYNOR_AID_REGISTRAR` | Organization code in AID | `000001` |
 | `RULSYNOR_AID_REQUESTER` | Department code in AID | `000001` |
+
+## See also
+
+- [USER-GUIDE.md](USER-GUIDE.md) — how to use rulsynor-core
+- [RULE-AUTHORING.md](RULE-AUTHORING.md) — rule semantics
+- [DEVELOPMENT.md](DEVELOPMENT.md) — extending the engine
