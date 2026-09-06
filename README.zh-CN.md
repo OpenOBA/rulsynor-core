@@ -7,6 +7,8 @@
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 
 > **规则决定一切。**
+>
+> **让 AI Agent 加入人力资源管理体系，用规则来约束他。**
 
 **rulsynor-core** 是让这句话落地的确定性内核：**规则——决定 Agent 的每一个动作。**
 

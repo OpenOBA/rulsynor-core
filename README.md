@@ -7,6 +7,8 @@
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 
 > **Rules Decide Everything.**
+>
+> **AI agents join the HR system — constrained by rules, not prompts.**
 
 **rulsynor-core** is the deterministic core that makes it true: **rules — decide every action an agent takes.**
 
