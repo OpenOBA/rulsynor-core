@@ -119,8 +119,8 @@ export function operatorValueShape(op: string): OperatorValueShape | null {
 
 /**
  * Lenient parse aliases (historical compatibility; NOT new operators).
- * After normalization they MUST fall within CONDITION_OPERATORS; the SPEC master has not
- * yet registered these two aliases (pending write-back, see reconciliation O1).
+ * After normalization they MUST fall within CONDITION_OPERATORS. SPEC §5.2
+ * registers these two aliases (宽容别名): matches→match, neq→ne.
  */
 export const OPERATOR_ALIASES: Readonly<Record<string, ConditionOperator>> = Object.freeze({
   matches: 'match',

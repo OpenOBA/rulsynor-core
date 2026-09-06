@@ -17,7 +17,10 @@
  * Condition kind  — ERDL SPEC v2.0 §11 defines a single kind: context_matches.
  * All conditions evaluate field + operator + value against the execution context.
  */
-import type { ConditionOperator as SchemaConditionOperator } from './erdl-schema.js';
+import type {
+  ConditionOperator as SchemaConditionOperator,
+  Decision as SchemaDecision,
+} from './erdl-schema.js';
 
 export type ConditionKind = 'context_matches';
 
@@ -63,35 +66,10 @@ export interface RuleCondition {
 // Rule Action / Decision
 // ============================================
 
-/** SPEC v2.0 §27: decision types (13 external + 4 internal + rulsynor extensions).
- *  CENSOR is a rulsynor extension (after-audit pipeline), not in SPEC v2.0. */
-export type Decision =
-  // SPEC v2.0 §27: 13 externally visible
-  | 'ALLOW'
-  | 'DENY'
-  | 'CORRECT'
-  | 'NOTIFY'
-  | 'EMERGENCY_HALT'
-  | 'ROLLBACK'
-  | 'QUARANTINE'
-  | 'REQUEST_HUMAN'
-  | 'ESCALATE'
-  | 'DELEGATE'
-  | 'DEFER'
-  | 'WORKFLOW'
-  | 'WORKFLOW_PROGRESS'
-  | 'WORKFLOW_WAITING'
-  // rulsynor extension: positive guidance (guide) — when matched, guides the LLM to act per SOP/best practice
-  | 'GUIDE'
-  // SPEC v2.0 §27: 4 internal reasoning (not in Decision Object)
-  | 'STRATEGIZE'
-  | 'AUDIT'
-  | 'CALCULATE'
-  | 'VALIDATE'
-  // Internal state
-  | 'PASS'
-  // rulsynor extension (after-audit, not in SPEC v2.0)
-  | 'CENSOR';
+/** Decision types — derived from erdl-schema.ALL_DECISIONS (single source of truth).
+ *  = DO-visible 13 + 2 WORKFLOW substates + 4 internal reasoning + PASS + CENSOR.
+ *  A second hand-written union here is forbidden (authority-source red line). */
+export type Decision = SchemaDecision;
 
 /** ERDL SPEC v2.0 §9  — override level enum (critical > high > normal > low) */
 export type OverrideLevel = 'critical' | 'high' | 'normal' | 'low';
