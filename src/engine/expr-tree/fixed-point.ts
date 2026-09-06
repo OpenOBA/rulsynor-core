@@ -1,5 +1,5 @@
 /**
- * FixedPoint — strict fixed-point decimal rational arithmetic (SPEC v2.0 §10 E2 / §10.4(b))
+ * FixedPoint — strict fixed-point decimal rational arithmetic (SPEC §10 E2 / §10.4(b))
  *
  * Constraints (strict implementation, no pitfalls):
  * - Intermediate computation uses [high-precision bounded rationals] (bigint numerator/denominator),
@@ -173,7 +173,7 @@ export function toDecimalString(r: Rational, scale: number = DECIMAL_SCALE): str
     fracStr = (rounded - pow).toString().padStart(scale, '0');
   }
 
-  // Strip trailing zeros — per SPEC §28.2 minimal canonical representation: integer without decimal point, decimal without trailing zeros
+  // Strip trailing zeros — per SPEC §8.2 minimal canonical representation: integer without decimal point, decimal without trailing zeros
   const trimmed = scale > 0 ? `${fracStr}`.replace(/0+$/, '') : '';
   const out = scale > 0 ? (trimmed === '' ? intStr : `${intStr}.${trimmed}`) : intStr;
   return (neg ? '-' : '') + out;

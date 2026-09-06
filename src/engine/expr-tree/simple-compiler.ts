@@ -1,12 +1,12 @@
 /**
- * simple-compiler — Simple condition operators (28) → expression-tree compilation (SPEC v2.0 §11)
+ * simple-compiler — Simple condition operators (28) → expression-tree compilation (SPEC §5)
  *
- * SPEC v2.0 §11: "28 condition operators + 2 modifiers (within/rate) = 30 semantic units".
+ * SPEC §5: "28 condition operators + 2 modifiers (within/rate) = 30 semantic units".
  * This file only compiles the 28 condition operators; within/rate are stateful modifiers, outside
  * the tree (GuardStateManager), not compiled here. The evaluation core converges from
  * "operator branching" to "node-type traversal".
  *
- * 28 condition operators' compile destinations (SPEC v2.0 §11 authoritative mapping):
+ * 28 condition operators' compile destinations (SPEC §5 authoritative mapping):
  * - 13 direct nodes: eq/ne/gt/gte/lt/lte · in · contains/starts_with/ends_with/match · exists · between
  * - 6  not-combinations: not_in/not_contains/not_starts_with/not_ends_with/not_exists/not_between
  * - 9  length/count combinations: length_gt/gte/lt/lte/eq (5) + count_gt/gte/lt/lte (4)
@@ -20,7 +20,7 @@
 import type { ExprNode } from './node-types.js';
 import type { ConditionOperator } from '../erdl-schema.js';
 
-/** Full set of Simple condition operators (28, SPEC v2.0 §11, spec-level frozen; excluding within/rate modifiers) */
+/** Full set of Simple condition operators (28, SPEC §5, spec-level frozen; excluding within/rate modifiers) */
 // 2026-08-28 argumentation-stage consolidation: originally a local 28-item union type. It was once
 // added to the NO-DUP-ENUM whitelist, and the whitelist masked a true duplicate — simple-compiler
 // can be fully derived from the single source of truth.
@@ -80,7 +80,7 @@ function andExists(fieldName: string, inner: ExprNode): ExprNode {
 
 /**
  * Compile a single Simple condition → expression-tree node.
- * Aligned with the §11 authoritative mapping, no dangling.
+ * Aligned with the §5 authoritative mapping, no dangling.
  */
 export function compileSimpleCondition(cond: SimpleCondition): ExprNode {
   const { field: fieldName, operator, value } = cond;

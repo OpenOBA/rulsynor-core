@@ -1,5 +1,5 @@
 /**
- * ExprTreeEvaluator — expression-tree evaluator (SPEC v2.0 §10)
+ * ExprTreeEvaluator — expression-tree evaluator (SPEC §10)
  *
  * Tree-walking evaluation, pure function (E1), no side effects, no wall-clock reads.
  * Semantic constraints:
@@ -8,7 +8,7 @@
  * - E9  wall-clock read forbidden; time is injected via context.as_of (external input — this evaluator never reads Date.now)
  * - E11 undefined sentinel semantics: field missing → false for everything except exists (null propagation)
  * - E12 evaluation-error fold: the caller decides fail-close or fold-false by tier
- * - §11.2 strict type matching: no implicit type conversion
+ * - §5.2 strict type matching: no implicit type conversion
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
@@ -87,7 +87,7 @@ export class ExprTreeEvaluator {
     return this.evalNode(node, context);
   }
 
-  /** Evaluate and collect eval_trace (SPEC §17, E6 tree-as-evidence) */
+  /** Evaluate and collect eval_trace (SPEC §7.0.3, E6 tree-as-evidence) */
   evaluateWithTrace(
     node: ExprNode,
     context: EvalContext,
@@ -225,7 +225,7 @@ export class ExprTreeEvaluator {
           });
           return ok(false, warnings);
         }
-        // SPEC §11.2 list limit: in/not_in operands ≤ 256 items
+        // SPEC §5.2 list limit: in/not_in operands ≤ 256 items
         if (r.value.length > 256) {
           warnings.push({
             kind: 'array_over_limit',
@@ -513,12 +513,12 @@ export class ExprTreeEvaluator {
     }
   }
 
-  // ── Boolean conversion (strict type §11.2: only boolean true is truthy; E11 null propagation: undefined/null → false) ──
+  // ── Boolean conversion (strict type §5.2: only boolean true is truthy; E11 null propagation: undefined/null → false) ──
   private toBoolean(v: unknown): boolean {
     return v === true;
   }
 
-  // ── Comparison (strict type matching §11.2) ──
+  // ── Comparison (strict type matching §5.2) ──
   private compare(op: string, left: unknown, right: unknown, warnings: EvalWarning[]): boolean {
     switch (op) {
       case 'eq':
@@ -633,7 +633,7 @@ export class ExprTreeEvaluator {
       }
     }
     if (this.isRational(v)) return v as Rational;
-    // Strict type matching §11.2: string / bare bigint are not implicitly converted to numeric → null
+    // Strict type matching §5.2: string / bare bigint are not implicitly converted to numeric → null
     return null;
   }
 
@@ -664,7 +664,7 @@ export class ExprTreeEvaluator {
         if (typeof left === 'object' && left !== null) {
           return this.deepContains(left as Record<string, unknown>, rn);
         }
-        // §11.2 strict type matching: non-string, non-object (number/boolean etc.) are not implicitly String()-converted
+        // §5.2 strict type matching: non-string, non-object (number/boolean etc.) are not implicitly String()-converted
         if (typeof left !== 'string') {
           warnings.push({
             kind: 'type_mismatch',
@@ -1024,7 +1024,7 @@ export class ExprTreeEvaluator {
     }
   }
 
-  /** Uniformly convert array elements to Rationals; on non-numeric (incl. string, §11.2 strict type) returns null and logs a warning */
+  /** Uniformly convert array elements to Rationals; on non-numeric (incl. string, §5.2 strict type) returns null and logs a warning */
   private toRationalArray(arr: unknown[], fn: string, warnings: EvalWarning[]): Rational[] | null {
     const rats: Rational[] = [];
     for (const v of arr) {

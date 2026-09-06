@@ -1,14 +1,14 @@
 /**
- * Rule Template Engine — 12 templates that produce deterministic SPEC v2.0 §11 YAML.
+ * Rule Template Engine — 12 templates that produce deterministic SPEC §5 YAML.
  *
  * Each template is a pure function with strictly-typed parameters.
- * Template functions are the ONLY way to produce SPEC v2.0 §11 YAML from user input.
+ * Template functions are the ONLY way to produce SPEC §5 YAML from user input.
  * The engine guarantees 100% output correctness through type checking + validation.
  *
  * Design invariant: YAML output is always valid because the template functions
  * construct the object graph; yaml.dump is deterministic given the same input.
  *
- * Context fields: Templates accept any valid SPEC v2.0 §11 context field name
+ * Context fields: Templates accept any valid SPEC §5 context field name
  * (tool.name, sem.code, sem.sub_code, project.*, task.*, etc.) as the `field` parameter.
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
@@ -260,7 +260,7 @@ export const TEMPLATES: TemplateDef[] = [
         type: 'field',
         required: true,
         placeholder: '例如: amount 或 sem.code',
-        description: 'SPEC v2.0 §11 上下文字段。例如: tool.name, sem.code, amount',
+        description: 'SPEC §5 上下文字段。例如: tool.name, sem.code, amount',
       },
       { key: 'operator', label: '比较符', labelEn: 'Operator', type: 'operator', required: true },
       {
@@ -290,7 +290,7 @@ export const TEMPLATES: TemplateDef[] = [
         type: 'field',
         required: true,
         placeholder: '例如: status 或 sem.code',
-        description: 'SPEC v2.0 §11 上下文字段',
+        description: 'SPEC §5 上下文字段',
       },
       {
         key: 'values',
@@ -319,7 +319,7 @@ export const TEMPLATES: TemplateDef[] = [
         labelEn: 'Field 1',
         type: 'field',
         required: true,
-        description: 'SPEC v2.0 §11 field',
+        description: 'SPEC §5 field',
       },
       {
         key: 'operator1',
@@ -335,7 +335,7 @@ export const TEMPLATES: TemplateDef[] = [
         labelEn: 'Field 2',
         type: 'field',
         required: true,
-        description: 'SPEC v2.0 §11 field',
+        description: 'SPEC §5 field',
       },
       {
         key: 'operator2',
@@ -363,7 +363,7 @@ export const TEMPLATES: TemplateDef[] = [
         labelEn: 'Field 1',
         type: 'field',
         required: true,
-        description: 'SPEC v2.0 §11 field',
+        description: 'SPEC §5 field',
       },
       {
         key: 'operator1',
@@ -379,7 +379,7 @@ export const TEMPLATES: TemplateDef[] = [
         labelEn: 'Field 2',
         type: 'field',
         required: true,
-        description: 'SPEC v2.0 §11 field',
+        description: 'SPEC §5 field',
       },
       {
         key: 'operator2',
@@ -407,7 +407,7 @@ export const TEMPLATES: TemplateDef[] = [
         labelEn: 'List Field',
         type: 'field',
         required: true,
-        description: 'SPEC v2.0 §11 field',
+        description: 'SPEC §5 field',
       },
       { key: 'values', label: '值列表', labelEn: 'Values', type: 'list', required: true },
       {
@@ -416,7 +416,7 @@ export const TEMPLATES: TemplateDef[] = [
         labelEn: 'Compare Field',
         type: 'field',
         required: true,
-        description: 'SPEC v2.0 §11 field',
+        description: 'SPEC §5 field',
       },
       { key: 'operator', label: '比较符', labelEn: 'Operator', type: 'operator', required: true },
       { key: 'value', label: '值', labelEn: 'Value', type: 'value', required: true },
@@ -565,9 +565,9 @@ export class TemplateEngine {
   }
 
   /**
-   * Generate SPEC v2.0 §11 YAML from template parameters.
+   * Generate SPEC §5 YAML from template parameters.
    *
-   * Uses RuleYamlSerializer for deterministic SPEC v2.0 §11 F1-F8 output
+   * Uses RuleYamlSerializer for deterministic SPEC §5 F1-F8 output
    * (template assembly, not yaml.dump).
    */
   generate(input: TemplateInput): TemplateOutput {
@@ -584,7 +584,7 @@ export class TemplateEngine {
     try {
       const data = this.buildSpec5(input);
 
-      // Use RuleYamlSerializer for deterministic SPEC v2.0 §11 F1-F8 output
+      // Use RuleYamlSerializer for deterministic SPEC §5 F1-F8 output
       const serializer = new RuleYamlSerializer('.'); // dir unused by serializeSpec5
       const yamlStr = serializer.serializeSpec5(data);
 
@@ -604,7 +604,7 @@ export class TemplateEngine {
   }
 
   // ============================================
-  // Private: Build SPEC v2.0 §11 data structure (delegates YAML to RuleYamlSerializer)
+  // Private: Build SPEC §5 data structure (delegates YAML to RuleYamlSerializer)
   // ============================================
 
   private buildSpec5(input: TemplateInput): ExtractedSpec5 {

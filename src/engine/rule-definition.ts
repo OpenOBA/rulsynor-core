@@ -14,7 +14,7 @@
 // ============================================
 
 /**
- * Condition kind  — ERDL SPEC v2.0 §11 defines a single kind: context_matches.
+ * Condition kind  — ERDL SPEC §5 defines a single kind: context_matches.
  * All conditions evaluate field + operator + value against the execution context.
  */
 import type {
@@ -24,13 +24,13 @@ import type {
 
 export type ConditionKind = 'context_matches';
 
-/** Spec v2.0 §11 comparison operators */
+/** Spec v2.0 §5 comparison operators */
 // 2026-08-28 review: was a local 28-item union type (a second enum definition).
 // Now derived from the single source of truth; listing operators again in this file is forbidden.
 export type ConditionOperator = SchemaConditionOperator;
 
 export interface RuleCondition {
-  /** Condition kind (SPEC v1.1 legacy, deprecated in v2.0; kept optional for old-data compatibility, ignored by evaluation logic) */
+  /** Condition kind (SPEC legacy, deprecated in v2.0; kept optional for old-data compatibility, ignored by evaluation logic) */
   kind?: ConditionKind;
 
   /** Keywords to match against agent intent (intent_contains) */
@@ -45,17 +45,17 @@ export interface RuleCondition {
   /** Expected value for context_matches comparison */
   value?: unknown;
 
-  /** Spec v2.0 §11 comparison operator (when using field/operator/value mode) */
+  /** Spec v2.0 §5 comparison operator (when using field/operator/value mode) */
   operator?: ConditionOperator;
 
-  /** SPEC v2.0 §11: Time window constraint (e.g., "5m") */
+  /** SPEC §5: Time window constraint (e.g., "5m") */
   within?: string;
 
-  /** SPEC v2.0 §11: Rate limit constraint (e.g., "10/1m") */
+  /** SPEC §5: Rate limit constraint (e.g., "10/1m") */
   rate?: string;
 
   /**
-   * Structured expression tree (S-expression JSON form, SPEC v2.0 §12 external form).
+   * Structured expression tree (S-expression JSON form, SPEC §5.3 external form).
    * Carries complex conditions that field/operator/value cannot express (time arithmetic/arithmetic/fn delegation etc.).
    * Converted to a tree via fromSExpr at evaluation; mutually exclusive with field/operator/value (E5).
    */
@@ -71,7 +71,7 @@ export interface RuleCondition {
  *  A second hand-written union here is forbidden (authority-source red line). */
 export type Decision = SchemaDecision;
 
-/** ERDL SPEC v2.0 §9  — override level enum (critical > high > normal > low) */
+/** ERDL SPEC §4.1  — override level enum (critical > high > normal > low) */
 export type OverrideLevel = 'critical' | 'high' | 'normal' | 'low';
 
 /** Execution Ring  — ERDL Protocol Spec */
@@ -141,7 +141,7 @@ export type RuleCategory =
   | 'custom';
 
 /**
- * SPEC v1.2 legacy §3.2.0  — Six-tier rule hierarchy.
+ * SPEC v1.2 legacy Appendix D  — Six-tier rule hierarchy.
  * Tier 0 (Moral), 1 (Compliance), 2 (Security), 3 (Policy), 4 (Role), 5 (Convention).
  */
 export type RuleTier = 0 | 1 | 2 | 3 | 4 | 5;
@@ -155,7 +155,7 @@ export const TIER_LABELS: Record<RuleTier, string> = {
   5: 'Convention',
 };
 
-/** SPEC v1.2 legacy §3.2.0a  — Tier override semantics */
+/** SPEC v1.2 legacy Appendix D  — Tier override semantics */
 export type TierOverride = 'none' | 'human_approval' | 'emergency_override' | 'always';
 
 export const TIER_RING_COMPAT: Record<RuleTier, number[]> = {
@@ -180,10 +180,10 @@ export interface RuleDefinition {
   /** Category for organization */
   category: RuleCategory;
 
-  /** Match conditions (ERDL SPEC v2.0 §11 field/operator/value) */
+  /** Match conditions (ERDL SPEC §5 field/operator/value) */
   conditions: RuleCondition[];
 
-  /** Condition logic: AND = all must match, OR = any must match (SPEC v2.0 §11) */
+  /** Condition logic: AND = all must match, OR = any must match (SPEC §5) */
   conditionLogic?: 'AND' | 'OR';
 
   /** Action to take when matched */
@@ -196,10 +196,10 @@ export interface RuleDefinition {
   enabled: boolean;
 
   /**
-   * ERDL SPEC v2.0 §9 + §10: hard constraint that immediately terminates all other rule
+   * ERDL SPEC §4.1 + §10: hard constraint that immediately terminates all other rule
    * evaluations upon match. Cannot be bypassed by LLMs.
    *
-   * SPEC v2.0 §9 levels: critical | high | normal | low
+   * SPEC §4.1 levels: critical | high | normal | low
    * - critical/high: can override a prior DENY  — ALLOW (same Ring only)
    * - normal/low: do not enable override behavior (treated as non-override)
    * - undefined: no override
@@ -222,7 +222,7 @@ export interface RuleDefinition {
   source_text?: string | null;
 
   /**
-   * SPEC v2.0 §11: unless exemption conditions.
+   * SPEC §5: unless exemption conditions.
    * Evaluated BEFORE when conditions. If unless matches  — ALLOW (exempt).
    * Same structure as conditions.
    */
@@ -260,7 +260,7 @@ export interface RuleMatch {
 }
 
 /**
- * Window count snapshot for stateful operators (within/rate) (SPEC v2.0 §11 / RFC-002 §2.4).
+ * Window count snapshot for stateful operators (within/rate) (SPEC §5 / RFC-002 §2.4).
  * Goes into the DO `evaluation.temporal_state`, so "why rate-limiting fired at this moment" can be recomputed offline.
  * Field structure frozen consistent with RFC-002 §2.4: { rule_id, operator, field, window_ms, count, limit? }.
  */
@@ -281,7 +281,7 @@ export interface EvaluationResult {
   /** All matched rules, in evaluation order (excludes unless exemptions) */
   matchedRules: RuleMatch[];
 
-  /** SPEC v2.0 §11: unless exemptions  — rules exempted via unless, recorded separately.
+  /** SPEC §5: unless exemptions  — rules exempted via unless, recorded separately.
    *  Not included in matchedRules (v1.1 vectors expect matched_rules=[] when only unless fires). */
   unlessExemptions?: RuleMatch[];
 

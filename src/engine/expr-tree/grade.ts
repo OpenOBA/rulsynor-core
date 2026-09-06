@@ -1,5 +1,5 @@
 /**
- * grade — rule grading (SPEC v2.0 §16.2)
+ * grade — rule grading (SPEC Appendix D)
  *
  * Grade determines audit strength and recomputability declaration; Grade metadata goes through
  * extension fields, not into the core frozen fields.

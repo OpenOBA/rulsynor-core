@@ -1,5 +1,5 @@
 /**
- * limits — resource limit check (SPEC v2.0 §10 E4)
+ * limits — resource limit check (SPEC §10 E4)
  *
  * Hard resource quotas against expression-tree bloat attacks:
  * - arithmetic depth ≤ 2

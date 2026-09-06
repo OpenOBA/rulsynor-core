@@ -1,5 +1,5 @@
 /**
- * s-expression — S-expression serialization of the expression tree (SPEC v2.0 §12 external form)
+ * s-expression — S-expression serialization of the expression tree (SPEC §5.3 external form)
  *
  * SPEC external form: key name is the node, children are an array, e.g.:
  *   { lt: [ { div: [ {sub: [...]}, {field: "..."} ] }, 0.15 ] }
@@ -17,7 +17,7 @@
  *   add/sub/mul/div/round, days_between/epoch_ms,
  *   count/sum/avg/min/max
  *
- * Literal convention (following SPEC §12 examples):
+ * Literal convention (following SPEC §5.3 examples):
  *   - bare value (number/string/boolean/null) = literal node
  *   - { field: "path" } = field node
  *   - { var: "path" } = var node (path is only '$'/'$.x')
@@ -302,10 +302,10 @@ export function isSExprWhen(when: unknown): boolean {
 }
 
 /**
- * Extract the S-expression raw value of the expression tree from the when structure (Spec §12 authoritative form: when.expr).
+ * Extract the S-expression raw value of the expression tree from the when structure (Spec §5.3 authoritative form: when.expr).
  *
  * Recognizes two Expression-projection writing forms:
- * - wrapped form (SPEC §12 authoritative): `when: { expr: { lt: [...] } }` → returns expr's value
+ * - wrapped form (SPEC §5.3 authoritative): `when: { expr: { lt: [...] } }` → returns expr's value
  * - top-level tree (compatible form): `when: { lt: [...] }` → returns when itself
  *
  * Returns null when it is not an Expression projection (possibly flat conditions or other).
@@ -316,7 +316,7 @@ export function extractWhenExpr(when: unknown): unknown | null {
   }
   const obj = when as Record<string, unknown>;
 
-  // SPEC §12 authoritative: when.expr wrapped form
+  // SPEC §5.3 authoritative: when.expr wrapped form
   if ('expr' in obj) {
     const inner = obj['expr'];
     try {

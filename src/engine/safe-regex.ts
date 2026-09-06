@@ -8,7 +8,7 @@
  *   3. Pattern length overflow via max-length cap
  *   4. Invalid regex crash via try-catch wrapper
  *
- * Cost bound (engineering equivalent of SPEC v2.0 E4 regex step count ≤10000):
+ * Cost bound (engineering equivalent of SPEC E4 regex step count ≤10000):
  * JS RegExp has no step-count primitive, so this module constrains the worst-case
  * execution cost with "static pattern analysis + input length cap".
  * safeTest() truncates over-limit input before matching, keeping single-rule evaluation bounded.

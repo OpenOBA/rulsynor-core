@@ -42,10 +42,10 @@ const FORBIDDEN_NAME_PREFIXES = ['test-', 'old-', 'temp-', 'debug-', 'wip-', 'tm
 const VALID_CATEGORIES: readonly string[] = RULE_CATEGORIES;
 
 /**
- * The set of legal CAT abbreviations for the three-part rule name `[CAT]-[NNN]-[desc]` (SPEC v2.0 §16).
+ * The set of legal CAT abbreviations for the three-part rule name `[CAT]-[NNN]-[desc]` (SPEC §7.4).
  *
  * This is the single source of truth for the naming gate: a rule name's prefix MUST be in this set,
- * otherwise load is rejected (error). New categories must first be declared here + registered in spec §16.
+ * otherwise load is rejected (error). New categories must first be declared here + registered in spec §4.1.
  */
 // ADR-003 (2026-08-28): the prefix table is consolidated into the single source of truth erdl-schema.RULE_NAME_PREFIXES,
 // here only an alias is kept; writing a second prefix definition in this file is forbidden. New prefix → edit erdl-schema and sync SPEC.
@@ -54,7 +54,7 @@ const CATEGORY_PREFIX_MAP: Record<string, string> = RULE_NAME_PREFIXES;
 /** Legal rule name format: CAT-NNN-desc (desc segment lowercase English kebab, number 3-4 digits) */
 const RULE_NAME_PATTERN = /^[A-Z]{2,4}-(\d{3,4})-[a-z0-9][a-z0-9-]*$/;
 
-// 2026-08-28 review: was a 21-item local list (the Ring annotation was still at ERDL v1.0 §3.4).
+// 2026-08-28 review: was a 21-item local list (the Ring annotation was still at ERDL v1.0 §4.1).
 // Now derived from the single source of truth ALL_DECISIONS = DO-visible 13 + non-DO 8 (2 sub-states + 4 internal reasoning + PASS + CENSOR).
 // Note: this list is the input-validation domain of "engine-internal flowable identifiers", not the DO value domain —
 // result.decision written to DO MUST ∈ 13, judged via erdl-schema.isDODecision().
@@ -83,7 +83,7 @@ export class RuleValidator {
   }
 
   /**
-   * SPEC v2.0 §10.6: Validate when completeness.
+   * SPEC §10.6: Validate when completeness.
    * Rejects explicit when:'true' combined with blocking decisions.
    * Used by external callers (e.g., RuleService) for raw-when rules.
    */
@@ -102,7 +102,7 @@ export class RuleValidator {
   }
 
   /**
-   * SPEC v2.0 §11: Check metadata.decision vs content.then consistency.
+   * SPEC §5: Check metadata.decision vs content.then consistency.
    */
   checkDecisionConsistency(
     metadataDecision: string,
@@ -186,8 +186,8 @@ export class RuleValidator {
   }
 
   /**
-   * SPEC v2.0 §16: Blocking decisions SHOULD have non-empty message.
-   * Per §16 this is a WARNING-level gate (record advisory, do not reject).
+   * SPEC §7.4: Blocking decisions SHOULD have non-empty message.
+   * Per §7.4 this is a WARNING-level gate (record advisory, do not reject).
    */
   checkBlockingMessageEmpty(decision: string, message: string): ValidationError | null {
     if (BLOCKING_DECISIONS.includes(decision) && (!message || !message.trim())) {
@@ -212,7 +212,7 @@ export class RuleValidator {
   }
 
   /**
-   * SPEC v2.0 §10.6: when:'true' combined with blocking then — error.
+   * SPEC §10.6: when:'true' combined with blocking then — error.
    * Only checks explicit when:'true' in params — structured templates
    * (fieldCompare, toolEq, etc.) generate their own when from params
    * and are validated through their own param checks.
@@ -232,7 +232,7 @@ export class RuleValidator {
   }
 
   /**
-   * SPEC v2.0 §16 naming-convention gate — binary judgment: legal passes, illegal is rejected with error, no middle ground.
+   * SPEC §7.4 naming-convention gate — binary judgment: legal passes, illegal is rejected with error, no middle ground.
    *
    *   Illegal = starts with a forbidden prefix, or format is not `CAT-NNN-desc`, or prefix not in the legal CAT set.
    *   Any of the above unmet → error (block load/write). No warning/info advisory level.
@@ -275,7 +275,7 @@ export class RuleValidator {
     return null;
   }
 
-  /** SPEC v2.0 §16: forbid test-/old-/temp- naming prefixes (internal) */
+  /** SPEC §7.4: forbid test-/old-/temp- naming prefixes (internal) */
   private checkNamingConventionInternal(name: string, errors: ValidationError[]): void {
     const result = this.checkNamingConvention(name);
     if (result) errors.push(result);
@@ -456,7 +456,7 @@ export class RuleValidator {
     return false;
   }
 
-  // === §16 new gates ===
+  // === §7.4 new gates ===
 
   /** Guard rules (guard: true) MUST NOT contain unless */
   checkGuardWithUnless(rule: RuleDefinition): ValidationError | null {
@@ -465,7 +465,7 @@ export class RuleValidator {
       return {
         field: 'unless',
         code: 'GUARD_WITH_UNLESS',
-        message: `Guard rule "${rule.name}" must not contain unless field (§11)`,
+        message: `Guard rule "${rule.name}" must not contain unless field (§5)`,
         level: 'error',
       };
     }
@@ -483,7 +483,7 @@ export class RuleValidator {
         return {
           field: 'unless',
           code: 'UNLESS_WITH_TEMPORAL',
-          message: `Rule "${rule.name}" unless condition must not contain within or rate (§11)`,
+          message: `Rule "${rule.name}" unless condition must not contain within or rate (§5)`,
           level: 'error',
         };
       }
@@ -566,7 +566,7 @@ export class RuleValidator {
 
   /** Full naming format detection [CAT]-[NNN]-desc */
   checkNamingConventionFull(rule: RuleDefinition): ValidationError | null {
-    // SPEC v2.0 §16 naming gate (same binary standard as checkNamingConvention):
+    // SPEC §7.4 naming gate (same binary standard as checkNamingConvention):
     //   Legal = CAT-NNN-desc (desc segment lowercase English kebab), prefix MUST be in CATEGORY_PREFIX_MAP.
     //   Illegal → error (block load), no warning/info middle state.
     // ADR-003: prefix whitelist validated unconditionally. The historical implementation only looked up the prefix table when the regex failed,
@@ -600,10 +600,10 @@ export class RuleValidator {
     return null;
   }
 
-  // === §16 new gates (completing 3 unimplemented items) ===
+  // === §7.4 new gates (completing 3 unimplemented items) ===
 
   /**
-   * §16 no-tool-constraint (warning):
+   * §7.4 no-tool-constraint (warning):
    * coding/security rules that match tool arguments (tool.* fields) SHOULD specify a
    * tool.name condition to avoid indiscriminate matching across every tool call.
    *
@@ -626,27 +626,27 @@ export class RuleValidator {
     return {
       field: 'conditions',
       code: 'NO_TOOL_CONSTRAINT',
-      message: `${rule.category} rule "${rule.name}" should specify a tool.name condition to avoid matching every tool call (§16)`,
+      message: `${rule.category} rule "${rule.name}" should specify a tool.name condition to avoid matching every tool call (§7.4)`,
       level: 'warning',
     };
   }
 
   /**
-   * §3.6 Guard then restriction: Guard rules (guard: true) support only Ring 0-2 actions + CORRECT.
+   * §7.4 Guard then restriction: Guard rules (guard: true) support only Ring 0-2 actions + CORRECT.
    * Ring 3 internal actions (STRATEGIZE/AUDIT/CALCULATE/VALIDATE) are not allowed in Guard rules.
    */
   checkGuardThenRestriction(rule: RuleDefinition): ValidationError | null {
     const guard = (rule as unknown as Record<string, unknown>).guard as boolean | undefined;
     if (!guard) return null;
     const decision = rule.action?.decision ?? 'ALLOW';
-    // Allowed for Guard: Ring 0-2 actions + CORRECT (Ring 3 exception per §3.6)
+    // Allowed for Guard: Ring 0-2 actions + CORRECT (Ring 3 exception per §7.4)
     // 2026-08-28 review: switch to the single source of truth GUARD_ALLOWED_DECISIONS
     const ALLOWED_GUARD_DECISIONS: readonly string[] = GUARD_ALLOWED_DECISIONS;
     if (!ALLOWED_GUARD_DECISIONS.includes(decision)) {
       return {
         field: 'then',
         code: 'GUARD_THEN_NOT_ALLOWED',
-        message: `Guard rule "${rule.name}" uses then:${decision} which is not allowed. Guard then only supports Ring 0-2 actions + CORRECT/ALLOW (§3.6)`,
+        message: `Guard rule "${rule.name}" uses then:${decision} which is not allowed. Guard then only supports Ring 0-2 actions + CORRECT/ALLOW (§7.4)`,
         level: 'error',
       };
     }

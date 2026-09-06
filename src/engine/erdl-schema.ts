@@ -1,6 +1,6 @@
 /**
  * erdl-schema — the **single source of truth** for the ERDL deterministic kernel
- * (SPEC v2.0 authoritative enums).
+ * (SPEC authoritative enums).
  *
  * Why this file exists (verified 2026-08-28 reconciliation): the operator/decision
  * enums were previously scattered across 6 places with 4 different values, drifting

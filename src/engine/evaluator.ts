@@ -34,15 +34,15 @@ import { compileSimpleCondition } from './expr-tree/simple-compiler.js';
 import { fromSExpr, toSExpr } from './expr-tree/s-expression.js';
 import { ExprLimitError } from './expr-tree/limits.js';
 
-// SPEC v2.0 §9: override level ranking — critical > high > normal > low
-// normal/low do NOT enable override behavior (§9)
+// SPEC §4.1: override level ranking — critical > high > normal > low
+// normal/low do NOT enable override behavior (§4.1)
 const OVERRIDE_RANK: Record<OverrideLevel, number> = { critical: 0, high: 1, normal: 2, low: 3 };
 /** Returns rank for sorting; undefined/non-enabling levels sort last */
 function overrideSortRank(rule: RuleDefinition): number {
   if (!rule.override) return 4;
   return OVERRIDE_RANK[rule.override] ?? 4;
 }
-/** SPEC v2.0 §9: only critical/high enable override behavior */
+/** SPEC §4.1: only critical/high enable override behavior */
 function overrideEnables(rule: RuleDefinition): boolean {
   return rule.override === 'critical' || rule.override === 'high';
 }
@@ -58,7 +58,7 @@ function isRestrictive(decision: string): boolean {
 }
 
 export class Evaluator {
-  // SPEC v2.0 §11: within/rate stateful operators — state externalized to GuardStateManager (2026-08-15)
+  // SPEC §5: within/rate stateful operators — state externalized to GuardStateManager (2026-08-15)
   // Expression tree/evaluation stays pure (E1); sliding-window counting maintained by stateManager outside the tree.
   private readonly stateManager: GuardStateManager;
 
@@ -103,7 +103,7 @@ export class Evaluator {
 
     const enabled = rules.filter(r => r.enabled);
     if (enabled.length === 0) {
-      // SPEC v2.0 §11: metadata.decision fallback takes precedence over default ALLOW
+      // SPEC §5: metadata.decision fallback takes precedence over default ALLOW
       const metadataDecision = context['metadata.decision'] as string | undefined;
       if (metadataDecision) {
         return {
@@ -137,7 +137,7 @@ export class Evaluator {
     const allMatched: RuleMatch[] = [];
     // RFC-002 §2.4: stateful operator (within/rate) window count snapshot (into DO temporal_state)
     const temporalState: TemporalStateEntry[] = [];
-    // SPEC v2.0 §11: unless exemptions recorded separately — NOT in matchedRules
+    // SPEC §5: unless exemptions recorded separately — NOT in matchedRules
     // (v1.1 vectors DO-024/DO-026 expect matched_rules=[] when only unless fires)
     const unlessExemptions: RuleMatch[] = [];
     let finalDecision: Decision = 'PASS';
@@ -158,7 +158,7 @@ export class Evaluator {
 
       // §7.1 item 6: catch-all rules are inert once any explicit rule matched.
       if (isCatchAllRule(rule) && anyExplicitMatched) continue;
-        // SPEC v2.0 §11: unless exemption — evaluated BEFORE when
+        // SPEC §5: unless exemption — evaluated BEFORE when
         if (rule.unless?.conditions && rule.unless.conditions.length > 0) {
           const unlessLogic = rule.unless.logic ?? 'AND';
           const unlessExempt =
@@ -209,12 +209,12 @@ export class Evaluator {
           return this.evaluateWorkflowStep(context);
         }
 
-        // SPEC v2.0 §10 + §9: override semantics
+        // SPEC §10 + §4.1: override semantics
         // - override only allows restrictive→ALLOW (safe direction); ALLOW→restrictive is NOT allowed (DO-011)
         // - override critical/high enables cross-Ring coverage (DO-010: Ring 3 ALLOW covers Ring 0 DENY)
         // - EMERGENCY_HALT / WORKFLOW full short-circuit; DENY does NOT short-circuit
         //
-        // §9 gate: once a decision is made, non-override non-terminating rules
+        // §4.1 gate: once a decision is made, non-override non-terminating rules
         // are treated differently by decision type:
         // - ALLOW + override-enabling + finalDecision=restrictive → allow override (below)
         // - ALLOW + non-override + finalDecision=ALLOW → allow instruction accumulation
@@ -247,7 +247,7 @@ export class Evaluator {
             finalDecision = 'ALLOW';
             lastDecisionRing = ring;
           }
-          // §9: accumulate instructions even when finalDecision is already ALLOW
+          // §4.1: accumulate instructions even when finalDecision is already ALLOW
           if (match.instruction) {
             finalInstruction = finalInstruction
               ? `${finalInstruction}; ${match.instruction}`
@@ -257,7 +257,7 @@ export class Evaluator {
         }
 
         if (match.decision === 'EMERGENCY_HALT') {
-          // SPEC v2.0 §7.0.2: EMERGENCY_HALT 命中即短路 — full short-circuit on hit, any ring.
+          // SPEC §7.0.2: EMERGENCY_HALT 命中即短路 — full short-circuit on hit, any ring.
           finalDecision = 'EMERGENCY_HALT';
           lastDecisionRing = ring;
           finalReason = match.reason;
@@ -278,7 +278,7 @@ export class Evaluator {
         }
 
         if (isRestrictive(match.decision)) {
-          // SPEC v2.0 §9: a higher-ring restrictive decision (DENY/ROLLBACK/QUARANTINE)
+          // SPEC §4.1: a higher-ring restrictive decision (DENY/ROLLBACK/QUARANTINE)
           // can override a lower-ring ALLOW; within same ring, a restrictive decision
           // does NOT override ALLOW (unsafe direction; same-ring override restrictive
           // after ALLOW → popped).
@@ -291,7 +291,7 @@ export class Evaluator {
             finalExplanation = match.explanation;
             finalAlternative = match.alternative;
           } else if (finalDecision === 'ALLOW') {
-            // SPEC v2.0 §9 + §10:
+            // SPEC §4.1 + §10:
             // - Cross-ring: higher-ring restrictive decision overrides lower-ring ALLOW
             // - Same-ring: normal restrictive decision overrides ALLOW
             // - Same-ring: override restrictive decision after ALLOW → popped (DO-011: unsafe)
@@ -331,7 +331,7 @@ export class Evaluator {
     }
 
     if (allMatched.length === 0) {
-      // SPEC v2.0 §11: priority chain — rules[].then > metadata.decision > default PASS
+      // SPEC §5: priority chain — rules[].then > metadata.decision > default PASS
       // metadata.decision is a file-level field; callers may inject it via context['metadata.decision']
       // DO-030: metadata.decision=DENY, no rules match → DENY (fallback kicks in)
       const metadataDecision = context['metadata.decision'] as string | undefined;
@@ -416,7 +416,7 @@ export class Evaluator {
   }
 
   // ============================================
-  // SPEC v2.0 §11: field/operator/value evaluation
+  // SPEC §5: field/operator/value evaluation
   // ============================================
 
   /**
@@ -494,7 +494,7 @@ export class Evaluator {
   }
 
   private evaluateLeaf(cond: RuleCondition, context: Record<string, unknown>): boolean {
-    // E7 + §12 Expression projection: structured expression tree (S-expression) takes priority, evaluate directly via the tree kernel
+    // E7 + §5.3 Expression projection: structured expression tree (S-expression) takes priority, evaluate directly via the tree kernel
     if (cond.expr !== undefined && cond.expr !== null) {
       try {
         const tree = fromSExpr(cond.expr);
@@ -543,7 +543,7 @@ export class Evaluator {
         const result = this.treeEvaluator.evaluate(tree, evalCtx);
         const matched = result.value === true;
 
-        // SPEC v2.0 §11: rate limiting (post-match: only counts on field match; includes value isolation, different operations rate-limit independently)
+        // SPEC §5: rate limiting (post-match: only counts on field match; includes value isolation, different operations rate-limit independently)
         // Fix (2026-08-27): the original semantics were inverted (blocked within quota, allowed when exceeded), record relied on "commit after match" causing a deadlock,
         // and rate was pre-matched so non-matching fields also counted, and the rate key omitted value causing shared counters.
         // Correct semantics: allow the first N (and count), block from the N+1-th onwards.
@@ -559,7 +559,7 @@ export class Evaluator {
           // Exceeded: condition satisfied (trigger block)
         }
 
-        // SPEC v2.0 §11: within dedup (post-match: only counts on field match; includes value isolation)
+        // SPEC §5: within dedup (post-match: only counts on field match; includes value isolation)
         // Fix (2026-08-27): the original was dead code (first time no history → no match → not recorded → never any history).
         // Correct semantics: first trigger (no history) → record + allow; re-trigger within the window (has history) → block.
         if (matched && cond.within) {

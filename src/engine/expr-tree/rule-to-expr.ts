@@ -77,7 +77,7 @@ export function ruleWhenToExpr(rule: RuleDefinition): ExprNode | null {
  * irregular JSON + alias normalization. Returns null when not compilable.
  */
 export function jsonWhenToExpr(when: Record<string, unknown>): ExprNode | null {
-  // §12 Expression projection: prefer the when.expr wrapped form (SPEC §12 authoritative),
+  // §5.3 Expression projection: prefer the when.expr wrapped form (SPEC §5.3 authoritative),
   // compatible with the old form where when is a tree at the top level.
   const exprValue = extractWhenExpr(when);
   if (exprValue !== null) {

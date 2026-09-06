@@ -1,5 +1,5 @@
 /**
- * eval-warning — evaluation warning (SPEC v2.0 §10 E3)
+ * eval-warning — evaluation warning (SPEC §10 E3)
  *
  * Non-fatal issues during evaluation are recorded in eval_warnings; the fold direction is by tier
  * per E12:
@@ -12,7 +12,7 @@
  */
 
 export type EvalWarningKind =
-  | 'type_mismatch' // strict type matching failed (§11.2)
+  | 'type_mismatch' // strict type matching failed (§5.2)
   | 'division_by_zero' // division by zero
   | 'field_absent' // field absent (null propagation)
   | 'quantifier_empty' // quantifier empty-array safe fold (E8)

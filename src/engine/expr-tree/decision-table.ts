@@ -1,12 +1,12 @@
 /**
- * decision-table — decision-table projection (SPEC v2.0 §13)
+ * decision-table — decision-table projection (SPEC §5.4)
  *
  * A decision table is a matrix form (rows = condition combinations, columns = condition
  * dimensions), for pricing/approval/discount rules written by business/finance people.
  * Compiled to the same kernel (expression tree) — each row's condition combination compiles
  * to an and tree; row semantics are explained below.
  *
- * SPEC §13 only defines the property "matrix form, compiled to the same kernel", not the
+ * SPEC §5.4 only defines the property "matrix form, compiled to the same kernel", not the
  * concrete row/column syntax. This implementation uses standard decision-table semantics
  * (DMN simplified) and [explicitly annotates] this structural convention, to avoid dangling:
  * - column = condition field (column name)

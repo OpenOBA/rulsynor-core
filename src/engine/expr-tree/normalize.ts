@@ -1,5 +1,5 @@
 /**
- * normalize — string NFC normalization (SPEC v2.0 §10 E10)
+ * normalize — string NFC normalization (SPEC §10 E10)
  *
  * String literals, before entering the canonical tree / hash, uniformly apply Unicode NFC
  * normalization, ensuring that "visually identical but different code points" strings

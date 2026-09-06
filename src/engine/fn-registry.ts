@@ -1,5 +1,5 @@
 /**
- * ERDL Function Registry — SPEC v2.0 §16.1
+ * ERDL Function Registry — SPEC Appendix D
  *
  * Industry function registration, sandbox execution, resource quotas,
  * and degradation protocol (on_timeout fallback).
@@ -21,10 +21,10 @@ export interface FnSignature {
   returns: string;
 }
 
-/** SPEC v2.0 §16.1: Degradation behavior on timeout */
+/** SPEC Appendix D: Degradation behavior on timeout */
 export type OnTimeout = 'throw' | 'fallback';
 
-/** SPEC v2.0 §16.1: Sandbox scope constraint */
+/** SPEC Appendix D: Sandbox scope constraint */
 export type SandboxScope = 'pure' | 'network' | 'filesystem';
 
 export interface FnRegistration {
@@ -32,17 +32,17 @@ export interface FnRegistration {
   impl: (...args: unknown[]) => unknown;
   /** Timeout in ms, default 5000 */
   timeoutMs?: number;
-  /** SPEC v2.0 §16.1: Degradation protocol. Default: 'throw' */
+  /** SPEC Appendix D: Degradation protocol. Default: 'throw' */
   onTimeout?: OnTimeout;
   /** Fallback value when onTimeout='fallback' */
   fallbackValue?: unknown;
-  /** SPEC v2.0 §16.1: Sandbox scope. Default: 'pure' */
+  /** SPEC Appendix D: Sandbox scope. Default: 'pure' */
   sandbox?: SandboxScope;
-  /** SPEC v2.0 §16.1: determinism declaration — functions used on the Guard evaluation path must declare and guarantee determinism. Default false (non-deterministic, must not enter Guard evaluation) */
+  /** SPEC Appendix D: determinism declaration — functions used on the Guard evaluation path must declare and guarantee determinism. Default false (non-deterministic, must not enter Guard evaluation) */
   deterministic?: boolean;
 }
 
-/** SPEC v2.0 §16.1: Resource quota */
+/** SPEC Appendix D: Resource quota */
 export interface FnQuota {
   /** Max total invocations (cumulative), 0 = unlimited */
   maxInvocations?: number;
@@ -80,7 +80,7 @@ export class ERDLFnRegistry {
     return this.fns.get(name)?.signature;
   }
 
-  /** SPEC v2.0 §16.1: query whether a function declares determinism (Guard evaluation path requires determinism) */
+  /** SPEC Appendix D: query whether a function declares determinism (Guard evaluation path requires determinism) */
   isDeterministic(name: string): boolean {
     return this.fns.get(name)?.deterministic === true;
   }
@@ -142,7 +142,7 @@ export class ERDLFnRegistry {
         Promise.resolve(reg.impl(...args)),
         new Promise<never>((_, reject) =>
           setTimeout(() => {
-            // SPEC v2.0 §16.1: on_timeout degradation
+            // SPEC Appendix D: on_timeout degradation
             const onTimeout = reg.onTimeout ?? 'throw';
             if (onTimeout === 'fallback') {
               // Fallback: resolve with fallback value — don't reject

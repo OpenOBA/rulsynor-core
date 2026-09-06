@@ -1,9 +1,9 @@
 /**
  * Rulsynor — Rule YAML Serializer
  *
- * Converts RuleConfig DB entities to ERDL SPEC v2.0 §11 YAML files.
+ * Converts RuleConfig DB entities to ERDL SPEC §5 YAML files.
  *
- * SPEC v2.0 §11 format ironclad rules (F1-F8):
+ * SPEC §5 format ironclad rules (F1-F8):
  *   F1 top-level order: protocol → version → metadata → rules
  *   F2 metadata: name → description → category → decision → tags
  *   F3 rules[]: name → description → priority → override → ring → when → then → message → instruction → unless
@@ -13,11 +13,11 @@
  *   F8 protocol must come first
  *
  * Implementation strategy: not relying on yaml.dump() (uncontrollable JS object key order and quoting),
- * instead using a custom template to concatenate field by field, ensuring field order and quoting style satisfy SPEC v2.0 §11.
+ * instead using a custom template to concatenate field by field, ensuring field order and quoting style satisfy SPEC §2.3.
  *
  * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-20 · P2 DB → FS sync
- * @rework 2026-07-26 · template-splicing aligned with SPEC v2.0 §11 F1-F8
+ * @rework 2026-07-26 · template-splicing aligned with SPEC §5 F1-F8
  */
 
 import * as fs from 'node:fs';
@@ -37,7 +37,7 @@ interface Spec5Metadata {
   description: string;
   category: string;
   decision: string;
-  /** SPEC v2.0 §11 F2: tags is a bare-word list, optional */
+  /** SPEC §5 F2: tags is a bare-word list, optional */
   tags?: unknown[];
 }
 
@@ -67,7 +67,7 @@ interface Spec5Document {
   rules: Spec5Rule[];
 }
 
-/** SPEC v2.0 §11 structured data extracted from rule.content */
+/** SPEC §5 structured data extracted from rule.content */
 export interface ExtractedSpec5 {
   protocol: string;
   version: string;
@@ -87,7 +87,7 @@ export class RuleYamlSerializer {
   }
 
   /**
-   * Convert a RuleConfig DB entity to SPEC v2.0 §11 YAML string.
+   * Convert a RuleConfig DB entity to SPEC §5 YAML string.
    *
    * Template-splicing: concatenate field by field per F1-F8, not relying on yaml.dump().
    * Prioritizes reading the full SPEC structure from rule.content; if content is not the SPEC5 nested format,
@@ -195,10 +195,10 @@ export class RuleYamlSerializer {
   }
 
   // ============================================
-  // Private: structured document (for programmatic consumption, structure aligned with SPEC v2.0 §11 F2)
+  // Private: structured document (for programmatic consumption, structure aligned with SPEC §5 F2)
   // ============================================
 
-  /** Return the SPEC v2.0 §11 structured document object (metadata no longer includes priority/ring/enabled/source). */
+  /** Return the SPEC §5 structured document object (metadata no longer includes priority/ring/enabled/source). */
   toSpec5Document(rule: RuleConfig): Spec5Document {
     const data = this.extractSpec5(rule);
     const m = data.metadata;
@@ -243,7 +243,7 @@ export class RuleYamlSerializer {
   // ============================================
 
   /**
-   * Extract the SPEC v2.0 §11 structure from a RuleConfig.
+   * Extract the SPEC §5 structure from a RuleConfig.
    * Prioritizes the full { protocol, version, metadata, rules } already in content;
    * otherwise constructs a minimal structure from DB fields (compatible with flat/legacy content).
    */
@@ -263,7 +263,7 @@ export class RuleYamlSerializer {
       };
     }
 
-    // Fallback: flat / legacy content → construct minimal SPEC v2.0 §11
+    // Fallback: flat / legacy content → construct minimal SPEC §5
     const raw = content;
     const name = (raw.name as string) ?? rule.name;
     const decision = (raw.then as string) ?? rule.decision ?? 'ALLOW';
@@ -291,7 +291,7 @@ export class RuleYamlSerializer {
 
   /**
    * Template-splicing: generate the YAML string line by line per F1-F8.
-   * Public so template-engine can produce SPEC v2.0 §11 YAML without a RuleConfig entity.
+   * Public so template-engine can produce SPEC §5 YAML without a RuleConfig entity.
    */
   serializeSpec5(data: ExtractedSpec5): string {
     const lines: string[] = [];
@@ -384,7 +384,7 @@ export class RuleYamlSerializer {
     if (typeof block === 'object' && !Array.isArray(block)) {
       const w = block as Record<string, unknown>;
 
-      // SPEC v2.0 §12 authoritative: when.expr wrapped form ({ expr: {tree} })
+      // SPEC §5.3 authoritative: when.expr wrapped form ({ expr: {tree} })
       if ('expr' in w) {
         try {
           const inner = w.expr;
@@ -398,7 +398,7 @@ export class RuleYamlSerializer {
         }
       }
 
-      // §12 Expression projection + compatible form: when is an S-expression expression tree at the top level
+      // §5.3 Expression projection + compatible form: when is an S-expression expression tree at the top level
       // (no conditions / logic / expr keys, try serializing as a tree; fall back to flat on failure)
       if (!('conditions' in w) && !('logic' in w) && !('expr' in w)) {
         try {

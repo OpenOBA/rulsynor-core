@@ -1,5 +1,5 @@
 /**
- * Rule Quality Gate — SPEC v2.0 §16
+ * Rule Quality Gate — SPEC §7.4
  *
  * Aggregates all validation checks and produces a quality report
  * when rules are loaded from DB or file system.
@@ -40,23 +40,23 @@ export interface QualityGateRuleDetail {
 
 export class RuleQualityGate {
   /**
-   * Check all loaded rules against SPEC v2.0 quality gates.
+   * Check all loaded rules against SPEC quality gates.
    *
-   * §16 rule quality gate (this implementation has 11 checks = 8 SPEC core + 3 implementation extensions):
+   * §7.4 rule quality gate (this implementation has 11 checks = 8 SPEC core + 3 implementation extensions):
    *   Error (reject on load):
    *     1. wild-when-with-blocking-then (§10.6)
    *     2. no-condition-on-security-rule (§10.6)  ← v1.1 new
-   *     3. guard-with-unless (§11)               ← v1.1 new
-   *     4. unless-with-temporal (§11)            ← v1.1 new
+   *     3. guard-with-unless (§5)               ← v1.1 new
+   *     4. unless-with-temporal (§5)            ← v1.1 new
    *     5. regex-redos-risk (§10.4)                  ← v1.1 new
    *     6. ast-complexity-exceeded (§10 E4)           ← v1.1 new
    *   Warning (record log):
-   *     7. empty-message-on-blocking-rule (§16)
-   *     8. non-standard-name (§16)
-   *     9. non-standard-name-full (§16)          ← v1.1 new
-   *     10. no-tool-constraint (§16)             ← v1.1 upgraded info→warning
+   *     7. empty-message-on-blocking-rule (§7.4)
+   *     8. non-standard-name (§7.4)
+   *     9. non-standard-name-full (§7.4)          ← v1.1 new
+   *     10. no-tool-constraint (§7.4)             ← v1.1 upgraded info→warning
    *   Info (record hint):
-   *     11. no-path-constraint (§16)            ← v1.1 upgraded info→warning
+   *     11. no-path-constraint (§7.4)            ← v1.1 upgraded info→warning
    */
   check(rules: RuleDefinition[]): QualityGateReport {
     const details: QualityGateRuleDetail[] = [];
@@ -73,7 +73,7 @@ export class RuleQualityGate {
       );
       issues.push(...whenResult.errors);
 
-      // §16: blocking message mandatory
+      // §7.4: blocking message mandatory
       // CORRECT decision stores its message in `correction`, not `reason` —
       // check the appropriate field based on decision type (see parseThenAction)
       const decision = rule.action?.decision ?? 'ALLOW';
@@ -81,20 +81,20 @@ export class RuleQualityGate {
       const msgErr = ruleValidator.checkBlockingMessageEmpty(decision, messageField ?? '');
       if (msgErr) issues.push(msgErr);
 
-      // §16: naming convention
+      // §7.4: naming convention
       const nameErr = ruleValidator.checkNamingConvention(rule.name);
       if (nameErr) issues.push(nameErr);
 
-      // §11: decision consistency
+      // §5: decision consistency
       // RuleDefinition.action.decision is metadata level
       // content.then is not directly available in RuleDefinition
       // Skip for now — RuleService.createFromTemplate handles this on write path
 
-      // §11: Guard rules MUST NOT have unless
+      // §5: Guard rules MUST NOT have unless
       const guardErr = ruleValidator.checkGuardWithUnless(rule);
       if (guardErr) issues.push(guardErr);
 
-      // §11: unless MUST NOT contain within/rate
+      // §5: unless MUST NOT contain within/rate
       const temporalErr = ruleValidator.checkUnlessWithTemporal(rule);
       if (temporalErr) issues.push(temporalErr);
 
@@ -110,15 +110,15 @@ export class RuleQualityGate {
       const astErr = ruleValidator.checkASTComplexity(rule);
       if (astErr) issues.push(astErr);
 
-      // §16: full naming-format validation (error, binary judgment)
+      // §7.4: full naming-format validation (error, binary judgment)
       const nameFullErr = ruleValidator.checkNamingConventionFull(rule);
       if (nameFullErr) issues.push(nameFullErr);
 
-      // §16: no-tool-constraint (warning) — coding/security rules should specify tool.name
+      // §7.4: no-tool-constraint (warning) — coding/security rules should specify tool.name
       const toolErr = ruleValidator.checkToolConstraint(rule);
       if (toolErr) issues.push(toolErr);
 
-      // §16: Guard then restriction — Guard rules only allow Ring 0-2 + CORRECT/ALLOW
+      // §7.4: Guard then restriction — Guard rules only allow Ring 0-2 + CORRECT/ALLOW
       const guardThenErr = ruleValidator.checkGuardThenRestriction(rule);
       if (guardThenErr) issues.push(guardThenErr);
 

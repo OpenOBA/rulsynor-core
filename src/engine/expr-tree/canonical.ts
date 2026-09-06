@@ -1,10 +1,10 @@
 /**
- * canonical — canonical expression tree + hash (SPEC v2.0 §10.3 + §28)
+ * canonical — canonical expression tree + hash (SPEC §10.3 + §8.2)
  *
  * The hashed object = the canonical tree (not the serialized text). Canonicalization rules:
  * - node order is fixed: the S-expression children array order IS the canonical order (fixed at construction)
  * - field names are load-bearing: the field path enters the hash, frozen and unchangeable
- * - literal canonicalization: number stays number (JCS IEEE 754, strictly typed, distinguished from string), string NFC (E10); monetary/float values MUST use strings (§28)
+ * - literal canonicalization: number stays number (JCS IEEE 754, strictly typed, distinguished from string), string NFC (E10); monetary/float values MUST use strings (§8.2)
  * - var canonicalization: only '$'/'$.path'
  * - metadata stripped: S-expressions carry no metadata (this implementation adds none), naturally satisfied
  *

@@ -1,7 +1,7 @@
 /**
  * date-utils — time arithmetic utilities (UTC semantics, replaces date-fns, keeps zero-dependency + determinism)
  *
- * Aligns with SPEC v2.0 §10.5 timezone semantics: all time nodes evaluate uniformly in UTC,
+ * Aligns with SPEC §10.5 timezone semantics: all time nodes evaluate uniformly in UTC,
  * guaranteeing byte-identical results cross-implementation and cross-timezone (stored/transmitted UTC,
  * business local timezone converted by the engine when as_of is injected).
  *

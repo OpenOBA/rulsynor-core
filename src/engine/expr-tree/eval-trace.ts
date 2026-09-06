@@ -1,12 +1,12 @@
 /**
- * eval-trace — evaluation provenance chain (SPEC v2.0 §17, E6 "tree as evidence")
+ * eval-trace — evaluation provenance chain (SPEC §7.0.3, E6 "tree as evidence")
  *
  * Expression-layer evaluation is "tree as evidence": every derived value gets one
  * DerivationRecord, forming an independently recomputable provenance chain;
  * eval_trace is the node-level reasoning chain — Expression MUST, Simple SHOULD — recorded
  * into the decision object.
  *
- * DerivationRecord fields (SPEC §17):
+ * DerivationRecord fields (SPEC §7.0.3):
  * - node identifier (node type + position)
  * - semantic canonical hash (the node's hash in its canonical form)
  * - context snapshot hash (a snapshot of the evaluation context, not a reference)

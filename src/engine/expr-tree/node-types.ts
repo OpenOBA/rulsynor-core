@@ -1,5 +1,5 @@
 /**
- * ERDL expression tree — typed expression-tree kernel (SPEC v2.0 §10 SafeExpr expression engine)
+ * ERDL expression tree — typed expression-tree kernel (SPEC §10 SafeExpr expression engine)
  *
  * The semantic kernel is a typed expression tree. This file's TS discriminated union has 20 types:
  * parameterized nodes (compare 6 operators / string 4 operators / arith 5 operators /
@@ -11,7 +11,7 @@
  * This file defines two views of the kernel: the [in-memory type representation] and the
  * [S-expression canonical serialization]:
  *  - TS internal: discriminated union (type field), for the evaluator's exhaustive switch + type safety
- *  - S-expression (SPEC §12 external form, key names are nodes): for cross-implementation hashing / vectors / LLM generation benchmarking
+ *  - S-expression (SPEC §5.3 external form, key names are nodes): for cross-implementation hashing / vectors / LLM generation benchmarking
  *
  * The two are two projections of the same tree with zero semantic loss, not two evaluators (E7).
  *
