@@ -1,5 +1,0 @@
-style: prettier-format engine + test files
-
-Fix the formatting drift introduced by the total_evaluated change (the
-evaluatedCount increment was over-indented). Prettier-clean, no semantic
-change.
