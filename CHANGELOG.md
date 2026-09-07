@@ -1,0 +1,82 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Version lifecycle: [`VERSIONING.md`](./VERSIONING.md).
+
+## [1.1.0] - 2026-09-07
+
+> **Version-line continuation.** The premature `1.0.0` release (2026-08-07) was
+> superseded: its engine was not aligned to SPEC v2.0. This repository was then
+> restarted on an internal `0.1.0-alpha` line while the engine was realigned and
+> the Decision Object migrated. `1.1.0` is the first public release on the
+> continued line, and supersedes both. The legacy `1.0.0` history is archived at
+> [`docs/archive/CHANGELOG-1.0.0-legacy.md`](./docs/archive/CHANGELOG-1.0.0-legacy.md).
+
+### Added
+
+- **Deterministic kernel** — single expression-tree evaluation core (SPEC E7):
+  30 operators (28 condition + 2 modifiers), 34 semantic nodes, fixed-point
+  arithmetic (scale=14, half-even), string NFC normalization.
+- **Decision Object v1.5 flat-hash** (`erdl-do-v1.5-hash-flat`): JCS (RFC 8785)
+  + SHA-256, UUID v7 decision/execution ids, `evaluation.temporal_state`
+  (within/rate window snapshots) and `evaluation.matched_rules[].canonical_tree`
+  in the hash preimage; signature mode (ECDSA P-256) pending RFC-002 §10.
+- **Out-of-the-box CLI**: `rulsynor chat` (7-step method), `setup`, `rules`,
+  `audit list|show`, `mcp` (stdio JSON-RPC), `demo`.
+- **Audit persistence** — SQLite `audit_records` (hash-idempotent writes,
+  read-only views).
+- **LLM tool-call loop** — function calling (tool_call id + tool role),
+  OpenAI-compatible default client.
+- **CORRECT 3-round correction loop** wired into the runtime (state machine
+  `advanceCorrectLoop`; re-issue guidance to the agent, deterministic re-guard,
+  up to 3 rounds, then escalate to human).
+- **User rule loading** (`loadRulesFromDir`) and runtime `context` injection
+  (`context.*` rules deterministically injected by the host).
+
+### Changed
+
+- License: runtime MIT → BSL 1.1 (Change Date 2030-06-09, Change License
+  GPL 3.0; free for non-production use).
+- Preset rules 30 → 34 (cross-tool security rules split per tool).
+- Rule name prefixes enforce a registered allow-list (unregistered → rejected).
+- Package renamed to `@openoba/rulsynor-core`.
+
+### Fixed
+
+- **`total_evaluated` count drift** — the evaluator derived it inconsistently
+  (`allMatched.length` on the EMERGENCY_HALT short-circuit path, `enabled.length`
+  elsewhere). An explicit `evaluatedCount` now counts rules whose unless/when
+  evaluation was actually entered. (Review finding, RavindraAnnam.)
+- **Catch-all (empty-condition) ALLOW never rewrites an explicit DENY** (§7.1
+  item 6) — symmetric catch-all guard on both the ALLOW and DENY branches.
+- **P0 field-path fix** — rule field paths are `tool.*` (Entity namespace), not
+  `context.tool.*`; 30 preset rules were silently ALLOW-ing on a wrong context
+  shape.
+- **11 cross-tool security rules missing `tool.name`** — scoped and split.
+- **`context.*` rules dormant** — runtime now injects `context`.
+- **Decision Object v1.3 → v1.5** field alignment (UUID v7, temporal_state,
+  canonical_tree, jurisdiction trimming).
+- **`policies[].id` aligned with `matched_rules[].rule_id`** — P5
+  tree-snapshot-divergence detection was silently dead.
+- **Date nodes string semantics** — `date_add`/`date_part`/`month_last_day`
+  take a date string (full ISO datetime output), aligned to the engine.
+- **Type-mismatched `eq`/`ne` fold false**; **`!= null` on a present field
+  folds true** (G4); **`date_add` amount MUST be an integer** (§7.3(f)).
+- **AID 28-bit** (instanceId 8→6, SPEC §5.3).
+- **audit show accepts the `sha256:` prefix** on hash lookup.
+
+### Security
+
+- Guard fail-close (E12 tier folding); runtime decision dispatch never executes
+  tools for non-ALLOW verdicts; audit chain anchored via `previousAuditHash`;
+  `risk_level=critical` forces signature mode.
+
+---
+
+## Historical
+
+The superseded `1.0.0` release history is preserved at
+[`docs/archive/CHANGELOG-1.0.0-legacy.md`](./docs/archive/CHANGELOG-1.0.0-legacy.md).
