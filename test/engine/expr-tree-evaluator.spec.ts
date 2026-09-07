@@ -310,19 +310,40 @@ describe('ExprTreeEvaluator — 算术 / 时间 / 聚合', () => {
     expect(ev.evaluate(node, ctx({})).value).toBe(10);
   });
   it('epoch_ms no-timezone datetime == explicit Z (UTC, host-TZ independent)', () => {
-    const noTz: ExprNode = { type: 'epoch_ms', arg: { type: 'literal', value: '2026-01-01T12:30:45' } };
-    const withZ: ExprNode = { type: 'epoch_ms', arg: { type: 'literal', value: '2026-01-01T12:30:45Z' } };
+    const noTz: ExprNode = {
+      type: 'epoch_ms',
+      arg: { type: 'literal', value: '2026-01-01T12:30:45' },
+    };
+    const withZ: ExprNode = {
+      type: 'epoch_ms',
+      arg: { type: 'literal', value: '2026-01-01T12:30:45Z' },
+    };
     expect(ev.evaluate(noTz, ctx({})).value).toBe(1767270645000);
     expect(ev.evaluate(noTz, ctx({})).value).toBe(ev.evaluate(withZ, ctx({})).value);
   });
   it('epoch_ms honors explicit offsets (UTC = local - offset)', () => {
-    const plus8: ExprNode = { type: 'epoch_ms', arg: { type: 'literal', value: '2026-01-01T12:30:45+08:00' } };
-    const minus5: ExprNode = { type: 'epoch_ms', arg: { type: 'literal', value: '2026-01-01T12:30:45-05:00' } };
+    const plus8: ExprNode = {
+      type: 'epoch_ms',
+      arg: { type: 'literal', value: '2026-01-01T12:30:45+08:00' },
+    };
+    const minus5: ExprNode = {
+      type: 'epoch_ms',
+      arg: { type: 'literal', value: '2026-01-01T12:30:45-05:00' },
+    };
     expect(ev.evaluate(plus8, ctx({})).value).toBe(1767241845000);
     expect(ev.evaluate(minus5, ctx({})).value).toBe(1767288645000);
   });
   it('epoch_ms rejects non-ISO and invalid calendar dates (strict)', () => {
-    for (const bad of ['Jan 1 2026', '2026/01/01', '2026-02-30', '2026-13-01', '2026-01-01T25:00:00', 'not-a-date', '2026-01-01T12:30:45.123Z', '2026-01-01T12:30:45.5']) {
+    for (const bad of [
+      'Jan 1 2026',
+      '2026/01/01',
+      '2026-02-30',
+      '2026-13-01',
+      '2026-01-01T25:00:00',
+      'not-a-date',
+      '2026-01-01T12:30:45.123Z',
+      '2026-01-01T12:30:45.5',
+    ]) {
       const node: ExprNode = { type: 'epoch_ms', arg: { type: 'literal', value: bad } };
       expect(ev.evaluate(node, ctx({})).value).toBeNull();
     }

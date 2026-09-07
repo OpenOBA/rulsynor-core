@@ -160,132 +160,146 @@ export class Evaluator {
 
       // §7.1 item 6: catch-all rules are inert once any explicit rule matched.
       if (isCatchAllRule(rule) && anyExplicitMatched) continue;
-        // SPEC §5: unless exemption — evaluated BEFORE when
-        evaluatedCount += 1;
-        if (rule.unless?.conditions && rule.unless.conditions.length > 0) {
-          const unlessLogic = rule.unless.logic ?? 'AND';
-          const unlessExempt =
-            unlessLogic === 'OR'
-              ? rule.unless.conditions.some(cond => this.evaluateLeaf(cond, context))
-              : rule.unless.conditions.every(cond => this.evaluateLeaf(cond, context));
-          if (unlessExempt) {
-            unlessExemptions.push({
-              ruleId: rule.name,
-              ruleName: `${rule.name}/unless`,
-              decision: 'ALLOW',
-              reason: `unless condition matched — rule exempt`,
-              priority: rule.priority,
-              ring: (rule.action.ring ?? 3) as RingLevel,
-            });
-            if (finalDecision === 'PASS') {
-              finalDecision = 'ALLOW';
-              lastDecisionRing = ring;
-            }
-            continue;
-          }
-        }
-
-        const matched =
-          rule.conditions.length === 0 ||
-          (rule.conditionLogic === 'OR'
-            ? rule.conditions.some(cond => this.evaluateLeaf(cond, context))
-            : rule.conditions.every(cond => this.evaluateLeaf(cond, context)));
-        if (!matched) continue;
-
-        if (!isCatchAllRule(rule)) anyExplicitMatched = true;
-
-        const match = this.makeMatch(rule, ring as RingLevel);
-        allMatched.push(match);
-        // RFC-002 §2.4: collect stateful operator (within/rate) window count snapshots into DO temporal_state
-        this.collectTemporalState(rule, temporalState);
-
-        // P4.3: WORKFLOW — if rule has workflow, start workflow mode
-        if (match.decision === 'WORKFLOW' && rule.workflow) {
-          context['workflow.active'] = {
-            rule_name: rule.name,
-            rule_id: rule.id,
-            steps: rule.workflow.steps,
-            current_step: 0,
-            started_at: new Date(this.clock.now()),
-          };
-          // Return immediately to start workflow
-          return this.evaluateWorkflowStep(context);
-        }
-
-        // SPEC §10 + §4.1: override semantics
-        // - override only allows restrictive→ALLOW (safe direction); ALLOW→restrictive is NOT allowed (DO-011)
-        // - override critical/high enables cross-Ring coverage (DO-010: Ring 3 ALLOW covers Ring 0 DENY)
-        // - EMERGENCY_HALT / WORKFLOW full short-circuit; DENY does NOT short-circuit
-        //
-        // §4.1 gate: once a decision is made, non-override non-terminating rules
-        // are treated differently by decision type:
-        // - ALLOW + override-enabling + finalDecision=restrictive → allow override (below)
-        // - ALLOW + non-override + finalDecision=ALLOW → allow instruction accumulation
-        // - ALLOW + non-override + finalDecision!=ALLOW → pop (can't change existing decision)
-        // - CORRECT/NOTIFY/REQUEST_HUMAN/… + non-override → pop
-        // - DENY/ROLLBACK/QUARANTINE: always let through
-        if (finalDecision !== 'PASS') {
-          const isTerminating = isRestrictive(match.decision);
-          const isAllowAccumulation = match.decision === 'ALLOW' && finalDecision === 'ALLOW';
-          if (!overrideEnables(rule) && !isTerminating && !isAllowAccumulation) {
-            allMatched.pop();
-            continue;
-          }
-        }
-
-        if (match.decision === 'ALLOW') {
-          // override ALLOW covers a prior restrictive decision → ALLOW (safe, cross-Ring)
-          if (overrideEnables(rule) && finalDecision !== 'PASS' && isRestrictive(finalDecision)) {
-            finalDecision = 'ALLOW';
-            lastDecisionRing = ring;
-            finalInstruction = match.instruction;
-            finalReason = match.reason;
-            finalCorrection = match.correction;
-            finalExplanation = match.explanation;
-            finalAlternative = match.alternative;
-            skipRing = ring; // override takes effect, stop evaluating this ring
-            continue;
-          }
+      // SPEC §5: unless exemption — evaluated BEFORE when
+      evaluatedCount += 1;
+      if (rule.unless?.conditions && rule.unless.conditions.length > 0) {
+        const unlessLogic = rule.unless.logic ?? 'AND';
+        const unlessExempt =
+          unlessLogic === 'OR'
+            ? rule.unless.conditions.some(cond => this.evaluateLeaf(cond, context))
+            : rule.unless.conditions.every(cond => this.evaluateLeaf(cond, context));
+        if (unlessExempt) {
+          unlessExemptions.push({
+            ruleId: rule.name,
+            ruleName: `${rule.name}/unless`,
+            decision: 'ALLOW',
+            reason: `unless condition matched — rule exempt`,
+            priority: rule.priority,
+            ring: (rule.action.ring ?? 3) as RingLevel,
+          });
           if (finalDecision === 'PASS') {
             finalDecision = 'ALLOW';
             lastDecisionRing = ring;
           }
-          // §4.1: accumulate instructions even when finalDecision is already ALLOW
-          if (match.instruction) {
-            finalInstruction = finalInstruction
-              ? `${finalInstruction}; ${match.instruction}`
-              : match.instruction;
-          }
-          continue; // keep evaluating for potential DENY/override rules
+          continue;
         }
+      }
 
-        if (match.decision === 'EMERGENCY_HALT') {
-          // SPEC §7.0.2: EMERGENCY_HALT 命中即短路 — full short-circuit on hit, any ring.
-          finalDecision = 'EMERGENCY_HALT';
+      const matched =
+        rule.conditions.length === 0 ||
+        (rule.conditionLogic === 'OR'
+          ? rule.conditions.some(cond => this.evaluateLeaf(cond, context))
+          : rule.conditions.every(cond => this.evaluateLeaf(cond, context)));
+      if (!matched) continue;
+
+      if (!isCatchAllRule(rule)) anyExplicitMatched = true;
+
+      const match = this.makeMatch(rule, ring as RingLevel);
+      allMatched.push(match);
+      // RFC-002 §2.4: collect stateful operator (within/rate) window count snapshots into DO temporal_state
+      this.collectTemporalState(rule, temporalState);
+
+      // P4.3: WORKFLOW — if rule has workflow, start workflow mode
+      if (match.decision === 'WORKFLOW' && rule.workflow) {
+        context['workflow.active'] = {
+          rule_name: rule.name,
+          rule_id: rule.id,
+          steps: rule.workflow.steps,
+          current_step: 0,
+          started_at: new Date(this.clock.now()),
+        };
+        // Return immediately to start workflow
+        return this.evaluateWorkflowStep(context);
+      }
+
+      // SPEC §10 + §4.1: override semantics
+      // - override only allows restrictive→ALLOW (safe direction); ALLOW→restrictive is NOT allowed (DO-011)
+      // - override critical/high enables cross-Ring coverage (DO-010: Ring 3 ALLOW covers Ring 0 DENY)
+      // - EMERGENCY_HALT / WORKFLOW full short-circuit; DENY does NOT short-circuit
+      //
+      // §4.1 gate: once a decision is made, non-override non-terminating rules
+      // are treated differently by decision type:
+      // - ALLOW + override-enabling + finalDecision=restrictive → allow override (below)
+      // - ALLOW + non-override + finalDecision=ALLOW → allow instruction accumulation
+      // - ALLOW + non-override + finalDecision!=ALLOW → pop (can't change existing decision)
+      // - CORRECT/NOTIFY/REQUEST_HUMAN/… + non-override → pop
+      // - DENY/ROLLBACK/QUARANTINE: always let through
+      if (finalDecision !== 'PASS') {
+        const isTerminating = isRestrictive(match.decision);
+        const isAllowAccumulation = match.decision === 'ALLOW' && finalDecision === 'ALLOW';
+        if (!overrideEnables(rule) && !isTerminating && !isAllowAccumulation) {
+          allMatched.pop();
+          continue;
+        }
+      }
+
+      if (match.decision === 'ALLOW') {
+        // override ALLOW covers a prior restrictive decision → ALLOW (safe, cross-Ring)
+        if (overrideEnables(rule) && finalDecision !== 'PASS' && isRestrictive(finalDecision)) {
+          finalDecision = 'ALLOW';
+          lastDecisionRing = ring;
+          finalInstruction = match.instruction;
+          finalReason = match.reason;
+          finalCorrection = match.correction;
+          finalExplanation = match.explanation;
+          finalAlternative = match.alternative;
+          skipRing = ring; // override takes effect, stop evaluating this ring
+          continue;
+        }
+        if (finalDecision === 'PASS') {
+          finalDecision = 'ALLOW';
+          lastDecisionRing = ring;
+        }
+        // §4.1: accumulate instructions even when finalDecision is already ALLOW
+        if (match.instruction) {
+          finalInstruction = finalInstruction
+            ? `${finalInstruction}; ${match.instruction}`
+            : match.instruction;
+        }
+        continue; // keep evaluating for potential DENY/override rules
+      }
+
+      if (match.decision === 'EMERGENCY_HALT') {
+        // SPEC §7.0.2: EMERGENCY_HALT 命中即短路 — full short-circuit on hit, any ring.
+        finalDecision = 'EMERGENCY_HALT';
+        lastDecisionRing = ring;
+        finalReason = match.reason;
+        finalInstruction = match.instruction;
+        finalExplanation = match.explanation;
+        finalAlternative = match.alternative;
+        return {
+          decision: finalDecision,
+          matchedRules: allMatched,
+          unlessExemptions: unlessExemptions.length > 0 ? unlessExemptions : undefined,
+          primaryReason: finalReason ?? `${finalDecision} triggered by Ring ${ring} rule`,
+          primaryExplanation: finalExplanation,
+          primaryAlternative: finalAlternative,
+          totalEvaluated: evaluatedCount,
+          totalMatched: allMatched.length,
+          temporalState: temporalState.length > 0 ? temporalState : undefined,
+        };
+      }
+
+      if (isRestrictive(match.decision)) {
+        // SPEC §4.1: a higher-ring restrictive decision (DENY/ROLLBACK/QUARANTINE)
+        // can override a lower-ring ALLOW; within same ring, a restrictive decision
+        // does NOT override ALLOW (unsafe direction; same-ring override restrictive
+        // after ALLOW → popped).
+        if (finalDecision === 'PASS' || isRestrictive(finalDecision)) {
+          finalDecision = match.decision;
           lastDecisionRing = ring;
           finalReason = match.reason;
           finalInstruction = match.instruction;
+          finalCorrection = match.correction;
           finalExplanation = match.explanation;
           finalAlternative = match.alternative;
-          return {
-            decision: finalDecision,
-            matchedRules: allMatched,
-            unlessExemptions: unlessExemptions.length > 0 ? unlessExemptions : undefined,
-            primaryReason: finalReason ?? `${finalDecision} triggered by Ring ${ring} rule`,
-            primaryExplanation: finalExplanation,
-            primaryAlternative: finalAlternative,
-            totalEvaluated: evaluatedCount,
-            totalMatched: allMatched.length,
-            temporalState: temporalState.length > 0 ? temporalState : undefined,
-          };
-        }
-
-        if (isRestrictive(match.decision)) {
-          // SPEC §4.1: a higher-ring restrictive decision (DENY/ROLLBACK/QUARANTINE)
-          // can override a lower-ring ALLOW; within same ring, a restrictive decision
-          // does NOT override ALLOW (unsafe direction; same-ring override restrictive
-          // after ALLOW → popped).
-          if (finalDecision === 'PASS' || isRestrictive(finalDecision)) {
+        } else if (finalDecision === 'ALLOW') {
+          // SPEC §4.1 + §10:
+          // - Cross-ring: higher-ring restrictive decision overrides lower-ring ALLOW
+          // - Same-ring: normal restrictive decision overrides ALLOW
+          // - Same-ring: override restrictive decision after ALLOW → popped (DO-011: unsafe)
+          const allowRing = lastDecisionRing ?? ring;
+          if (ring > allowRing || (ring === allowRing && !overrideEnables(rule))) {
             finalDecision = match.decision;
             lastDecisionRing = ring;
             finalReason = match.reason;
@@ -293,44 +307,30 @@ export class Evaluator {
             finalCorrection = match.correction;
             finalExplanation = match.explanation;
             finalAlternative = match.alternative;
-          } else if (finalDecision === 'ALLOW') {
-            // SPEC §4.1 + §10:
-            // - Cross-ring: higher-ring restrictive decision overrides lower-ring ALLOW
-            // - Same-ring: normal restrictive decision overrides ALLOW
-            // - Same-ring: override restrictive decision after ALLOW → popped (DO-011: unsafe)
-            const allowRing = lastDecisionRing ?? ring;
-            if (ring > allowRing || (ring === allowRing && !overrideEnables(rule))) {
-              finalDecision = match.decision;
-              lastDecisionRing = ring;
-              finalReason = match.reason;
-              finalInstruction = match.instruction;
-              finalCorrection = match.correction;
-              finalExplanation = match.explanation;
-              finalAlternative = match.alternative;
-            } else {
-              allMatched.pop();
-            }
           } else {
-            // restrictive decision cannot override ESCALATE/REQUEST_HUMAN/… — remove from matched
             allMatched.pop();
           }
-          // DO-010: restrictive decisions do NOT short-circuit — continue for potential override ALLOW
-          continue;
+        } else {
+          // restrictive decision cannot override ESCALATE/REQUEST_HUMAN/… — remove from matched
+          allMatched.pop();
         }
+        // DO-010: restrictive decisions do NOT short-circuit — continue for potential override ALLOW
+        continue;
+      }
 
-        // CORRECT / REQUEST_HUMAN / ESCALATE / NOTIFY / DELEGATE / DEFER / GUIDE: accumulate
-        if (finalDecision === 'PASS') {
-          finalDecision = match.decision;
-        }
-        if (match.reason && (match.decision === 'REQUEST_HUMAN' || match.decision === 'ESCALATE')) {
-          finalReason = match.reason;
-          finalExplanation = match.explanation;
-        }
-        if (match.correction && match.decision === 'CORRECT') {
-          finalCorrection = match.correction;
-          finalExplanation = match.explanation;
-        }
-        continue; // keep evaluating
+      // CORRECT / REQUEST_HUMAN / ESCALATE / NOTIFY / DELEGATE / DEFER / GUIDE: accumulate
+      if (finalDecision === 'PASS') {
+        finalDecision = match.decision;
+      }
+      if (match.reason && (match.decision === 'REQUEST_HUMAN' || match.decision === 'ESCALATE')) {
+        finalReason = match.reason;
+        finalExplanation = match.explanation;
+      }
+      if (match.correction && match.decision === 'CORRECT') {
+        finalCorrection = match.correction;
+        finalExplanation = match.explanation;
+      }
+      continue; // keep evaluating
     }
 
     if (allMatched.length === 0) {

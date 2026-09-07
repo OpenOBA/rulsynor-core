@@ -748,7 +748,9 @@ describe('ERDL Evaluator — §7.1 item 6 catch-all (empty-condition) resolution
     const rules = [
       makeRule({
         id: 'explicit-deny',
-        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        conditions: [
+          { kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' },
+        ],
         action: { decision: 'DENY', reason: 'explicit block', ring: 0 },
         priority: 10,
       }),
@@ -767,7 +769,9 @@ describe('ERDL Evaluator — §7.1 item 6 catch-all (empty-condition) resolution
     const rules = [
       makeRule({
         id: 'explicit-other',
-        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'delete_file' }],
+        conditions: [
+          { kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'delete_file' },
+        ],
         action: { decision: 'DENY', reason: 'block delete', ring: 0 },
         priority: 10,
       }),
@@ -786,7 +790,9 @@ describe('ERDL Evaluator — §7.1 item 6 catch-all (empty-condition) resolution
     const rules = [
       makeRule({
         id: 'explicit-allow',
-        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        conditions: [
+          { kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' },
+        ],
         action: { decision: 'ALLOW', ring: 0 },
         priority: 10,
       }),
@@ -805,13 +811,17 @@ describe('ERDL Evaluator — §7.1 item 6 catch-all (empty-condition) resolution
     const rules = [
       makeRule({
         id: 'explicit-deny',
-        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        conditions: [
+          { kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' },
+        ],
         action: { decision: 'DENY', reason: 'explicit block', ring: 0 },
         priority: 10,
       }),
       makeRule({
         id: 'explicit-allow-override',
-        conditions: [{ kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' }],
+        conditions: [
+          { kind: 'context_matches', field: 'tool.name', operator: 'eq', value: 'exec' },
+        ],
         override: 'critical',
         action: { decision: 'ALLOW', ring: 3 },
         priority: 20,

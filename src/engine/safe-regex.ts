@@ -74,7 +74,10 @@ function findNonRegularConstruct(pattern: string): string | null {
       if (c === ']') inClass = false;
       continue;
     }
-    if (c === '[') { inClass = true; continue; }
+    if (c === '[') {
+      inClass = true;
+      continue;
+    }
     if (c === '(' && pattern[i + 1] === '?') {
       const kind = pattern[i + 2];
       if (kind === '=' || kind === '!') {

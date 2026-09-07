@@ -219,7 +219,14 @@ export const GUARD_ALLOWED_DECISIONS = [
  *  Consolidated 2026-09-06: ROLLBACK/QUARANTINE reclassified as restrictive (blocking)
  *  polarity (SPEC §6), so an unconditional `when:true` + ROLLBACK/QUARANTINE is as unsafe
  *  as `when:true` + DENY and must be rejected the same way. */
-export const BLOCKING_DECISIONS = ['DENY', 'CORRECT', 'REQUEST_HUMAN', 'EMERGENCY_HALT', 'ROLLBACK', 'QUARANTINE'] as const;
+export const BLOCKING_DECISIONS = [
+  'DENY',
+  'CORRECT',
+  'REQUEST_HUMAN',
+  'EMERGENCY_HALT',
+  'ROLLBACK',
+  'QUARANTINE',
+] as const;
 
 export type DODecision = (typeof DO_DECISIONS)[number];
 export type Decision = (typeof ALL_DECISIONS)[number];
