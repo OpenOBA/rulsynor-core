@@ -4,7 +4,6 @@
  * Extracts structured plan steps from LLM PLAN text for ERDL evaluation.
  * Handles variable formatting (LLMs are not strict syntax generators).
  *
- * @author Tang Haoran · 2026-07-21
  */
 
 export interface ParsedPlanStep {

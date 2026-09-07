@@ -224,7 +224,7 @@ export async function runReActLoop(opts: RuntimeOptions): Promise<RuntimeResult>
   let finalResponse = '';
   let step = 0;
 
-  // ── CORRECT loop state (original design D21 — Henry Plan A) ──
+  // ── CORRECT loop state (original design D21) ──
   // A CORRECT verdict starts a bounded retry sequence: the correction guidance is fed back
   // to the agent, which re-issues the call; every retry gets a fresh deterministic verdict.
   // Max 3 correction rounds → then escalate to human (REQUEST_HUMAN). The state machine is

@@ -12,7 +12,6 @@
  * handleRequest is pure (dependency-injected) and unit-tested; runMcpServer is
  * the thin stdio loop.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */

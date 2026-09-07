@@ -22,7 +22,6 @@
  *   - { field: "path" } = field node
  *   - { var: "path" } = var node (path is only '$'/'$.x')
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

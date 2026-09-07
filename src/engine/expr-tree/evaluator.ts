@@ -10,7 +10,6 @@
  * - E12 evaluation-error fold: the caller decides fail-close or fold-false by tier
  * - §5.2 strict type matching: no implicit type conversion
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

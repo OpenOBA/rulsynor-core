@@ -15,7 +15,6 @@
  * - uses kernel nodes beyond the Simple 28 condition operators (arithmetic/quantifier/aggregate/time) → B
  * - uses only the Simple 28 condition operators → A
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

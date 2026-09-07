@@ -18,7 +18,6 @@
  * condition tree is an and-combination of the same expression-tree kernel — this is the concrete
  * implementation of "compiled to the same kernel".
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

@@ -11,7 +11,6 @@
  *      (only DENY→ALLOW direction; never to a less-safe state)
  *   5. override within same Ring: override rule runs first regardless of priority
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-07 · updated 2026-07-09 (override + rings)
  * @license BSL 1.1
  */

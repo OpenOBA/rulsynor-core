@@ -4,7 +4,6 @@
  * Core type definitions for ERDL rules.
  * Supports personal rules, team standards, enterprise policies, and compliance mandates.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-07 · updated 2026-07-09 (compliance scope + extended categories)
  * @license BSL 1.1
  */

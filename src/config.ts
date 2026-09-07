@@ -7,7 +7,6 @@
  *   persisted — CORE stores model name/baseUrl only (see storage/index.ts).
  * - User rules dir resolution order: RULSYNOR_RULES_DIR env > ./rules (cwd) > ~/.rulsynor/rules.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */

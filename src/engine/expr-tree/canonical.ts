@@ -10,7 +10,6 @@
  *
  * Hash algorithm: JCS (RFC 8785, json-canonicalize) + SHA-256.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

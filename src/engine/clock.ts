@@ -2,7 +2,6 @@
  * Clock — time abstraction layer
  *
  * Makes time-dependent rules (within/rate) testable.
- * Must be completed in Phase 0 (Henry decision #2).
  */
 
 export interface Clock {

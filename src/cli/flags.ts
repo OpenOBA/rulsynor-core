@@ -1,7 +1,6 @@
 /**
  * Shared CLI argument helpers.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */

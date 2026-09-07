@@ -12,7 +12,6 @@
  * - 9  length/count combinations: length_gt/gte/lt/lte/eq (5) + count_gt/gte/lt/lte (4)
  * - 2  time modifiers: within/rate (state outside the tree in GuardStateManager, not compiled into tree evaluation — see below)
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

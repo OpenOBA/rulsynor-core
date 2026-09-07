@@ -11,7 +11,6 @@
  *
  * This is a PURE DATA component — no rules, no evaluation, no decisions.
  *
- * @author Tang Haoran · 2026-07-21
  */
 
 import * as fs from 'node:fs';

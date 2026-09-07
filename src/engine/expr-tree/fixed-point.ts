@@ -11,7 +11,6 @@
  * Rational representation: { num: bigint, den: bigint }, den > 0, always in simplest form (gcd reduction).
  * All operations return a normalized rational; `toDecimalString()` is the only rounding exit.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

@@ -9,7 +9,6 @@
  * Therefore registered fn implementations MUST be deployer-trusted code (same trust anchor level as the rule package).
  * SPEC §59 Worker Threads hard isolation is deferred to Phase 2 (same batch as ECDSA signing infrastructure).
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-02 · updated 2026-08-10 (sandbox + quotas + degradation)
  * @license BSL 1.1
  */

@@ -9,7 +9,6 @@
  * - only pure conditions are compiled (field+operator+value); within/rate/pattern/keywords are not compiled (stateful/non-pure)
  * - conditionLogic: AND (default) / OR → and/or tree
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

@@ -16,7 +16,6 @@
  * gloss (G4) and eval_trace together form the two faces of the decision object: the
  * human-readable gloss judges correctness, the machine-verified eval_trace proves authenticity.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

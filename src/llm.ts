@@ -5,7 +5,6 @@
  * comes from the environment (never the DB), and this factory builds the `llm` function
  * the runtime consumes. Zero npm dependency (global fetch).
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */

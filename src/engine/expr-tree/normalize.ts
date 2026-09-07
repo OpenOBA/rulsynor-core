@@ -5,7 +5,6 @@
  * normalization, ensuring that "visually identical but different code points" strings
  * (e.g. é vs e + combining mark) produce the same byte sequence.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

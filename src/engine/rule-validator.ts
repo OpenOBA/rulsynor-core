@@ -4,7 +4,6 @@
  * Catches invalid data at the API boundary, before it enters the template engine.
  * Each template has specific parameter constraints enforced here.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-17
  */
 

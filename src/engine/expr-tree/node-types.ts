@@ -15,7 +15,6 @@
  *
  * The two are two projections of the same tree with zero semantic loss, not two evaluators (E7).
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

@@ -22,7 +22,6 @@
  * Freeze level: operator/node sets are `[FREEZE-2]` (additive-only, no semantic change);
  * the 13-decision value domain enters the audit chain with the DO.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-28
  * @license BSL 1.1
  */

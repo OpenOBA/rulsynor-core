@@ -4,7 +4,6 @@
  * The original rulsynor RuleConfig is a TypeORM entity (@Entity/@Column); core is zero-dependency,
  * so it becomes a pure TS interface (same fields, decorators removed), used by rule YAML serialization and storage interfaces.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-21 (M2 stripped rule-config.entity dependency)
  * @license BSL 1.1
  */

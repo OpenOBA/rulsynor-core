@@ -4,7 +4,6 @@
  * CORE policy: audit records can be viewed, never exported or downloaded —
  * export is a commercial-edition capability, not a CORE one.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */

@@ -8,7 +8,6 @@
  *   - RuleStore.load() calls check() (DbRuleStore/FileRuleStore implementation deferred, not MVP)
  *   - RuleService.createFromTemplate() already validates per-rule
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-21
  */
 

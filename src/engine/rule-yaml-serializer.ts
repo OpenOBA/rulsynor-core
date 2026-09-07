@@ -15,7 +15,6 @@
  * Implementation strategy: not relying on yaml.dump() (uncontrollable JS object key order and quoting),
  * instead using a custom template to concatenate field by field, ensuring field order and quoting style satisfy SPEC §2.3.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-20 · P2 DB → FS sync
  * @rework 2026-07-26 · template-splicing aligned with SPEC §5 F1-F8
  */

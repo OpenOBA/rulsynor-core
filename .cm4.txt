@@ -1,0 +1,5 @@
+chore: remove internal attribution from source and docs
+
+Drop per-file @author headers and internal naming from source comments,
+GOVERNANCE.md, and docs/ARCHITECTURE.md so the public surface carries
+team attribution only.

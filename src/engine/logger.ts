@@ -5,7 +5,6 @@
  * but drops the @nestjs/common LoggerService dependency and AsyncLocalStorage trace context,
  * keeping core zero-dependency (only node built-in process + JSON).
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-21 (M2 stripped rulsynor-logger dependency)
  * @license BSL 1.1
  */

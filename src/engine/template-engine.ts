@@ -11,7 +11,6 @@
  * Context fields: Templates accept any valid SPEC §5 context field name
  * (tool.name, sem.code, sem.sub_code, project.*, task.*, etc.) as the `field` parameter.
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-07-17
  */
 

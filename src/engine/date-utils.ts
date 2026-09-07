@@ -11,7 +11,6 @@
  *   - getYear / getMonth / getDate / getDay: UTC component extraction (equivalent getUTC*)
  *   - endOfMonth: UTC last day of the month (Date.UTC month-end 00:00:00Z)
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-21 (M1 ported from an in-house implementation; then unified to UTC semantics aligned with SPEC §10.5)
  * @license BSL 1.1
  */

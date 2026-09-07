@@ -5,7 +5,6 @@
  * rules dir; every guarded tool call lands one tamper-evident Decision Object
  * in the local audit DB (view with `rulsynor audit list` — read-only).
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */

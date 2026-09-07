@@ -6,7 +6,6 @@
  * - tier ≤ 2 / Guard default: fail-close (safe failure)
  * - tier 3-5: fold to false
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-08-15
  * @license BSL 1.1
  */

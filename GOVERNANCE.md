@@ -11,7 +11,7 @@ OpenOBA is currently maintained by **Shenzhen Miaojing Technology Co., Ltd.** Go
 
 | Phase | Contributors | Decision Model |
 |-------|-------------|----------------|
-| **Phase 1 (current)** | Henry (Founder) + Tang Haoran (AI Executive Officer) + Core Team | **BDFL final adjudication + Lazy Consensus** |
+| **Phase 1 (current)** | OpenOBA Core Team | **BDFL final adjudication + Lazy Consensus** |
 | **Phase 2** | 5+ external contributors | Core Maintainer Team voting (2/3 majority) |
 | **Phase 3** | 50+ external contributors | OpenOBA TSC (Technical Steering Committee) voting |
 | **Phase 4** | 500+ external contributors | Foundation model (e.g., Apache, Linux Foundation) |

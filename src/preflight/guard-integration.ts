@@ -1,13 +1,13 @@
 /**
  * Guard Integration + DO Payload Writers — Sprint D21
  *
- * CORRECT blocking (Henry Plan A) + Agent REQUEST_HUMAN path + DO payload injection.
+ * CORRECT blocking  + Agent REQUEST_HUMAN path + DO payload injection.
  * These are interface contracts for backend implementation, defined in @openoba/rulsynor-core
  * for type safety and cross-package contract enforcement.
  */
 
 // ═══════════════════════════════════════════════════════════════
-// CORRECT Loop State Machine (D21 — Henry Plan A)
+// CORRECT Loop State Machine (D21)
 // ═══════════════════════════════════════════════════════════════
 
 export type CorrectLoopState =

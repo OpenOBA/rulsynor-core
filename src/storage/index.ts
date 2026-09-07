@@ -9,7 +9,6 @@
  * - Model config stores name/baseUrl ONLY — the API key NEVER enters the DB (kept by the
  *   caller / environment; see runtime.ts llm injection).
  *
- * @author Tang Haoran · OpenOBA AI Executive Officer
  * @since 2026-09-02
  * @license BSL 1.1
  */
