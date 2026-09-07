@@ -535,11 +535,11 @@ npm run verify   # 对 78 条决策证据逐字节重算 JCS + SHA-256，与独�
 
 **Erik Newton（Concordia）的验证结果**：他以与被测实现完全不同的编程语言（Python）从零构建独立验证引擎，对 13 条审计向量逐字节重算——**12 条逐字节一致，AV-013 金丝雀正确失败**（这条金丝雀故意让一个「删除整个 audit 对象」的退化实现失配，被成功捕获）。
 
-**版本谱系说明（请仔细阅读）**：Erik Newton 上述独立验证完成于 v1.3 审计向量（AV-001–AV-013），证明的是方法论的可行性；§7.1 现行的 78 条 v1.5 向量现已由第二个 Runner 完成独立重算——Santosh Kumar Puppala 的 **`norviq-go`**，纯规范洁净室实现（Go、零依赖，自建 JCS RFC 8785 + crypto/sha256），仅凭公开规范与 RUNNER_CONTRACT R1–R6 构建，未读任何参考代码：**107/107 规范字节逐字节一致**，2026-09-01 合并，K01 金丝雀正确判别。第三个 Runner 正在下文征集。我们不用旧版本的验证结果为新版本背书——而现在也不再需要：新版本已由独立实现者重新测量。
+**版本谱系说明（请仔细阅读）**：Erik Newton 上述独立验证完成于 v1.3 审计向量（AV-001–AV-013），证明的是方法论的可行性；§7.1 现行的 78 条 v1.5 向量现已由两个独立 Runner 完成独立重算——Santosh Kumar Puppala 的 **`norviq-go`**（洁净室 Go、零依赖，自建 JCS RFC 8785 + crypto/sha256，2026-09-01 合并）与 **`concordia-python`**（Python，自建 JCS RFC 8785，2026-09-02 合并）——均仅凭公开规范与 RUNNER_CONTRACT R1–R6 构建，未读任何参考代码：**107/107 规范字节逐字节一致**，K01 金丝雀正确判别。第三个 Runner 正在下文征集。我们不用旧版本的验证结果为新版本背书——而现在也不再需要：新版本已由独立实现者们重新测量。
 
 这意味着：一个从未看过我们任何代码的人，仅凭公开规范，独立重算出了与我们逐字节一致的哈希——**中立性不是宣称的，是被独立测出来的。**
 
-**Runner 征集令**：第 2 个独立 Runner（norviq-go，Go）已经落地；我们现在公开征集第 3 个独立实现者（Runner）。验证者将获得：
+**Runner 征集令**：前 2 个独立 Runner（norviq-go Go、concordia-python Python）已经落地；我们现在公开征集第 3 个独立实现者（Runner）。验证者将获得：
 
 - **社区声誉**——作为独立验证者载入 IMPLEMENTATIONS 名录，全社区可见；
 - **早期治理积分**——参与品类治理的权重凭证；
@@ -775,6 +775,13 @@ docker run openoba/runtime-alpha --scenario=credit-assistant
 - **首个第三方 v1.5 独立实现**：以 Go 从零构建 `norviq-go`（零依赖、自建 JCS RFC 8785 + crypto/sha256），仅凭公开规范与 RUNNER_CONTRACT R1–R6 实现，未读任何参考代码——107/107 规范字节逐字节一致；
 - **记录-执行保真度（P-05）**：以真实的 PEP / 缓存命中 bug 案例提出 P-05 残余风险，推动 §1.4（生产侧不变量）、§1.5（决策推导语义）、§1.6（Producer Contract + V-PRODUCER）；
 - **P6 可解析集澄清**：指出可解析集语义歧义，推动「无信息 ≠ 空集」的收窄。
+
+### RavindraAnnam
+
+独立技术审阅者，直指「确定性内核」宣称中最难坚守的边界——**有状态算子**（`within`/`rate`）：
+
+- **有状态算子证据缺口**：对求值器的 review 揭示了状态突变的 `temporal_state` 证据缺口与 `total_evaluated` 计数漂移，现均已修复并由一致性向量覆盖；该发现进而催生了针对状态算子语义的专项研究；
+- **多 Agent 治理不变式**：在 A2A Discussion #2031 中提出四条运行时权威不变式——权威不放大（authority non-amplification）、溯源连续（provenance continuity）、窄化继承（narrow-only constraint inheritance）、传递撤销（transitive revocation）——演化成 INV-01~INV-05 委托权威安全备忘，并成为 OpenOBA 多 Agent 治理方向的基础。
 
 ### OpenOBA 参考实现团队
 

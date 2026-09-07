@@ -541,11 +541,11 @@ Independent verification is not empty words — the first independent implemente
 
 **Erik Newton (Concordia)'s verification results**: building an independent verification engine from scratch in a completely different programming language (Python), he recomputed 13 audit vectors byte-for-byte — **12 byte-identical, AV-013 canary correctly failing** (this canary deliberately makes a defective implementation that "deletes the entire audit object" mismatch, and it was successfully caught).
 
-**Version lineage (please read carefully)**: Erik Newton's independent verification above was completed on the v1.3 audit vectors (AV-001–AV-013), proving the feasibility of the methodology. The current 78 v1.5 vectors in §7.1 have now been independently recomputed by a second Runner — Santosh Kumar Puppala's **`norviq-go`**, a clean-room Go implementation with zero dependencies (self-built JCS RFC 8785 + crypto/sha256), built from the public spec and RUNNER_CONTRACT R1–R6 alone: **107/107 canonical bytes byte-for-byte**, merged 2026-09-01, K01 canary correctly discriminating. A third Runner is being recruited below. We do not use old-version verification results to endorse the new version — and we no longer need to: the new version has now been re-measured by an independent implementer.
+**Version lineage (please read carefully)**: Erik Newton's independent verification above was completed on the v1.3 audit vectors (AV-001–AV-013), proving the feasibility of the methodology. The current 78 v1.5 vectors in §7.1 have now been independently recomputed by two independent Runners — Santosh Kumar Puppala's **`norviq-go`** (clean-room Go, zero dependencies, self-built JCS RFC 8785 + crypto/sha256, merged 2026-09-01) and **`concordia-python`** (Python, self-built JCS RFC 8785, merged 2026-09-02) — each built from the public spec and RUNNER_CONTRACT R1–R6 alone: **107/107 canonical bytes byte-for-byte**, K01 canary correctly discriminating. A third Runner is being recruited below. We do not use old-version verification results to endorse the new version — and we no longer need to: the new version has now been re-measured by independent implementers.
 
 This means: someone who has never seen any of our code, relying only on the public specification, independently recomputed hashes byte-identical to ours — **neutrality is not claimed, it is independently measured.**
 
-**Runner recruitment**: the 2nd independent Runner (norviq-go, Go) has landed; we now openly seek the 3rd. Verifiers will receive:
+**Runner recruitment**: the first two independent Runners (norviq-go Go, concordia-python Python) have landed; we now openly seek the 3rd. Verifiers will receive:
 
 - **Community reputation** — listed in the IMPLEMENTATIONS registry as an independent verifier, visible to the whole community;
 - **Early governance points** — weighted credentials for participating in category governance;
@@ -781,6 +781,13 @@ The first third-party v1.5 Runner, and the proposer of the record-emission fidel
 - **First third-party v1.5 independent implementation**: built `norviq-go` from scratch in Go with zero dependencies (self-built JCS RFC 8785 + crypto/sha256), from the public spec and RUNNER_CONTRACT R1–R6 alone, reading no reference code — 107/107 canonical bytes byte-for-byte;
 - **Record-emission fidelity (P-05)**: raised the P-05 residual risk with a real-world PEP / cache-hit bug example, driving §1.4 (production-side invariant), §1.5 (decision-derivation semantics), and §1.6 (Producer Contract + V-PRODUCER);
 - **P6 resolvable-set clarification**: identified the resolvable-set semantic ambiguity, driving the "no information ≠ empty set" narrowing.
+
+### RavindraAnnam
+
+Independent technical reviewer who pressed on the boundary where a "deterministic kernel" claim is hardest to hold — the **stateful operators** (`within`/`rate`):
+
+- **Stateful-operator evidence gap**: his review of the evaluator surfaced the `temporal_state` evidence gap on state mutation and the `total_evaluated` count drift, now fixed and covered by conformance vectors; the finding opened a dedicated research track on stateful-operator semantics;
+- **Multi-agent governance invariants**: in A2A Discussion #2031 he proposed the four runtime-authority invariants — authority non-amplification, provenance continuity, narrow-only constraint inheritance, and transitive revocation — that grew into the INV-01–INV-05 delegation-authority security note and now underpin OpenOBA's multi-agent governance direction.
 
 ### OpenOBA Reference Implementation Team
 
