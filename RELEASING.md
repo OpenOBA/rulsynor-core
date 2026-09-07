@@ -22,7 +22,7 @@
 ## 2. 发布步骤
 
 ```bash
-# ① 版本号提升（示例：0.1.0-alpha → 0.1.0-beta）
+# ① 版本号提升（示例：1.1.0 → 1.2.0）
 #    编辑 package.json 的 version 字段
 
 # ② 更新 CHANGELOG（将 [Unreleased] 段重命名为新版本号）
@@ -39,8 +39,8 @@ npm pack --dry-run
 
 # ⑥ git 提交 + 打 tag
 git add -A
-git commit -m "chore(release): v0.1.0-beta"
-git tag v0.1.0-beta
+git commit -m "chore(release): v1.2.0"
+git tag v1.2.0
 
 # ⑦ 推送到 GitHub
 git push origin master
