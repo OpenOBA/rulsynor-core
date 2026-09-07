@@ -26,6 +26,13 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
+      # node 22 bundles npm 10, which lacks OIDC trusted publishing support.
+      # npm >= 11.5.1 is required for the GitHub Actions OIDC token exchange.
+      - name: Ensure npm supports OIDC trusted publishing
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
