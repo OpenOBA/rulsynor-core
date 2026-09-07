@@ -1,8 +1,0 @@
-fix(ci): pin pnpm 11.12.0 + drop stale release.yml
-
-- pin pnpm/action-setup to 11.12.0 (match local) so frozen-lockfile
-  behaves consistently on GitHub runners
-- ci.yml: drop node 20 from matrix (engines requires >=22.13.0)
-- add pnpm-workspace.yaml with onlyBuiltDependencies (unrs-resolver)
-- remove the stale release.yml (duplicated publish on v* tags, used the
-  unset NPM_TOKEN secret) — publish.yml (OIDC) is the single path
