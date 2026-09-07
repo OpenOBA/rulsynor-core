@@ -1,5 +1,0 @@
-fix(ci): use allowBuilds (pnpm 11) instead of onlyBuiltDependencies
-
-pnpm 11 replaced onlyBuiltDependencies with the allowBuilds map. The old
-key is silently ignored, so unrs-resolver's postinstall stayed blocked and
---frozen-lockfile failed with ERR_PNPM_IGNORED_BUILDS on GitHub runners.
