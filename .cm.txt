@@ -1,0 +1,6 @@
+fix(engine): count total_evaluated as rules actually entered
+
+Mirror of the erdl-landing evaluator fix: total_evaluated must be the
+number of rules whose unless/when evaluation was actually entered, not
+allMatched.length (short-circuit) or enabled.length (skips skipRing and
+catch-all-inert rules). Add an explicit evaluatedCount counter.

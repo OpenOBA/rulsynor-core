@@ -150,6 +150,9 @@ export class Evaluator {
     let anyExplicitMatched = false;
     // After an override-ALLOW relaxes a restrictive decision → ALLOW, skip the rest of the SAME ring.
     let skipRing: number | undefined = undefined;
+    // SPEC §7.0.3 total_evaluated: the number of rules whose unless/when evaluation was
+    // actually entered (excludes rules skipped by skipRing or catch-all inertness).
+    let evaluatedCount = 0;
 
     for (const rule of [...explicitRules, ...catchAllRules]) {
       const ring = ringOf(rule);
@@ -159,6 +162,7 @@ export class Evaluator {
       // §7.1 item 6: catch-all rules are inert once any explicit rule matched.
       if (isCatchAllRule(rule) && anyExplicitMatched) continue;
         // SPEC §5: unless exemption — evaluated BEFORE when
+        evaluatedCount += 1;
         if (rule.unless?.conditions && rule.unless.conditions.length > 0) {
           const unlessLogic = rule.unless.logic ?? 'AND';
           const unlessExempt =
@@ -271,7 +275,7 @@ export class Evaluator {
             primaryReason: finalReason ?? `${finalDecision} triggered by Ring ${ring} rule`,
             primaryExplanation: finalExplanation,
             primaryAlternative: finalAlternative,
-            totalEvaluated: allMatched.length, // DO-013: actual evaluated count on short-circuit
+            totalEvaluated: evaluatedCount,
             totalMatched: allMatched.length,
             temporalState: temporalState.length > 0 ? temporalState : undefined,
           };
@@ -339,7 +343,7 @@ export class Evaluator {
         return {
           decision: metadataDecision as Decision,
           matchedRules: [],
-          totalEvaluated: enabled.length,
+          totalEvaluated: evaluatedCount,
           totalMatched: 0,
           primaryReason: `No rules matched; metadata.decision fallback: ${metadataDecision}`,
         };
@@ -352,7 +356,7 @@ export class Evaluator {
         decision: finalDecision as Decision,
         matchedRules: [],
         unlessExemptions: unlessExemptions.length > 0 ? unlessExemptions : undefined,
-        totalEvaluated: enabled.length,
+        totalEvaluated: evaluatedCount,
         totalMatched: 0,
       };
     }
@@ -366,7 +370,7 @@ export class Evaluator {
       primaryCorrection: finalCorrection,
       primaryExplanation: finalExplanation,
       primaryAlternative: finalAlternative,
-      totalEvaluated: enabled.length,
+      totalEvaluated: evaluatedCount,
       totalMatched: allMatched.length,
       temporalState: temporalState.length > 0 ? temporalState : undefined,
     };
