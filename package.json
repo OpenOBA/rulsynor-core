@@ -2,7 +2,7 @@
   "name": "@openoba/rulsynor-core",
   "version": "1.1.0",
   "description": "ERDL deterministic Guard engine — open-source Agent runtime with cryptographic audit chain",
-  "license": "BUSL-1.1",
+  "license": "BSL-1.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/OpenOBA/rulsynor-core.git"

@@ -2,7 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
 [![Downloads](https://img.shields.io/npm/dm/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
-[![License](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
 [![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
 [![Vectors](https://img.shields.io/badge/vectors-317%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
@@ -612,7 +612,7 @@ flowchart TD
 
 ## 许可证
 
-BUSL-1.1 © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
+BSL-1.1 © 2026-present OpenOBA（[深圳市秒镜科技有限公司](https://openoba.com)）
 
 > "规则决定一切。"
 >
