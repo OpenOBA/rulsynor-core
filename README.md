@@ -574,8 +574,8 @@ registry.register({
 flowchart TD
     A["Your Agent<br/>(LangChain / MCP / DIY)"] --> B["LLM generates tool_call"]
     B --> G["GUARD<br/>Ring 0 → Ring 3<br/>34 preset + your rules<br/>30 operators / 34 nodes<br/>within / rate trackers<br/>CORRECT auto-retry<br/>Guidance for LLM"]
-    G -->|ALLOW<br/>(execute)| X["Execute"]
-    G -->|DENY / CORRECT /<br/>HUMAN / QUARANTINE<br/>(guided recovery)| Y["Guided recovery"]
+    G -->|ALLOW<br/>execute| X["Execute"]
+    G -->|DENY / CORRECT /<br/>HUMAN / QUARANTINE<br/>guided recovery| Y["Guided recovery"]
     X --> D
     Y --> D
     D["DECISION OBJECT<br/>14 CORE + 15 JUR<br/>JCS + SHA-256<br/>previous_hash chain<br/>Compliance profile"]

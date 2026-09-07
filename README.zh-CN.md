@@ -555,8 +555,8 @@ registry.register({
 flowchart TD
     A["你的 Agent<br/>(LangChain / MCP / 自定义)"] --> B["LLM 生成 tool_call"]
     B --> G["GUARD<br/>环 0 → 环 3<br/>34 条预设 + 你的规则<br/>30 运算符 / 34 节点<br/>within / rate 追踪<br/>CORRECT 自动重试<br/>Guidance 引导 LLM"]
-    G -->|ALLOW<br/>（执行）| X["执行"]
-    G -->|DENY / CORRECT /<br/>HUMAN / QUARANTINE<br/>（引导恢复）| Y["引导恢复"]
+    G -->|ALLOW<br/>执行| X["执行"]
+    G -->|DENY / CORRECT /<br/>HUMAN / QUARANTINE<br/>引导恢复| Y["引导恢复"]
     X --> D
     Y --> D
     D["DECISION OBJECT<br/>14 CORE + 15 JUR<br/>JCS + SHA-256<br/>previous_hash 链<br/>合规剖面"]
