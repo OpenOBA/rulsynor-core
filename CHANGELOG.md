@@ -23,6 +23,15 @@ Version lifecycle: [`VERSIONING.md`](./VERSIONING.md).
   human-in-the-loop decision set `{ REQUEST_HUMAN, ESCALATE, DELEGATE }`
   (RFC-002 §9.5 T03).
 
+### Security
+
+- **ReDoS detection consolidated to one source of truth** — `rule-validator`'s
+  private `isReDosVulnerable` heuristic (a second, drift-prone copy) is removed;
+  load-time validation now delegates to `safe-regex.ts analyzePattern`, the same
+  gate the runtime `safeRegExp` uses. Adds a `{m}`/`{m,}`/`{m,n}` repeat-count
+  cap (`REGEX_MAX_REPEAT = 10_000`, mirroring erdl-formal) on top of the existing
+  pattern-length cap, input-length cap, and nested/adjacent-quantifier detection.
+
 ### Changed
 
 - **Decision Object byte output** — `policies[].hash` and `policies[].author_id`

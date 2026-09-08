@@ -31,6 +31,7 @@ import {
   BLOCKING_DECISIONS as SCHEMA_BLOCKING_DECISIONS,
   GUARD_ALLOWED_DECISIONS,
 } from './erdl-schema.js';
+import { analyzePattern } from './safe-regex.js';
 
 // 2026-08-28 review: the four enums below were originally local hard-coded (11 categories / 21 decisions / 13 operators / 4 blocking),
 // where VALID_ALL_OPS had only 13, causing the UI and validator to reject the 15 kernel-supported operators
@@ -407,8 +408,8 @@ export class RuleValidator {
       errors.push({ field: 'pattern', code: 'REQUIRED', message: 'Match regex cannot be empty' });
       return;
     }
-    // ReDoS prevention: reject catastrophic backtracking patterns
-    if (this.isReDosVulnerable(val as string)) {
+    // ReDoS prevention: reject catastrophic backtracking patterns (single source of truth = safe-regex analyzePattern)
+    if (analyzePattern(val as string) !== null) {
       errors.push({
         field: 'pattern',
         code: 'REDOS_RISK',
@@ -439,20 +440,6 @@ export class RuleValidator {
     if (!VALID_ALL_OPS.includes(val as string)) {
       errors.push({ field: fieldKey, code: 'INVALID_OP', message: 'Invalid operator' });
     }
-  }
-
-  /**
-   * ReDoS detection — rejects patterns with nested repetition that
-   * can cause catastrophic backtracking.
-   */
-  private isReDosVulnerable(pattern: string): boolean {
-    // Detect nested quantifiers: (a+)+  (a*)*  (a+)*  (a*)+
-    if (/\([^)]*[+*]\)[+*]/.test(pattern)) return true;
-    // Detect alternation inside repetition that can backtrack
-    // (a|b|c)+ with overlapping prefixes
-    // Conservative: flag any pattern with >3 alternation groups inside repetition
-    if (/\([^)]*\|[^)]*\)[+*]\s*[+*]/.test(pattern)) return true;
-    return false;
   }
 
   // === §7.4 new gates ===
@@ -509,7 +496,7 @@ export class RuleValidator {
     for (const cond of allConditions) {
       const op = (cond as unknown as Record<string, unknown>).operator as string | undefined;
       const val = (cond as unknown as Record<string, unknown>).value as string | undefined;
-      if (op === 'match' && typeof val === 'string' && this.isReDosVulnerable(val)) {
+      if (op === 'match' && typeof val === 'string' && analyzePattern(val) !== null) {
         return {
           field: 'when',
           code: 'REGEX_REDOS_RISK',

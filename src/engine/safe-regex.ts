@@ -19,6 +19,11 @@
 const REGEX_MAX_LENGTH = 200;
 /** Regex match input length cap: constrains the worst-case backtracking cost (E4 engineering equivalent) */
 export const REGEX_MAX_INPUT_LENGTH = 10_000;
+/** Quantifier repeat-count cap (SPEC §7.3(d) / E4): bounds `{m}`/`{m,}`/`{m,n}` to prevent pathological repeat counts (mirrors erdl-formal MAX_REPEAT). */
+const REGEX_MAX_REPEAT = 10_000;
+
+/** Brace quantifier `{m}` / `{m,}` / `{m,n}` — captures the lower and upper bounds. */
+const BRACE_QUANTIFIER = /\{(\d+)(?:,(\d*))?\}/g;
 
 // Detect nested quantifiers: (a+)+, (a+)*, (a+)+?, (a*)*, (a+){1,10}, etc.
 // Matches: ) followed by optional whitespace then another quantifier
@@ -107,6 +112,19 @@ export function analyzePattern(pattern: string): string | null {
 
   if (pattern.length > REGEX_MAX_LENGTH) {
     return `pattern exceeds ${REGEX_MAX_LENGTH} chars (got ${pattern.length})`;
+  }
+
+  // Repeat-count cap: reject {m}/{m,}/{m,n} whose bounds exceed the E4 limit.
+  // JS RegExp compiles these lazily, but a huge bound signals a pathological pattern
+  // (e.g. `(a{9999999})+`) whose worst case the input cap cannot fully bound.
+  BRACE_QUANTIFIER.lastIndex = 0;
+  let bq: RegExpExecArray | null;
+  while ((bq = BRACE_QUANTIFIER.exec(pattern)) !== null) {
+    const lo = Number(bq[1]);
+    const hi = bq[2] === undefined ? lo : bq[2] === '' ? Infinity : Number(bq[2]);
+    if (lo > REGEX_MAX_REPEAT || (hi !== Infinity && hi > REGEX_MAX_REPEAT)) {
+      return `quantifier repeat count exceeds ${REGEX_MAX_REPEAT} (got ${Math.max(lo, hi === Infinity ? lo : hi)})`;
+    }
   }
 
   const nonRegular = findNonRegularConstruct(pattern);
