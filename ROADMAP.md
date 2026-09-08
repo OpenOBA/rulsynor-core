@@ -5,7 +5,7 @@
 
 ---
 
-## 1.1.0（当前 · stable）
+## 1.1.0（已发布 · superseded by 1.2.0）
 
 **已达成**（引擎确定性内核）：
 
@@ -23,15 +23,24 @@
 - [x] 655 测试
 - [x] BSL 1.1 · 零框架依赖（仅 json-canonicalize + js-yaml）
 
-## 1.2.0（下一步 · minor）
+## 1.2.0（当前 · stable）
+
+**已达成**（DO 审计记录对齐 RFC-002 + ReDoS 加固）：
+
+- [x] `policies[].hash` 原像补 `author_id`（RFC-002 §1.1）
+- [x] `policies[].author_id` 硬编码 `system` → 可注入（逐规则 → input → env → 默认 `openoba`）
+- [x] `human_oversight.required` 补 DELEGATE（RFC-002 §9.5 T03）
+- [x] `buildDecisionObject` 魔数/魔串全部提为命名常量
+- [x] ReDoS 检测合并到 `safe-regex.ts analyzePattern`（单一事实源）+ `REGEX_MAX_REPEAT`
+- [x] 新增 `test/guard.spec.ts`（7 测试：DO 字段 / 哈希原像重算 / author_id 解析链 / human_oversight / 扁平哈希 / JURISDICTION Omit）
+- [x] 662 测试
+
+## 1.3.x（下一步 · minor）
 
 - [ ] **Decision Object 签名模式**（哈希模式已对齐 v1.5 flat-hash；签名模式 ECDSA P-256 待完成，对齐 RFC-002 §10）
 - [ ] CI：GitHub Actions（lint/test/build 门禁 + npm 自动发布）
 - [ ] 覆盖率提升至 80%+（补边界/异常分支）
 - [ ] 公开测试 + 收口第三方反馈
-
-## 1.3.x（minor · 功能扩展）
-
 - [ ] `trustLabel()` / `parseToolCalls()` 完整实现（当前 stub）
 - [ ] LangGraph 集成示例 + MCP server 集成指南
 - [ ] 自定义业务规则热重载
@@ -51,7 +60,7 @@
 
 ```
 1.0.0 ──▶ 1.1.0 ──▶ 1.2.0 ──▶ 1.3.x ──▶ 2.0.0
-(试水)   (当前)   (DO v1.5签名) (功能)   (完整稳定)
+(试水)   (已发布) (当前)   (功能)   (完整稳定)
 ```
 
-> 说明：`1.0.0`（2026-08-07）是引擎未对齐 Spec v2.0 时的过早发布，已废弃；`1.1.0` 延续版本线，取代 `1.0.0`。
+> 说明：`1.0.0`（2026-08-07）是引擎未对齐 Spec v2.0 时的过早发布，已废弃；`1.1.0`（2026-09-07）延续版本线，取代 `1.0.0`；`1.2.0`（2026-09-08）修复 DO 审计记录缺陷（`policies[].hash` 原像、`author_id` 硬编码）+ ReDoS 检测合并 + 消硬编码。
