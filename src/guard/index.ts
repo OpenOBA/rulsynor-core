@@ -15,6 +15,75 @@ import { PROVENANCE } from '../provenance.js';
 import { getComplianceProfile } from '../compliance/index.js';
 import { uuidv7 } from '../uuidv7.js';
 
+// ── Frozen constants (protocol-level; MUST NOT change at runtime) ──
+
+const DO_SPEC = 'decision-object-v1.5' as const;
+const PREIMAGE_VERSION = 'erdl-do-v1.5-hash-flat' as const;
+const AUDIT_MODE = 'hash' as const;
+const HASH_PREFIX = 'sha256:' as const;
+const DID_PREFIX = 'did:erdl:sha256:' as const;
+const CHAIN_ID_PREFIX = 'chain-' as const;
+/** PII redaction not implemented yet — empty string, no fake placeholder (RFC-002 §5.3). */
+const EMPTY_SANITIZED_CONTEXT = '' as const;
+
+// ── Named defaults (configurable via environment; these are the fallback values) ──
+
+/** Default autonomy level (EU AI Act Art.50 / GB-Z 185); override via RULSYNOR_AUTONOMY_LEVEL. */
+const DEFAULT_AUTONOMY_LEVEL = 'L2';
+/** Fallback model id when neither `modelId` nor RULSYNOR_MODEL_ID is set. */
+const DEFAULT_MODEL_ID = 'unknown';
+/** Fallback `result.reason` when the matched rule carries no reason. */
+const DEFAULT_REASON = 'rule matched';
+/** Deployment-level rule author (RFC-002 §1.1 `policies[].author_id`); override via RULSYNOR_AUTHOR_ID. */
+const DEFAULT_AUTHOR_ID = 'openoba';
+
+/** Retention basis strings (RFC-002 §10.2 / GB-Z 185 36-month). */
+const RETENTION_BASIS_CN = 'GB-Z-185-2026-36-month';
+const RETENTION_BASIS_DEFAULT = 'default-36-month';
+const RETENTION_YEARS = 3;
+
+/** AID default registrar/requester (OID prefix per PROVENANCE.aidOidPrefix); override via env. */
+const AID_DEFAULT_REGISTRAR = '000001';
+const AID_DEFAULT_REQUESTER = '000001';
+
+/** Truncation lengths (hex chars) for derived identifiers (readability/collision tradeoff). */
+const AGENT_DID_HASH_HEX_LENGTH = 16;
+const CHAIN_ID_HASH_HEX_LENGTH = 8;
+const AID_INSTANCE_HEX_LENGTH = 6;
+
+/** Agent role detection (guardian/operator/observed, RFC-002 `agent.role`). */
+const AGENT_ROLE_GUARDIAN = 'guardian';
+const AGENT_ROLE_OPERATOR = 'operator';
+const AGENT_ROLE_OBSERVED = 'observed';
+const AGENT_ROLE_GUARDIAN_RE = /[.:_-]guardian$/i;
+const AGENT_ROLE_OPERATOR_RE = /[.:_-]operator$/i;
+
+/** Rule default priority / ring / version (RFC-002 `policies[]`). */
+const DEFAULT_PRIORITY = 100;
+const DEFAULT_RING = 3;
+const DEFAULT_RULE_VERSION = 1;
+
+/** Decisions that require human oversight (RFC-002 §9.5 T03: DELEGATE/ESCALATE/REQUEST_HUMAN). */
+const HUMAN_OVERSIGHT_DECISIONS: readonly string[] = ['REQUEST_HUMAN', 'ESCALATE', 'DELEGATE'];
+
+/** Action-taken value that counts as "allowed" for data-modification detection. */
+const ACTION_TAKEN_ALLOWED = 'allowed';
+
+/** Write-verb tool-name prefixes for data-modification detection (whole-word boundary match). */
+const DATA_MODIFICATION_WRITE_VERBS: readonly string[] = [
+  'write',
+  'create',
+  'update',
+  'delete',
+  'remove',
+  'save',
+  'insert',
+  'upsert',
+  'patch',
+  'put',
+  'post',
+];
+
 // ── Types ──
 
 export interface GuardInput {
@@ -36,6 +105,8 @@ export interface RuleDefinition {
   then?: unknown;
   priority?: number;
   ring?: number;
+  /** Rule author (RFC-002 §1.1 `policies[].author_id`); falls back to deployment-level author. */
+  author_id?: string;
 }
 
 export interface RuleMatch {
@@ -74,6 +145,8 @@ export interface DecisionObjectInput {
   rules: RuleDefinition[];
   evaluationDurationMs: number;
   modelId?: string;
+  /** Deployment-level rule author (RFC-002 §1.1); falls back to RULSYNOR_AUTHOR_ID then a documented default. */
+  authorId?: string;
   /** Stateful-operator window snapshots (RFC-002 §2.4); omitted from the DO when empty. */
   temporalState?: TemporalStateEntry[];
 }
@@ -150,31 +223,47 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     rules,
     evaluationDurationMs,
     modelId,
+    authorId,
     temporalState,
   } = opts;
   const timestamp = new Date().toISOString();
   const decisionId = uuidv7();
   const executionTraceId = uuidv7();
 
-  // Agent DID — did:erdl:sha256:<hash>. Extension point: CRM ID binding appends further method segments later.
-  const agentDid = `did:erdl:sha256:${crypto.createHash('sha256').update(input.agentId).digest('hex').slice(0, 16)}`;
-  const agentRole = /[.:_-]guardian$/i.test(input.agentId)
-    ? 'guardian'
-    : /[.:_-]operator$/i.test(input.agentId)
-      ? 'operator'
-      : 'observed';
+  // Deployment-level rule author: per-rule `author_id` wins, then the explicit input authorId,
+  // then the environment, then a documented default (no hardcoded magic string in the DO).
+  const defaultAuthorId = authorId ?? process.env['RULSYNOR_AUTHOR_ID'] ?? DEFAULT_AUTHOR_ID;
 
-  // Policies — v1.5 shape (id/name/author_id/when/then/priority/ring/hash)
-  const policies = rules.map(r => ({
-    id: r.id ?? r.name,
-    name: r.name,
-    author_id: 'system',
-    ...(r.when !== undefined ? { when: r.when } : {}),
-    ...(r.then !== undefined ? { then: r.then } : {}),
-    priority: r.priority ?? 100,
-    ring: r.ring ?? 3,
-    hash: `sha256:${crypto.createHash('sha256').update(canonicalize(r)).digest('hex')}`,
-  }));
+  // Agent DID — did:erdl:sha256:<hash>. Extension point: CRM ID binding appends further method segments later.
+  const agentDid = `${DID_PREFIX}${crypto
+    .createHash('sha256')
+    .update(input.agentId)
+    .digest('hex')
+    .slice(0, AGENT_DID_HASH_HEX_LENGTH)}`;
+  const agentRole = AGENT_ROLE_GUARDIAN_RE.test(input.agentId)
+    ? AGENT_ROLE_GUARDIAN
+    : AGENT_ROLE_OPERATOR_RE.test(input.agentId)
+      ? AGENT_ROLE_OPERATOR
+      : AGENT_ROLE_OBSERVED;
+
+  // Policies — v1.5 shape (id/name/author_id/when/then/priority/ring/hash).
+  // `policies[].hash` preimage = { id, name, when, then, priority, ring, author_id } (RFC-002 §1.1).
+  const policies = rules.map(r => {
+    const ruleAuthorId = r.author_id ?? defaultAuthorId;
+    const preimage: Record<string, unknown> = {
+      id: r.id ?? r.name,
+      name: r.name,
+      priority: r.priority ?? DEFAULT_PRIORITY,
+      ring: r.ring ?? DEFAULT_RING,
+      author_id: ruleAuthorId,
+    };
+    if (r.when !== undefined) preimage.when = r.when;
+    if (r.then !== undefined) preimage.then = r.then;
+    return {
+      ...preimage,
+      hash: `${HASH_PREFIX}${crypto.createHash('sha256').update(canonicalize(preimage)).digest('hex')}`,
+    };
+  });
 
   // Matched rules — v1.5 evaluation.matched_rules (rule_id + canonical_tree, RFC-002 §2.1)
   const doMatchedRules = matchedRules.map(r => ({
@@ -182,7 +271,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     ...(r.canonicalTree !== undefined ? { canonical_tree: r.canonicalTree } : {}),
   }));
 
-  const toolRegistryHash = `sha256:${crypto
+  const toolRegistryHash = `${HASH_PREFIX}${crypto
     .createHash('sha256')
     .update(canonicalize({ count: rules.length, names: rules.map(r => r.name).sort() }))
     .digest('hex')}`;
@@ -191,22 +280,25 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const contextObj: Record<string, unknown> = {
     tool: { name: input.toolName, args: input.toolArgs },
   };
-  const contextSnapshotHash = `sha256:${crypto.createHash('sha256').update(canonicalize(contextObj)).digest('hex')}`;
+  const contextSnapshotHash = `${HASH_PREFIX}${crypto
+    .createHash('sha256')
+    .update(canonicalize(contextObj))
+    .digest('hex')}`;
 
   // Rule set version
   const ruleIds = rules
-    .map(r => `${r.name}@${r.version ?? 1}`)
+    .map(r => `${r.name}@${r.version ?? DEFAULT_RULE_VERSION}`)
     .sort()
     .join('|');
-  const ruleSetHash = `sha256:${crypto.createHash('sha256').update(ruleIds).digest('hex')}`;
+  const ruleSetHash = `${HASH_PREFIX}${crypto.createHash('sha256').update(ruleIds).digest('hex')}`;
 
   // Derived fields
-  const humanOversightRequired = decision === 'REQUEST_HUMAN' || decision === 'ESCALATE';
+  const humanOversightRequired = HUMAN_OVERSIGHT_DECISIONS.includes(decision);
   const confidenceScore =
     totalEvaluated > 0 ? Math.round((totalMatched / totalEvaluated) * 100) : 0;
   const dataModification = isDataModification(input.toolName, actionTaken);
   const appliedRule = matchedRules.length > 0 ? matchedRules[0].ruleId : null;
-  const autonomyLevel = process.env['RULSYNOR_AUTONOMY_LEVEL'] || 'L2';
+  const autonomyLevel = process.env['RULSYNOR_AUTONOMY_LEVEL'] || DEFAULT_AUTONOMY_LEVEL;
 
   // Compliance profile
   const complianceProfile = getComplianceProfile();
@@ -216,11 +308,11 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
   const activated = new Set<string>(complianceProfile.activated_fields ?? []);
 
   // Chain + retention
-  const chainId = `chain-${crypto
+  const chainId = `${CHAIN_ID_PREFIX}${crypto
     .createHash('sha256')
     .update(`${input.sessionId}|${input.runId}`)
     .digest('hex')
-    .slice(0, 8)}`;
+    .slice(0, CHAIN_ID_HASH_HEX_LENGTH)}`;
   const chainSeq = input.step;
   const retention = computeRetention(complianceProfile, timestamp);
 
@@ -243,7 +335,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
 
   // ── Assemble v1.5 flat-hash DO ──
   const recordWithoutHash: Record<string, unknown> = {
-    spec: 'decision-object-v1.5',
+    spec: DO_SPEC,
     decision_id: decisionId,
     compliance_profile: complianceProfile,
     execution_trace_id: executionTraceId,
@@ -262,7 +354,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     result: {
       applied_rule: appliedRule,
       decision,
-      reason: reason ?? 'rule matched',
+      reason: reason ?? DEFAULT_REASON,
       rules_matched: matchedRules.map(r => r.ruleId),
     },
     human_oversight: { required: humanOversightRequired },
@@ -270,14 +362,14 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
       chain_id: chainId,
       chain_seq: chainSeq,
       commitment: { agent_id: agentDid, tool_name: input.toolName, decision },
-      mode: 'hash',
-      preimage_version: 'erdl-do-v1.5-hash-flat',
+      mode: AUDIT_MODE,
+      preimage_version: PREIMAGE_VERSION,
       previous_hash: input.previousAuditHash ?? null,
       retention,
     },
     // JURISDICTION fields (activated_fields-gated; omitted when not activated)
     ...(activated.has('model_id')
-      ? { model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || 'unknown' }
+      ? { model_id: modelId || process.env['RULSYNOR_MODEL_ID'] || DEFAULT_MODEL_ID }
       : {}),
     ...(activated.has('context_snapshot_hash')
       ? { context_snapshot_hash: contextSnapshotHash }
@@ -285,7 +377,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     // PII sanitization not implemented yet — empty string (no fake placeholder).
     // The DO context is already minimal (`tool.name`/`tool.args`); PII redaction
     // of `tool.args` is a planned compliance-layer feature.
-    ...(activated.has('sanitized_context') ? { sanitized_context: '' } : {}),
+    ...(activated.has('sanitized_context') ? { sanitized_context: EMPTY_SANITIZED_CONTEXT } : {}),
     ...(activated.has('impact_assessment_id') ? { impact_assessment_id: uuidv7() } : {}),
     ...(activated.has('fairness_assessment') ? { fairness_assessment: 'not_applicable' } : {}),
     ...(activated.has('autonomy_level') ? { autonomy_level: autonomyLevel } : {}),
@@ -309,7 +401,7 @@ export function buildDecisionObject(opts: DecisionObjectInput): DecisionObject {
     ...recordWithoutHash,
     audit: {
       ...(recordWithoutHash.audit as Record<string, unknown>),
-      hash: `sha256:${hash}`,
+      hash: `${HASH_PREFIX}${hash}`,
     },
   } as DecisionObject;
 }
@@ -321,47 +413,34 @@ function computeRetention(
 ): { retention_until: string; retention_basis: string } {
   const jurisdictions = complianceProfile.jurisdictions ?? [];
   const retentionBasis = jurisdictions.includes('CN')
-    ? 'GB-Z-185-2026-36-month'
-    : 'default-36-month';
+    ? RETENTION_BASIS_CN
+    : RETENTION_BASIS_DEFAULT;
   const until = new Date(Date.parse(timestamp));
-  until.setFullYear(until.getFullYear() + 3);
+  until.setFullYear(until.getFullYear() + RETENTION_YEARS);
   return { retention_until: until.toISOString(), retention_basis: retentionBasis };
 }
 
 // ── Helpers ──
 
 export function generateAID(): string {
-  const registrarId = process.env['RULSYNOR_AID_REGISTRAR'] || '000001';
-  const requesterId = process.env['RULSYNOR_AID_REQUESTER'] || '000001';
+  const registrarId = process.env['RULSYNOR_AID_REGISTRAR'] || AID_DEFAULT_REGISTRAR;
+  const requesterId = process.env['RULSYNOR_AID_REQUESTER'] || AID_DEFAULT_REQUESTER;
   const instanceId = crypto
     .createHash('sha256')
     .update(`${process.env['HOSTNAME'] || 'localhost'}-${process.pid}`)
     .digest('hex')
-    .slice(0, 6);
+    .slice(0, AID_INSTANCE_HEX_LENGTH);
   return `${PROVENANCE.aidOidPrefix}.1.${registrarId}.${requesterId}.${instanceId}`;
 }
 
 function isDataModification(toolName: string, actionTaken: string): boolean {
   // DENIED / blocked / paused actions have no data modification effect
-  if (actionTaken !== 'allowed') return false;
+  if (actionTaken !== ACTION_TAKEN_ALLOWED) return false;
   // Whitelist known write-verb tools (avoids substring false positives like 'post' matching 'postprocess')
-  const writeVerbs = [
-    'write',
-    'create',
-    'update',
-    'delete',
-    'remove',
-    'save',
-    'insert',
-    'upsert',
-    'patch',
-    'put',
-    'post',
-  ];
   const lower = toolName.toLowerCase();
   // Match whole word boundaries: tool name must START with or equal a write verb,
   // or have it at word boundary (e.g. 'write_file', 'createOrder')
-  return writeVerbs.some(
+  return DATA_MODIFICATION_WRITE_VERBS.some(
     v => lower === v || lower.startsWith(v + '_') || lower.startsWith(v + '-'),
   );
 }

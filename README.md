@@ -613,7 +613,7 @@ The cross-implementation test vector set lives in its own authoritative reposito
 - [`CHANGELOG.md`](CHANGELOG.md) — change log (Keep a Changelog)
 - [`ROADMAP.md`](ROADMAP.md) — version roadmap
 
-> **Current status**: `1.1.0` — engine aligned to ERDL Spec v2.1 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
+> **Current status**: `1.2.0` — engine aligned to ERDL Spec v2.1 (30 operators / 34 nodes); Decision Object migrated to v1.5 flat-hash (`erdl-do-v1.5-hash-flat`); signature mode (ECDSA P-256) pending RFC-002 §10.
 
 ---
 

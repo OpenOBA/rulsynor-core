@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Version lifecycle: [`VERSIONING.md`](./VERSIONING.md).
 
+## [1.2.0] - 2026-09-08
+
+### Fixed
+
+- **`policies[].hash` preimage missing `author_id`** — the per-rule content hash
+  now covers the full RFC-002 §1.1 preimage `{ id, name, when, then, priority,
+  ring, author_id }` (previously it hashed the raw rule, omitting `author_id`,
+  producing a non-conforming hash).
+- **`policies[].author_id` hardcoded `'system'`** — the author is now resolved
+  per-rule (`RuleDefinition.author_id`) → input (`DecisionObjectInput.authorId`)
+  → environment (`RULSYNOR_AUTHOR_ID`) → a documented default (`openoba`). The
+  hardcoded `'system'` constant that defeated the SoD check (`agent.id ≠
+  policies[].author_id`) is removed.
+- **`human_oversight.required` omitted `DELEGATE`** — now derived from the
+  human-in-the-loop decision set `{ REQUEST_HUMAN, ESCALATE, DELEGATE }`
+  (RFC-002 §9.5 T03).
+
+### Changed
+
+- **Decision Object byte output** — `policies[].hash` and `policies[].author_id`
+  values change (the hash preimage now includes `author_id`). Any DO archived by
+  `1.1.0` differs from `1.2.0` for the same input; the flat-hash scheme
+  (`erdl-do-v1.5-hash-flat`) is unchanged.
+- **`buildDecisionObject` magic strings/numbers extracted to named constants** —
+  no inline `'system'` / `'L2'` / `'unknown'` / `'rule matched'` / retention
+  basis / AID fallback / hash-truncation lengths / role regexes remain.
+
+### Added
+
+- `RuleDefinition.author_id` and `DecisionObjectInput.authorId`
+  (deployment-level rule author).
+- `buildDecisionObject` unit tests (`test/guard.spec.ts`) — CORE 14 fields,
+  `policies[].hash` preimage, author resolution, `human_oversight`, flat-hash
+  recomputation, JURISDICTION omission.
+
 ## [1.1.0] - 2026-09-07
 
 > **Version-line continuation.** The premature `1.0.0` release (2026-08-07) was
