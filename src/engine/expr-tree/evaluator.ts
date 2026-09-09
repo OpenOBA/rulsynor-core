@@ -288,20 +288,24 @@ export class ExprTreeEvaluator {
         const r = this.evalNode(node.arg, context, `${path}/arg`);
         if (r.errored) return r;
         const v = r.value;
-        let out: number;
+        let out: number | boolean;
         if (typeof v === 'string') {
           // SPEC §10.1: length = Unicode code-point count (not UTF-16 code units).
           // JS str.length returns 2 for surrogate pairs (emoji etc.), breaking cross-implementation byte-for-byte consistency.
           out = Array.from(v).length;
         } else if (Array.isArray(v)) {
           out = v.length;
+        } else if (v === undefined || v === null) {
+          // missing field: length(missing) = 0 (SPEC §5.2 exists-guard rationale)
+          out = 0;
         } else {
+          // scalar (present, non-string/non-array): type mismatch folds to false (like aggregate non-array, SPEC §7.3(e))
           r.warnings.push({
             kind: 'type_mismatch',
             message: 'length only supports string/array',
             nodeType: 'length',
           });
-          out = 0;
+          out = false;
         }
         this.traceCollector?.record(
           node.type,
@@ -761,7 +765,7 @@ export class ExprTreeEvaluator {
           message: `arithmetic operand is non-numeric: ${typeof v}`,
           nodeType: 'arith',
         });
-        return ok(null, warnings);
+        return err('arithmetic operand is non-numeric', warnings);
       }
       rats.push(r);
     }
@@ -787,7 +791,7 @@ export class ExprTreeEvaluator {
             message: `sub requires two operands, got ${rats.length}`,
             nodeType: 'arith',
           });
-          return ok(null, warnings);
+          return err('sub requires two operands', warnings);
         }
         return ok(sub(rats[0], rats[1]), warnings);
       }
@@ -799,7 +803,7 @@ export class ExprTreeEvaluator {
             message: `div requires two operands, got ${rats.length}`,
             nodeType: 'arith',
           });
-          return ok(null, warnings);
+          return err('div requires two operands', warnings);
         }
         if (rats[1].num === 0n) {
           warnings.push({
@@ -807,7 +811,7 @@ export class ExprTreeEvaluator {
             message: 'division by zero',
             nodeType: 'arith',
           });
-          return ok(null, warnings);
+          return err('division by zero', warnings);
         }
         return ok(div(rats[0], rats[1]), warnings);
       }
@@ -818,7 +822,7 @@ export class ExprTreeEvaluator {
             message: `round requires one operand, got ${rats.length}`,
             nodeType: 'arith',
           });
-          return ok(null, warnings);
+          return err('round requires one operand', warnings);
         }
         // round → half-even rounding to integer (reuse toDecimalString(scale=0) correct rounding semantics)
         const s = toDecimalString(rats[0], 0);
@@ -839,7 +843,7 @@ export class ExprTreeEvaluator {
         message: 'date parsing failed',
         nodeType: 'days_between',
       });
-      return ok(null, warnings);
+      return err('invalid date', warnings);
     }
     return ok(Math.floor((d2.getTime() - d1.getTime()) / 86400000), warnings);
   }
@@ -848,7 +852,7 @@ export class ExprTreeEvaluator {
     const d = parseIsoDateStrict(value);
     if (d === null) {
       warnings.push({ kind: 'invalid_date', message: 'date parsing failed', nodeType: 'epoch_ms' });
-      return ok(null, warnings);
+      return err('invalid date', warnings);
     }
     return ok(d.getTime(), warnings);
   }
@@ -873,7 +877,7 @@ export class ExprTreeEvaluator {
         message: `date_add base date invalid: ${String(base)}`,
         nodeType: 'date_add',
       });
-      return ok(null, warnings);
+      return err('invalid date', warnings);
     }
     const n = this.toRational(amount);
     if (n === null) {
@@ -882,7 +886,7 @@ export class ExprTreeEvaluator {
         message: `date_add step must be numeric: ${typeof amount}`,
         nodeType: 'date_add',
       });
-      return ok(null, warnings);
+      return err('date_add step must be numeric', warnings);
     }
     // SPEC v2.1 §7.3(f): amount MUST be an integer (a duration is an integer unit;
     // half-even rounding of "add 1.5 months" has no business meaning).
@@ -892,7 +896,7 @@ export class ExprTreeEvaluator {
         message: `date_add step must be an integer, got ${toDecimalString(n)}`,
         nodeType: 'date_add',
       });
-      return ok(null, warnings);
+      return err('date_add step must be an integer', warnings);
     }
     const int = Number(n.num);
     switch (unit) {
@@ -910,7 +914,7 @@ export class ExprTreeEvaluator {
           message: `unknown date_add unit: ${unit}`,
           nodeType: 'date_add',
         });
-        return ok(null, warnings);
+        return err('unknown date_add unit', warnings);
     }
   }
 
@@ -923,7 +927,7 @@ export class ExprTreeEvaluator {
         message: `date_part date invalid: ${String(value)}`,
         nodeType: 'date_part',
       });
-      return ok(null, warnings);
+      return err('invalid date', warnings);
     }
     switch (unit) {
       case 'year':
@@ -948,7 +952,7 @@ export class ExprTreeEvaluator {
           message: `unknown date_part component: ${unit}`,
           nodeType: 'date_part',
         });
-        return ok(null, warnings);
+        return err('unknown date_part component', warnings);
     }
   }
 
@@ -961,7 +965,7 @@ export class ExprTreeEvaluator {
         message: `month_last_day date invalid: ${String(value)}`,
         nodeType: 'month_last_day',
       });
-      return ok(null, warnings);
+      return err('invalid date', warnings);
     }
     return ok(endOfMonth(d), warnings);
   }
