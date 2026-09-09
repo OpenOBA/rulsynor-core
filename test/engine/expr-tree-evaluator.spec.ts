@@ -10,6 +10,7 @@
  */
 
 import { ExprTreeEvaluator, objectContext } from '../../src/engine/expr-tree/evaluator.js';
+import { fromSExpr } from '../../src/engine/expr-tree/s-expression.js';
 import { enforceLimits, ExprLimitError } from '../../src/engine/expr-tree/limits.js';
 import {
   toDecimalString,
@@ -516,5 +517,16 @@ describe('ExprTreeEvaluator — 资源上限（E4）', () => {
     );
     const node: ExprNode = { type: 'and', args };
     expect(() => enforceLimits(node)).toThrow(ExprLimitError);
+  });
+});
+
+describe('ExprTreeEvaluator — in 成员判等 NFC（E10）', () => {
+  it('decomposed 字段值 in precomposed 列表 → 匹配（NFC 归一）', () => {
+    const node = fromSExpr({ in: ['cafe\u0301', ['café', 'tea']] });
+    expect(ev.evaluate(node, objectContext({})).value).toBe(true);
+  });
+  it('不相关值 in 列表 → 不匹配', () => {
+    const node = fromSExpr({ in: ['coffee', ['café', 'tea']] });
+    expect(ev.evaluate(node, objectContext({})).value).toBe(false);
   });
 });
