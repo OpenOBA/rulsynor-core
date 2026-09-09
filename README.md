@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/npm/dm/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
 [![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
 [![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
-[![Vectors](https://img.shields.io/badge/vectors-317%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
+[![Vectors](https://img.shields.io/badge/vectors-318%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-brightgreen)]()
 [![Deterministic](https://img.shields.io/badge/deterministic-by_construction-2ea44f)]()
