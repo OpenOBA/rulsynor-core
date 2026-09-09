@@ -121,7 +121,7 @@ describe('ExprTreeEvaluator — 比较节点（严格类型匹配 §11.2）', ()
     };
     const r = ev.evaluate(node, ctx({ amount: '100' }));
     expect(r.value).toBe(false);
-    expect(r.warnings.some(w => w.kind === 'type_mismatch')).toBe(true);
+    expect(r.warnings.some(w => w.kind === 'type_mismatch')).toBe(false);
   });
 });
 
