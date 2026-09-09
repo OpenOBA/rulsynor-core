@@ -233,7 +233,12 @@ export class ExprTreeEvaluator {
           });
           return ok(false, warnings);
         }
-        const out = (r.value as unknown[]).includes(l.value);
+        // E10 NFC: membership comparison normalizes strings like eq/ne (decomposed == precomposed); strict === otherwise.
+        const out = (r.value as unknown[]).some((el) =>
+          typeof l.value === 'string' && typeof el === 'string'
+            ? normalizeNfc(l.value) === normalizeNfc(el)
+            : l.value === el,
+        );
         this.traceCollector?.record(
           node.type,
           path,
