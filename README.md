@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/npm/dm/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
 [![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
 [![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
-[![Vectors](https://img.shields.io/badge/vectors-318%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
+[![Vectors](https://img.shields.io/badge/vectors-318%20%7C%203%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-brightgreen)]()
 [![Deterministic](https://img.shields.io/badge/deterministic-by_construction-2ea44f)]()
@@ -44,7 +44,7 @@ rulsynor-core's determinism is not a standalone claim — it's verified by three
 | Layer | Repo | Role | Status |
 |---|---|---|---|
 | **Language** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl` (MIT) | Declarative deterministic rule language — "rules decide everything": 34-node kernel / 30 operators / 13 decisions | v2.1 · on npm |
-| **Tests** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors) (vectors CC0 / code Apache) | Cross-implementation byte-level verification: 317 frozen vectors; 78 audit-layer vectors byte-verified by 2 independent runners (Go / Python) | v1.5 |
+| **Tests** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors) (vectors CC0 / code Apache) | Cross-implementation byte-level verification: 318 frozen vectors; 78 audit-layer vectors byte-verified by 2 independent runners (Go / Python), 240 expression-layer vectors by concordia-python-expression (Python) | v1.5 |
 | **Proof** | [erdl-formal](https://github.com/OpenOBA/erdl-formal) (Apache-2.0) | Z3/SMT formal verification: 34-node coverage + E1–E12 — lifts "tested determinism" to "proven over all inputs" | v0.1.19 · on PyPI |
 
 **In one line**: the language defines rules, the vectors prove "implementations agree", the formal verifier proves "every input is safe" — determinism, from claim → measurement → proof.
@@ -596,8 +596,8 @@ This package bundles the normative reference specifications:
 
 | Document | Path | Description |
 |------|------|------|
-| ERDL Spec v2.1 | [`docs/SPEC/erdl-spec.md`](docs/SPEC/erdl-spec.md) | ERDL language specification (Chinese) |
-| ERDL Spec v2.1 (EN) | [`docs/SPEC/erdl-spec.en.md`](docs/SPEC/erdl-spec.en.md) | ERDL language specification (English) |
+| ERDL Spec v2.1 | [`docs/SPEC/erdl-language-spec-v2.1.md`](docs/SPEC/erdl-language-spec-v2.1.md) | ERDL language specification (Chinese) |
+| ERDL Spec v2.1 (EN) | [`docs/SPEC/erdl-language-spec-v2.1.en.md`](docs/SPEC/erdl-language-spec-v2.1.en.md) | ERDL language specification (English) |
 | SPEC v2.0 | [`docs/SPEC/spec-2.0.md`](docs/SPEC/spec-2.0.md) | OpenOBA Professionalized AI Employee open spec (Chinese) |
 | SPEC v2.0 (EN) | [`docs/SPEC/spec-2.0-en.md`](docs/SPEC/spec-2.0-en.md) | OpenOBA Professionalized AI Employee open spec (English) |
 | RFC 002 | [`docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md`](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object audit standard v1.5 (Chinese) |

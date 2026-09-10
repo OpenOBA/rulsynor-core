@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/npm/dm/@openoba/rulsynor-core)](https://www.npmjs.com/package/@openoba/rulsynor-core)
 [![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
 [![Spec](https://img.shields.io/badge/spec-ERDL%20v2.1-orange)](https://github.com/OpenOBA/erdl-landing)
-[![Vectors](https://img.shields.io/badge/vectors-318%20%7C%202%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
+[![Vectors](https://img.shields.io/badge/vectors-318%20%7C%203%20runners-green)](https://github.com/OpenOBA/erdl-vectors)
 [![Formal](https://img.shields.io/badge/formal-Z3%20SMT%20verified-purple)](https://github.com/OpenOBA/erdl-formal)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522.13-brightgreen)]()
 [![Deterministic](https://img.shields.io/badge/deterministic-by_construction-2ea44f)]()
@@ -19,7 +19,7 @@
 
 **模型负责思考，规则负责决定。**
 
-**技术基础**：rulsynor-core 建立在 **ERDL**（Entity-Rule Definition Language，实体规则定义语言）之上——一种声明式、确定性、可跨实现逐字节验证的规则格式（[ERDL 规范 v2.1](./docs/SPEC/erdl-spec.md)）；每一次确定性裁决都封存为 **Decision Object**（决策对象），遵循 [RFC-002 v1.5](./docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) 的扁平哈希链（`erdl-do-v1.5-hash-flat`，JCS + SHA-256）；整体架构对齐 [OpenOBA SPEC v2.0](./docs/SPEC/spec-2.0.md)（职业化 AI 员工开放规范）。
+**技术基础**：rulsynor-core 建立在 **ERDL**（Entity-Rule Definition Language，实体规则定义语言）之上——一种声明式、确定性、可跨实现逐字节验证的规则格式（[ERDL 规范 v2.1](./docs/SPEC/erdl-language-spec-v2.1.md)）；每一次确定性裁决都封存为 **Decision Object**（决策对象），遵循 [RFC-002 v1.5](./docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) 的扁平哈希链（`erdl-do-v1.5-hash-flat`，JCS + SHA-256）；整体架构对齐 [OpenOBA SPEC v2.0](./docs/SPEC/spec-2.0.md)（职业化 AI 员工开放规范）。
 
 ```bash
 npm install @openoba/rulsynor-core
@@ -36,7 +36,7 @@ rulsynor-core 的确定性不是孤立的承诺，而是三个独立仓库共同
 | 层 | 仓库 | 定位 | 现状 |
 |---|---|---|---|
 | **语言** | [ERDL](https://github.com/OpenOBA/erdl-landing) · `@openoba/erdl`（MIT） | 「规则决定一切」的声明式确定性规则语言：34 节点语义内核 / 30 运算符 / 13 决策 | v2.1 · npm 已发布 |
-| **测试** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors)（向量 CC0 / 代码 Apache） | 跨实现字节级验证：317 条冻结向量，78 条审计层向量已由 2 个独立 runner（Go / Python）逐字节验证 | v1.5 |
+| **测试** | [erdl-vectors](https://github.com/OpenOBA/erdl-vectors)（向量 CC0 / 代码 Apache） | 跨实现字节级验证：318 条冻结向量，78 条审计层向量已由 2 个独立 runner（Go / Python）逐字节验证，240 条表达式层向量由 concordia-python-expression（Python）验证 | v1.5 |
 | **证明** | [erdl-formal](https://github.com/OpenOBA/erdl-formal)（Apache-2.0） | Z3/SMT 形式化验证：34 节点全覆盖 + E1–E12，把「测试过的确定性」升级为「对所有输入成立的证明」 | v0.1.19 · PyPI 已发布 |
 
 **一句话**：语言定义规则，向量证明「实现一致」，形式化证明「所有输入安全」——确定性从**宣称**、到**测量**、到**证明**，三层递进。
@@ -577,8 +577,8 @@ flowchart TD
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| ERDL 规范 v2.1 | [docs/SPEC/erdl-spec.md](docs/SPEC/erdl-spec.md) | ERDL 语言规范（中文） |
-| ERDL 规范 v2.1 (EN) | [docs/SPEC/erdl-spec.en.md](docs/SPEC/erdl-spec.en.md) | ERDL 语言规范（英文） |
+| ERDL 规范 v2.1 | [docs/SPEC/erdl-language-spec-v2.1.md](docs/SPEC/erdl-language-spec-v2.1.md) | ERDL 语言规范（中文） |
+| ERDL 规范 v2.1 (EN) | [docs/SPEC/erdl-language-spec-v2.1.en.md](docs/SPEC/erdl-language-spec-v2.1.en.md) | ERDL 语言规范（英文） |
 | SPEC v2.0 | [docs/SPEC/spec-2.0.md](docs/SPEC/spec-2.0.md) | OpenOBA 职业化AI员工 开放规范（中文） |
 | SPEC v2.0 (EN) | [docs/SPEC/spec-2.0-en.md](docs/SPEC/spec-2.0-en.md) | OpenOBA 职业化AI员工 开放规范（英文） |
 | RFC 002 | [docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md](docs/RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object 审计标准 v1.5（中文） |

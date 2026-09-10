@@ -256,7 +256,7 @@ Step 6（向量验证强制）: recomputed hash 同时与答案文件的期望�
 | **有状态算子状态验证（规划，未生成）** | **V-TEMPORAL-001..004** | **4** | within/rate 跨决策窗口计数状态行为（多决策序列，验证 temporal_state 快照与重放一致，对应 §2.4）：T01 rate 正常序列（未超限→超限）、T02 within 正常序列、T03 temporal_state 快照篡改（判 `temporal_state_divergence`）、T04 状态重放金丝雀（跳过重放的 regressed 验证器被捕）。向量随 temporal_state 进 DO 落地后生成冻结 |
 | **合计** | | **审计层 78** | 哈希层 78 条（D/C/A/K/G/V-COMP 已冻结）。签名 5 + TSA 3 + V-TEMPORAL 4 为规划项（未生成，不计数） |
 
-> **2026-09-02 新增验证对象（非 Core 317）**：`decision_divergence`（跨层语义重推，V-DIVERGENCE 3 条，按 §1.5 从 DO 存储的 context+rules 重推决策，见 VERIFIER-GUIDE §4.4）+ `V-PRODUCER`（producer-side 一致性，按 §1.6 Producer Contract 运行 producer、捕获 enforcement vs 发射 DO，唯一能触达 P-05 的地方）。
+> **2026-09-02 新增验证对象（非 Core 318）**：`decision_divergence`（跨层语义重推，V-DIVERGENCE 3 条，按 §1.5 从 DO 存储的 context+rules 重推决策，见 VERIFIER-GUIDE §4.4）+ `V-PRODUCER`（producer-side 一致性，按 §1.6 Producer Contract 运行 producer、捕获 enforcement vs 发射 DO，唯一能触达 P-05 的地方）。
 
 > **命名澄清（避免与 PAE-spec §45 V-SCENE 语义混同）**：PAE-spec §45 的 V-SCENE 专指**生命周期七阶段**的业务场景验证（身份/岗位/培训/运营/审计/信任/退役），编号 `V-SCENE-NNN`。within/rate 的有状态算子窗口计数验证是**不同的验证对象**（算子状态正确性，非业务场景闭环），故本规范以**独立序列 V-TEMPORAL** 承载，不占用 V-SCENE 编号——对应 RFC-002 §9 第 2462 行「纳入 V-SCENE（多决策序列）**或独立状态验证向量**」中的「独立状态验证向量」分支。
 >
