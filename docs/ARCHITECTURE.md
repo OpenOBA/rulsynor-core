@@ -196,4 +196,4 @@ cloud.openoba.com（云端中台，写端 + 账户/订阅单一事实源）
 
 - [DEVELOPMENT.md](DEVELOPMENT.md) — 本地开发与扩展点
 - [API.md](API.md) — 引擎公开 API
-- [SPEC/erdl-spec.md](SPEC/erdl-spec.md) — ERDL 语言规范
+- [SPEC/erdl-language-spec-v2.1.md](SPEC/erdl-language-spec-v2.1.md) — ERDL 语言规范

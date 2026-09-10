@@ -299,7 +299,7 @@ npx @openoba/rulsynor-core --tool=exec --cmd="rm -rf /"
 **Always review generated rules before deploying.** The LLM writes the draft;
 you own the rulebook. For the full language reference see
 [RULE-AUTHORING.md](./RULE-AUTHORING.md) and
-[ERDL Spec v2.1](./SPEC/erdl-spec.en.md).
+[ERDL Spec v2.1](./SPEC/erdl-language-spec-v2.1.en.md).
 
 ---
 

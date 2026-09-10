@@ -1,7 +1,7 @@
 # ERDL Specification v2.1
 （Entity-Rule Definition Language · 实体规则定义语言）
 
-> **Authority note (2026-09-04 · synced to v2.1)**: This file is a **copy**; the authoritative source is the erdl repo `erdl-spec.en.md`. Normative facts follow the authority.
+> **Authority note (2026-09-04 · synced to v2.1)**: This file is a **copy**; the authoritative source is the erdl repo `erdl-language-spec-v2.1.en.md`. Normative facts follow the authority.
 
 > **Status**: v2.1 · Final
 > **Date**: 2026-09-03

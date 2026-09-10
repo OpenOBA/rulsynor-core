@@ -21,7 +21,7 @@ This directory holds the documentation for `@openoba/rulsynor-core`.
 
 | Path | What it is |
 |------|------------|
-| [`SPEC/`](SPEC/erdl-spec.md) | ERDL language specification (v2.1) |
+| [`SPEC/`](SPEC/erdl-language-spec-v2.1.md) | ERDL language specification (v2.1) |
 | [`RFC/`](RFC/OPENOBA-DOBJ-RFC-002-CN.md) | Decision Object RFC-002 (flat-hash chain) |
 
 ---

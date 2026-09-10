@@ -1,7 +1,7 @@
 # ERDL Rule Authoring Guide
 
 > For engine internals, see [DEVELOPMENT.md](./DEVELOPMENT.md).
-> For the formal specification, see [ERDL Spec v2.1](./SPEC/erdl-spec.md).
+> For the formal specification, see [ERDL Spec v2.1](./SPEC/erdl-language-spec-v2.1.md).
 > **Last updated**: 2026-09-03 — presets and loader migrated to the canonical ERDL document format (language spec v2.1 §2.1: `protocol`/`version`/`metadata`/`rules[]` + string `then`); this guide now documents that format end-to-end. Field paths canonical `tool.name`/`tool.args.*` (Entity namespace).
 
 ---
