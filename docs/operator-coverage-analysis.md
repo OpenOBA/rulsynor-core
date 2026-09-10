@@ -1,6 +1,6 @@
 # ERDL 运算符覆盖度全量分析
 
-> ⚠️ **历史文档（已过时）**：本文档是 v1.1 时代（13 运算符）的覆盖分析。其建议扩展的运算符（starts_with / ends_with / length_* / between / count_* 等）**已全部在 ERDL v2.0/v2.1 落地**——当前为 30 运算符（28 条件 + 2 修饰符，见 [erdl-spec](./SPEC/erdl-spec.md) §5.2）。本文档仅作历史留档，非当前权威。
+> ⚠️ **历史文档（已过时）**：本文档是 v1.1 时代（13 运算符）的覆盖分析。其建议扩展的运算符（starts_with / ends_with / length_* / between / count_* 等）**已全部在 ERDL v2.0/v2.1 落地**——当前为 30 运算符（28 条件 + 2 修饰符，见 [erdl-language-spec-v2.1](./SPEC/erdl-language-spec-v2.1.md) §5.2）。本文档仅作历史留档，非当前权威。
 
 ## 方法论
 

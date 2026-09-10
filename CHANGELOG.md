@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Version lifecycle: [`VERSIONING.md`](./VERSIONING.md).
 
+## [1.2.2] - 2026-09-11
+
+### Changed
+
+- **Language spec renamed to `erdl-language-spec-v2.1.md`** — `docs/SPEC/erdl-spec.md`
+  and `erdl-spec.en.md` are renamed to `erdl-language-spec-v2.1.md` /
+  `erdl-language-spec-v2.1.en.md`; all in-repo references are updated.
+- **Verification vector count aligned to 318** — the expression layer now counts
+  240 vectors (was 239), giving Core 318 = 78 audit-layer + 240 expression-layer.
+  The 240 expression-layer vectors are independently verified by the
+  `concordia-python-expression` runner (Erik Newton, Concordia); the 78
+  audit-layer vectors remain byte-verified by norviq-go and concordia-python.
+
 ## [1.2.1] - 2026-09-09
 
 ### Fixed
