@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Version lifecycle: [`VERSIONING.md`](./VERSIONING.md).
 
+## [Unreleased]
+
+### Security
+
+- **js-yaml 4.3.1 → 4.3.2** — fix GHSA-2883-xcg3-v3hh (high): YAML merge-key
+  DoS (`maxTotalMergeKeys` does not count empty merge sources). Also override
+  transitive jest-chain js-yaml 3.15.1 → 3.15.2 via `pnpm-workspace.yaml`
+  `overrides`.
+
+### Changed
+
+- **json-canonicalize 1.2.0 → 3.0.1** — canonical output unchanged for normal
+  preimages (verified via hash-compare harness); NaN/Infinity now throw
+  (fail-closed) instead of silently serializing to `null`.
+- **eslint 9.39.5 → 10.10.0** — dev dependency, no lint regressions.
+- **@types/node 26.4.1 → 26.5.1** — dev dependency.
+- **typescript-eslint 8.69.0 → 8.70.0** — dev dependency.
+
 ## [1.2.2] - 2026-09-11
 
 ### Changed
